@@ -1,0 +1,54 @@
+{
+    "tech_stack": [
+        "JavaScript",
+        "Firebase",
+        "Firestore",
+        "HTML",
+        "CSS"
+    ],
+    "features": [
+        {
+            "name": "Trip Management",
+            "description": "Core functionality to create, edit, and delete trips.",
+            "files": [
+                "bundle.js",
+                "storage.js",
+                "sync-service-enhanced.js"
+            ]
+        },
+        {
+            "name": "Expense Tracking",
+            "description": "Track expected and actual expenses for activities, stays, and meals.",
+            "files": [
+                "expense-model.js",
+                "bundle.js",
+                "reports.js"
+            ]
+        },
+        {
+            "name": "Cloud Synchronization",
+            "description": "Syncs local data with Firebase Firestore, supporting offline usage.",
+            "files": [
+                "sync-service-enhanced.js",
+                "background-sync.js",
+                "sync-queue.js"
+            ]
+        },
+        {
+            "name": "Authentication",
+            "description": "User login via Google and Email using Firebase Auth.",
+            "files": [
+                "auth-service.js",
+                "auth-ui.js"
+            ]
+        },
+        {
+            "name": "PWA/Offline Mode",
+            "description": "Service worker implementation for offline access.",
+            "files": [
+                "service-worker.js",
+                "index.html"
+            ]
+        }
+    ]
+}

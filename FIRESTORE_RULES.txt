@@ -1,0 +1,62 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper function to check ownership
+    function isOwner() {
+      return request.auth != null && resource.data.userId == request.auth.uid;
+    }
+    
+    // Helper for creating new documents (matches incoming data)
+    function isOwnerCreate() {
+      return request.auth != null && request.resource.data.userId == request.auth.uid;
+    }
+
+    // Trips collection
+    match /trips/{tripId} {
+      allow read: if isOwner();
+      allow create: if isOwnerCreate();
+      allow update, delete: if isOwner();
+    }
+    
+    // Days collection
+    match /days/{dayId} {
+      allow read: if isOwner();
+      allow create: if isOwnerCreate();
+      allow update, delete: if isOwner();
+    }
+    
+    // Activities collection
+    match /activities/{activityId} {
+      allow read: if isOwner();
+      allow create: if isOwnerCreate();
+      allow update, delete: if isOwner();
+    }
+    
+    // Expenses collection
+    match /expenses/{expenseId} {
+      allow read: if isOwner();
+      allow create: if isOwnerCreate();
+      allow update, delete: if isOwner();
+    }
+    
+    // Accommodations collection
+    match /accommodations/{accId} {
+      allow read: if isOwner();
+      allow create: if isOwnerCreate();
+      allow update, delete: if isOwner();
+    }
+    
+    // Meals collection
+    match /meals/{mealId} {
+      allow read: if isOwner();
+      allow create: if isOwnerCreate();
+      allow update, delete: if isOwner();
+    }
+
+    // Deny all other access
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

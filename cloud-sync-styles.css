@@ -1,0 +1,263 @@
+/* ========== Cloud Sync UI Styles ========== */
+
+/* Header Actions */
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-lg);
+}
+
+/* Sync Status Container */
+.sync-status-container {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: 0.5rem 0.75rem;
+    background: var(--color-bg-secondary);
+    border-radius: var(--radius-lg);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.sync-status-container:hover {
+    background: var(--color-border);
+}
+
+/* Sync Status Indicator */
+.sync-status {
+    font-size: 1.25rem;
+    line-height: 1;
+}
+
+.sync-status-text {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.sync-status.syncing {
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.5;
+    }
+}
+
+/* Account Container */
+.account-container {
+    position: relative;
+}
+
+.account-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    background: var(--color-bg-secondary);
+    border: 2px solid transparent;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    color: var(--color-text);
+}
+
+.account-button:hover {
+    background: var(--color-border);
+    border-color: var(--color-primary);
+}
+
+.account-button.active {
+    background: var(--color-primary);
+    border-color: var(--color-primary);
+    color: white;
+}
+
+/* Account Dropdown */
+.account-dropdown {
+    position: absolute;
+    top: calc(100% + 0.5rem);
+    right: 0;
+    min-width: 280px;
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-xl);
+    z-index: 1000;
+    overflow: hidden;
+}
+
+.account-dropdown.hidden {
+    display: none;
+}
+
+.account-dropdown-header {
+    padding: var(--spacing-md);
+    border-bottom: 1px solid var(--color-border);
+}
+
+.account-email {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
+    word-break: break-all;
+}
+
+.account-dropdown-section {
+    padding: var(--spacing-md);
+}
+
+.account-dropdown-section+.account-dropdown-section {
+    border-top: 1px solid var(--color-border);
+}
+
+.account-dropdown-title {
+    font-size: var(--font-size-xs);
+    font-weight: 600;
+    text-transform: uppercase;
+    color: var(--color-text-secondary);
+    margin-bottom: var(--spacing-sm);
+    letter-spacing: 0.05em;
+}
+
+.sync-status-item {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: 0.5rem;
+    border-radius: var(--radius-md);
+    background: var(--color-bg-secondary);
+    margin-bottom: 0.5rem;
+}
+
+.sync-status-item:last-child {
+    margin-bottom: 0;
+}
+
+.sync-status-icon {
+    font-size: 1.25rem;
+    line-height: 1;
+}
+
+.sync-status-label {
+    flex: 1;
+    font-size: var(--font-size-sm);
+    color: var(--color-text);
+}
+
+.sync-status-value {
+    font-size: var(--font-size-xs);
+    color: var(--color-text-secondary);
+    font-weight: 500;
+}
+
+.sync-status-item.active .sync-status-value {
+    color: var(--color-primary);
+    font-weight: 600;
+}
+
+.account-actions {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+}
+
+/* Auth UI */
+.auth-modal-content {
+    text-align: center;
+}
+
+.auth-subtitle {
+    color: var(--color-text-secondary);
+    margin-bottom: var(--spacing-xl);
+}
+
+.btn-google {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-md) var(--spacing-lg);
+    background: white;
+    border: 2px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-base);
+    margin-bottom: var(--spacing-md);
+}
+
+.btn-google:hover {
+    border-color: var(--color-primary);
+    box-shadow: var(--shadow-md);
+}
+
+.auth-divider {
+    display: flex;
+    align-items: center;
+    text-align: center;
+    margin: var(--spacing-lg) 0;
+}
+
+.auth-divider::before,
+.auth-divider::after {
+    content: '';
+    flex: 1;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.auth-divider span {
+    padding: 0 var(--spacing-md);
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-sm);
+}
+
+#emailSignInForm,
+#emailSignUpForm {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-md);
+}
+
+.auth-footer {
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-sm);
+    margin-top: var(--spacing-md);
+}
+
+.auth-footer a {
+    color: var(--color-primary);
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.auth-footer a:hover {
+    text-decoration: underline;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .header-actions {
+        gap: var(--spacing-sm);
+    }
+
+    .sync-status-text {
+        display: none;
+    }
+
+    .account-dropdown {
+        right: -1rem;
+        min-width: 260px;
+    }
+}

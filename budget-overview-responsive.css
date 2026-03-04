@@ -1,0 +1,64 @@
+/* ========== Budget Overview Responsive Styles ========== */
+.budget-overview-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2rem;
+}
+
+.budget-metric {
+    padding-right: 1.5rem;
+    border-right: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.budget-metric-last {
+    border-right: none;
+    padding-right: 0;
+}
+
+.budget-label {
+    font-size: 0.75rem;
+    color: var(--color-text-tertiary);
+    margin-bottom: 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 500;
+}
+
+.budget-value {
+    font-size: 1.875rem;
+    font-weight: 700;
+    color: var(--color-text);
+}
+
+/* Mobile Responsive - Vertical Stacking */
+@media (max-width: 768px) {
+    .budget-overview-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+
+    .budget-metric {
+        padding-right: 0;
+        padding-bottom: 1.5rem;
+        border-right: none;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .budget-metric-last {
+        border-bottom: none;
+        padding-bottom: 0;
+    }
+
+    .budget-label {
+        font-size: 0.7rem;
+    }
+
+    .budget-value {
+        font-size: 1.5rem;
+    }
+
+    .variance-badge {
+        font-size: 1.375rem !important;
+        padding: 6px 12px !important;
+    }
+}

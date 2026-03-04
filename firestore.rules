@@ -1,0 +1,144 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // --- Helper Functions ---
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Safe owner check — uses .get() so missing ownerId doesn't crash
+    function isOwner(resourceData) {
+      return isAuthenticated() && request.auth.uid == resourceData.get('ownerId', '__none__');
+    }
+
+    // Safe collaborator check — uses .get() so missing collaborators doesn't crash
+    function isCollaborator(resourceData) {
+      return isAuthenticated() && (request.auth.uid in resourceData.get('collaborators', []));
+    }
+
+    function hasAccess(resourceData) {
+      return isOwner(resourceData) || isCollaborator(resourceData);
+    }
+
+    // --- Collection Rules ---
+
+    // Users Collection (Profile Lookup)
+    match /users/{userId} {
+      allow create, update, delete: if isAuthenticated() && request.auth.uid == userId;
+      // Any authenticated user can read profiles (needed for add-collaborator-by-email lookup)
+      allow read: if isAuthenticated();
+    }
+
+    // Trips Collection
+    match /trips/{tripId} {
+
+      // GET (single doc read): allow authenticated users to check existence.
+      // resource == null when the document doesn't exist — we still allow the read so
+      // the JS can see {exists: false} and prompt the user to Force Sync.
+      allow get: if isAuthenticated() && (
+          resource == null ||
+          hasAccess(resource.data) ||
+          (request.auth.token.email != null &&
+           request.auth.token.email in resource.data.get('pendingInvites', []))
+      );
+
+      // LIST (collection query): restrict to owners/collaborators/invitees only
+      allow list: if hasAccess(resource.data) ||
+                  (isAuthenticated() &&
+                   request.auth.token.email != null &&
+                   request.auth.token.email in resource.data.get('pendingInvites', []));
+
+      // Create: owner must be the authenticated user
+      allow create: if isAuthenticated() &&
+                    request.resource.data.ownerId == request.auth.uid &&
+                    request.resource.data.collaborators.hasAll([request.auth.uid]);
+
+      // Update: owner, collaborator, or pending invitee (applying their own invite)
+      allow update: if hasAccess(resource.data) ||
+                    (isAuthenticated() &&
+                     request.auth.token.email != null &&
+                     request.auth.token.email in resource.data.get('pendingInvites', []));
+
+      // Delete: owner only
+      allow delete: if isOwner(resource.data);
+    }
+
+    // Helper to get parent trip data for sub-collections
+    function getTripData(tripId) {
+      return get(/databases/$(database)/documents/trips/$(tripId)).data;
+    }
+
+    // ── Sub-collection rules ──
+    // Two access paths:
+    //   1. Direct owner: resource.data.userId == auth.uid  (fast, no get())
+    //   2. Trip-based:   hasAccess(getTripData(...))        (for collaborators)
+
+    match /days/{dayId} {
+      allow read, write: if isAuthenticated() && (
+        resource.data.userId == request.auth.uid ||
+        hasAccess(getTripData(resource.data.tripId))
+      );
+      allow create: if isAuthenticated() && (
+        request.resource.data.userId == request.auth.uid ||
+        hasAccess(getTripData(request.resource.data.tripId))
+      );
+    }
+
+    match /activities/{activityId} {
+      allow read, write: if isAuthenticated() && (
+        resource.data.userId == request.auth.uid ||
+        hasAccess(getTripData(resource.data.tripId))
+      );
+      allow create: if isAuthenticated() && (
+        request.resource.data.userId == request.auth.uid ||
+        hasAccess(getTripData(request.resource.data.tripId))
+      );
+    }
+
+    match /expenses/{expenseId} {
+      allow read, write: if isAuthenticated() && (
+        resource.data.userId == request.auth.uid ||
+        hasAccess(getTripData(resource.data.tripId))
+      );
+      allow create: if isAuthenticated() && (
+        request.resource.data.userId == request.auth.uid ||
+        hasAccess(getTripData(request.resource.data.tripId))
+      );
+    }
+
+    match /accommodations/{accommodationId} {
+      allow read, write: if isAuthenticated() && (
+        resource.data.userId == request.auth.uid ||
+        hasAccess(getTripData(resource.data.tripId))
+      );
+      allow create: if isAuthenticated() && (
+        request.resource.data.userId == request.auth.uid ||
+        hasAccess(getTripData(request.resource.data.tripId))
+      );
+    }
+
+    match /meals/{mealId} {
+      allow read, write: if isAuthenticated() && (
+        resource.data.userId == request.auth.uid ||
+        hasAccess(getTripData(resource.data.tripId))
+      );
+      allow create: if isAuthenticated() && (
+        request.resource.data.userId == request.auth.uid ||
+        hasAccess(getTripData(request.resource.data.tripId))
+      );
+    }
+
+    match /travel/{travelId} {
+      allow read, write: if isAuthenticated() && (
+        resource.data.userId == request.auth.uid ||
+        hasAccess(getTripData(resource.data.tripId))
+      );
+      allow create: if isAuthenticated() && (
+        request.resource.data.userId == request.auth.uid ||
+        hasAccess(getTripData(request.resource.data.tripId))
+      );
+    }
+  }
+}

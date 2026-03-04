@@ -1,0 +1,16 @@
+# Vercel deployment artifacts
+.vercel
+
+# Sensitive config — contains API keys (never commit this)
+config.js
+API_KEY_TestSprite.txt
+
+# Scratch / temp files
+syntax_error.txt
+fix.html
+v12.html
+v15.html
+
+# OS
+.DS_Store
+Thumbs.db
