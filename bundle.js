@@ -2560,8 +2560,31 @@ const App = {
         const dayName = date && !isNaN(date) ? date.toLocaleDateString('en-IN', { weekday: 'long' }) : 'Unknown';
         const isIncomplete = this.isDayIncomplete(day);
 
+        // --- Left-edge accent color (cycles through 5 colors) ---
+        const DAY_COLORS = ['#4FC3F7', '#FFB74D', '#81C784', '#CE93D8', '#F48FB1'];
+        const accentColor = DAY_COLORS[(day.dayNumber - 1) % DAY_COLORS.length];
+
+        // --- Completion progress ---
+        const _meals = day.meals || [];
+        const _activities = day.activities || [];
+        const _travel = day.travel || [];
+        const _hasAccom = !!(day.accommodation && day.accommodation.name);
+        const totalItems = _meals.length + _activities.length + _travel.length + (_hasAccom ? 1 : 0);
+        const confirmedItems =
+            _meals.filter(m => (m.actualCost || 0) > 0).length +
+            _activities.filter(a => (a.actualCost || 0) > 0).length +
+            _travel.filter(t => (t.actualCost || 0) > 0).length +
+            (_hasAccom && (day.accommodation.actualCost || 0) > 0 ? 1 : 0);
+        const pct = totalItems > 0 ? Math.round((confirmedItems / totalItems) * 100) : 0;
+        const allConfirmed = totalItems > 0 && confirmedItems >= totalItems;
+        const progressLabel = totalItems === 0
+            ? '<span style="font-size:11px;color:rgba(255,255,255,0.35);font-family:Outfit,sans-serif;">No items yet</span>'
+            : allConfirmed
+                ? `<span style="font-size:11px;font-family:Outfit,sans-serif;color:${accentColor};">✓ All confirmed</span>`
+                : `<span style="font-size:11px;font-family:Outfit,sans-serif;color:rgba(255,255,255,0.5);">${confirmedItems}/${totalItems} confirmed</span>`;
+
         return `
-            <div class="card" style="margin-bottom: 1rem; cursor: default;">
+            <div class="card" style="margin-bottom: 1rem; cursor: default; border-left: 4px solid ${accentColor};">
                 <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
                     <div style="display: flex; align-items: center; gap: 0.5rem;">
                         <div>
@@ -2601,6 +2624,14 @@ const App = {
                     </div>
                 </div>
                 
+                ${totalItems > 0 ? `
+                <div class="day-progress-row">
+                    <div class="day-progress-track">
+                        <div class="day-progress-fill" style="width:${pct}%;background:${accentColor};"></div>
+                    </div>
+                    ${progressLabel}
+                </div>` : ''}
+
                 ${day.meals && day.meals.length > 0 ? `
                     <div style="margin-bottom: 1rem;">
                         <div class="cat-chip meal">🍽 MEAL</div>

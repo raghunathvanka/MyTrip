@@ -1485,3 +1485,37 @@ h4, h5, h6 {
     border: none;
     border-top: 1px solid rgba(255,255,255,0.08);
 }
+
+/* ============================================================
+   DAY CARD: Left-edge accent + Progress bar
+   ============================================================ */
+
+/* Progress row: sits between header and sections */
+.day-progress-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: -0.5rem 0 1rem 0;
+}
+
+/* The track (full-width bar background) */
+.day-progress-track {
+    flex: 1;
+    height: 4px;
+    border-radius: 2px;
+    background: rgba(255,255,255,0.1);
+    overflow: hidden;
+}
+
+/* The fill (animated from left) */
+.day-progress-fill {
+    height: 100%;
+    border-radius: 2px;
+    transform-origin: left center;
+    animation: dayProgressIn 600ms ease-out both;
+}
+
+@keyframes dayProgressIn {
+    from { transform: scaleX(0); }
+    to   { transform: scaleX(1); }
+}
