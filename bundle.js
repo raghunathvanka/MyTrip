@@ -1380,7 +1380,7 @@ const App = {
                 // Category spend breakdown
                 const catSpend = { Travel: 0, Stay: 0, Meal: 0, Activity: 0 };
                 const catColors = { Travel: '#4FC3F7', Stay: '#FFB74D', Meal: '#81C784', Activity: '#CE93D8' };
-                const catIcons  = { Travel: '\u2708', Stay: '\uD83D\uDECF', Meal: '\uD83C\uDF7D', Activity: '\u2B50' };
+                const catIcons = { Travel: '\u2708', Stay: '\uD83D\uDECF', Meal: '\uD83C\uDF7D', Activity: '\u2B50' };
                 (trip.days || []).forEach(d => {
                     (d.travel || []).forEach(t => { catSpend.Travel += t.actualCost || 0; });
                     if (d.accommodation) catSpend.Stay += d.accommodation.actualCost || 0;
@@ -1388,29 +1388,35 @@ const App = {
                     (d.activities || []).forEach(a => { catSpend.Activity += a.actualCost || 0; });
                 });
                 const catTotal = Object.values(catSpend).reduce((s, v) => s + v, 0);
-                const activeCats = Object.entries(catSpend).filter(([,v]) => v > 0).sort((a,b)=>b[1]-a[1]);
+                const activeCats = Object.entries(catSpend).filter(([, v]) => v > 0).sort((a, b) => b[1] - a[1]);
                 const biggestCat = activeCats[0];
 
                 // SVG donut helpers
                 const CX = 65, CY = 65, R = 47;
-                function polarXY(cx,cy,r,deg) {
-                    const a = (deg-90)*Math.PI/180;
-                    return [cx+r*Math.cos(a), cy+r*Math.sin(a)];
+                function polarXY(cx, cy, r, deg) {
+                    const a = (deg - 90) * Math.PI / 180;
+                    return [cx + r * Math.cos(a), cy + r * Math.sin(a)];
                 }
-                function arcPath(cx,cy,r,s,e) {
-                    const large = (e-s)>180?1:0;
-                    const [x1,y1]=polarXY(cx,cy,r,s);
-                    const [x2,y2]=polarXY(cx,cy,r,e);
-                    return M   A   0  1  ;
+                function arcPath(cx, cy, r, s, e) {
+                    const large = (e - s) > 180 ? 1 : 0;
+                    const [x1, y1] = polarXY(cx, cy, r, s);
+                    const [x2, y2] = polarXY(cx, cy, r, e);
+                    return 'M ' + x1.toFixed(3) + ' ' + y1.toFixed(3) + ' A ' + r + ' ' + r + ' 0 ' + large + ' 1 ' + x2.toFixed(3) + ' ' + y2.toFixed(3);
                 }
                 const GAP = activeCats.length > 1 ? 3 : 0;
-                let donutSvg='', legendHtml='', startAngle=0;
-                const circ = 2*Math.PI*R;
-                activeCats.forEach(([cat,amt],i) => {
-                    const sweep = (amt/catTotal)*360;
-                    const endAngle = startAngle + sweep - (i<activeCats.length-1?GAP:0);
-                    donutSvg += <path d="" fill="none" stroke="" stroke-width="18" stroke-linecap="butt" style="stroke-dasharray:;stroke-dashoffset:;animation:donutDraw 0.9s ease-out s forwards;"/>;
-                    legendHtml += <div style="display:flex;align-items:center;gap:8px;margin-bottom:7px;"><span style="width:10px;height:10px;border-radius:50%;background:;flex-shrink:0;display:inline-block;"></span><span style="font-family:'Outfit',sans-serif;font-size:12px;color:rgba(255,255,255,0.7);flex:1;"></span><span style="font-family:'Outfit',sans-serif;font-size:12px;font-weight:600;color:rgba(255,255,255,0.9);"></span></div>;
+                let donutSvg = '', legendHtml = '', startAngle = 0;
+                const circ = +(2 * Math.PI * R).toFixed(1);
+                activeCats.forEach(([cat, amt], i) => {
+                    const sweep = (amt / catTotal) * 360;
+                    const endAngle = startAngle + sweep - (i < activeCats.length - 1 ? GAP : 0);
+                    const delay = (i * 0.15).toFixed(2);
+                    const dpth = arcPath(CX, CY, R, startAngle, endAngle);
+                    donutSvg += '<path d="' + dpth + '" fill="none" stroke="' + catColors[cat] + '" stroke-width="18" stroke-linecap="butt" style="stroke-dasharray:' + circ + ';stroke-dashoffset:' + circ + ';animation:donutDraw 0.9s ease-out ' + delay + 's forwards;"/>';
+                    legendHtml += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:7px;">' +
+                        '<span style="width:10px;height:10px;border-radius:50%;background:' + catColors[cat] + ';flex-shrink:0;display:inline-block;"></span>' +
+                        '<span style="font-family:\'Outfit\',sans-serif;font-size:12px;color:rgba(255,255,255,0.7);flex:1;">' + cat + '</span>' +
+                        '<span style="font-family:\'Outfit\',sans-serif;font-size:12px;font-weight:600;color:rgba(255,255,255,0.9);">' + UIComponents.formatCurrency(amt) + '</span>' +
+                        '</div>';
                     startAngle += sweep;
                 });
 
@@ -2928,16 +2934,16 @@ const App = {
                     <div style="flex:1;display:flex;align-items:center;gap:8px;min-width:0;overflow:hidden;">
                         <span style="font-family:'Outfit',sans-serif;font-size:12px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:80px;">
                             ${(this.currentTrip.rentalInspection && this.currentTrip.rentalInspection.pickupLocation)
-        ? this.currentTrip.rentalInspection.pickupLocation.split(',')[0]
-        : (this.currentTrip.destination ? this.currentTrip.destination.split(',')[0] : 'Start')}
+                ? this.currentTrip.rentalInspection.pickupLocation.split(',')[0]
+                : (this.currentTrip.destination ? this.currentTrip.destination.split(',')[0] : 'Start')}
                         </span>
                         <div class="sd-route-line" style="flex:1;position:relative;height:2px;background:rgba(255,255,255,0.2);border-radius:1px;min-width:28px;overflow:visible;">
                             <div class="sd-route-dot"></div>
                         </div>
                         <span style="font-family:'Outfit',sans-serif;font-size:12px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:80px;">
                             ${(this.currentTrip.rentalInspection && this.currentTrip.rentalInspection.returnLocation)
-        ? this.currentTrip.rentalInspection.returnLocation.split(',')[0]
-        : (this.currentTrip.destination || 'End')}
+                ? this.currentTrip.rentalInspection.returnLocation.split(',')[0]
+                : (this.currentTrip.destination || 'End')}
                         </span>
                     </div>
 
@@ -3069,119 +3075,47 @@ const App = {
             </div>
         `;
     },
-entTrip.rentalInspection.pickupDate ? UIComponents.formatDate(this.currentTrip.rentalInspection.pickupDate) : '—'}</div>
-                            </div>
-                            <div>
-                                <div style="font-family:'Outfit',sans-serif;font-size:10px;color:rgba(255,255,255,0.5);margin-bottom:3px;"> Return Date</div>
-                                <div style="font-family:'Outfit',sans-serif;font-size:13px;font-weight:500;">${this.currentTrip.rentalInspection.returnDate ? UIComponents.formatDate(this.currentTrip.rentalInspection.returnDate) : '—'}</div>
-                            </div>
-                        </div>` : ''}
 
-                        <!-- Row 4: Odometer + Mileage -->
-                        ${(day.startOdometer != null || this.currentTrip.mileage) ? `
-                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;padding:0.85rem 0;border-bottom:1px solid rgba(255,255,255,0.1);">
-                            <div>
-                                <div style="font-family:'Outfit',sans-serif;font-size:10px;color:rgba(255,255,255,0.5);margin-bottom:3px;"> Starting ODO</div>
-                                <div style="font-family:'Outfit',sans-serif;font-size:13px;font-weight:500;">${day.startOdometer != null ? day.startOdometer.toLocaleString() + ' km' : '—'}</div>
-                            </div>
-                            <div>
-                                <div style="font-family:'Outfit',sans-serif;font-size:10px;color:rgba(255,255,255,0.5);margin-bottom:3px;"> Expected Mileage</div>
-                                <div style="font-family:'Outfit',sans-serif;font-size:13px;font-weight:500;">${this.currentTrip.mileage ? this.currentTrip.mileage + ' km/l' : '—'}</div>
-                            </div>
-                        </div>` : ''}
 
-                        <!-- Day odometer data -->
-                        ${(day.startOdometer != null && day.endOdometer != null) ? `
-                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;padding:0.85rem 0;border-bottom:1px solid rgba(255,255,255,0.1);">
-                            <div>
-                                <div style="font-family:'Outfit',sans-serif;font-size:10px;color:rgba(255,255,255,0.5);margin-bottom:3px;">START ODO</div>
-                                <div style="font-family:'Outfit',sans-serif;font-size:13px;font-weight:500;">${day.startOdometer.toLocaleString()} km</div>
-                            </div>
-                            <div>
-                                <div style="font-family:'Outfit',sans-serif;font-size:10px;color:rgba(255,255,255,0.5);margin-bottom:3px;">END ODO — ${day.endOdometer - day.startOdometer} km driven</div>
-                                <div style="font-family:'Outfit',sans-serif;font-size:13px;font-weight:500;">${day.endOdometer.toLocaleString()} km</div>
-                            </div>
-                        </div>` : (day.startOdometer == null && day.endOdometer == null ? `
-                        <div style="padding:0.85rem 0;border-bottom:1px solid rgba(255,255,255,0.1);font-family:'Outfit',sans-serif;font-size:12px;color:rgba(255,255,255,0.45);text-align:center;">No odometer data yet</div>` : '')}
+/**
+ * Get previous day with odometer reading (skipping no-driving days)
+ */
+getPreviousDay(currentDay) {
+    const currentIndex = this.currentTrip.days.findIndex(d => d.id === currentDay.id);
+    if (currentIndex <= 0) return null;
 
-                        <!-- Fuel data -->
-                        ${(day.fuelFilled && day.fuelFilled > 0) ? `
-                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;padding:0.85rem 0;border-bottom:1px solid rgba(255,255,255,0.1);">
-                            <div>
-                                <div style="font-family:'Outfit',sans-serif;font-size:10px;color:rgba(255,255,255,0.5);margin-bottom:3px;">FUEL FILLED</div>
-                                <div style="font-family:'Outfit',sans-serif;font-size:13px;font-weight:500;">${day.fuelFilled} L</div>
-                            </div>
-                            <div>
-                                <div style="font-family:'Outfit',sans-serif;font-size:10px;color:rgba(255,255,255,0.5);margin-bottom:3px;">FUEL COST</div>
-                                <div style="font-family:'Outfit',sans-serif;font-size:13px;font-weight:500;">${UIComponents.formatCurrency(day.fuelCost || 0)}</div>
-                            </div>
-                        </div>` : ''}
-
-                        <!-- Notes -->
-                        ${day.transportNotes ? `
-                        <div style="padding:0.85rem 0;border-bottom:1px solid rgba(255,255,255,0.1);">
-                            <div style="font-family:'Outfit',sans-serif;font-size:10px;color:rgba(255,255,255,0.5);margin-bottom:3px;">NOTES</div>
-                            <div style="font-family:'Outfit',sans-serif;font-size:13px;">${day.transportNotes}</div>
-                        </div>` : ''}
-
-                        <!-- Action buttons -->
-                        <div style="display:flex;gap:0.75rem;margin-top:1rem;flex-wrap:wrap;">
-                            <button id="updateOdometer_${day.id}" style="flex:1;min-width:120px;padding:8px 14px;border:1px solid rgba(255,255,255,0.4);border-radius:20px;background:transparent;color:white;font-family:'Outfit',sans-serif;font-size:13px;font-weight:500;cursor:pointer;transition:background 0.2s;">
-                                ${(day.startOdometer != null && day.endOdometer != null) ? 'Update' : 'Add'} Odometer &amp; Fuel
-                            </button>
-                            ${this.currentTrip.isRentalVehicle ? `
-                            <button id="pickupInspection_${day.id}" style="flex:1;min-width:120px;padding:8px 14px;border:1px solid rgba(255,255,255,0.4);border-radius:20px;background:transparent;color:white;font-family:'Outfit',sans-serif;font-size:13px;font-weight:500;cursor:pointer;transition:background 0.2s;">
-                                 Pickup Inspection
-                            </button>
-                            <button id="dropInspection_${day.id}" style="flex:1;min-width:120px;padding:8px 14px;border:1px solid rgba(255,255,255,0.4);border-radius:20px;background:transparent;color:white;font-family:'Outfit',sans-serif;font-size:13px;font-weight:500;cursor:pointer;transition:background 0.2s;">
-                                 Drop Inspection
-                            </button>` : ''}
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `;
-    }, },
-
-    /**
-     * Get previous day with odometer reading (skipping no-driving days)
-     */
-    getPreviousDay(currentDay) {
-        const currentIndex = this.currentTrip.days.findIndex(d => d.id === currentDay.id);
-        if (currentIndex <= 0) return null;
-
-        // Look backwards for the last day with an endOdometer reading
-        for (let i = currentIndex - 1; i >= 0; i--) {
-            const day = this.currentTrip.days[i];
-            if (day.endOdometer !== null && !day.noDrivingToday) {
-                return day;
-            }
+    // Look backwards for the last day with an endOdometer reading
+    for (let i = currentIndex - 1; i >= 0; i--) {
+        const day = this.currentTrip.days[i];
+        if (day.endOdometer !== null && !day.noDrivingToday) {
+            return day;
         }
+    }
 
-        return null;
-    },
+    return null;
+},
 
-    /**
-     * Get auto start odometer for a day (handles no-driving gaps)
-     */
-    getAutoStartOdometer(day) {
-        const prevDay = this.getPreviousDay(day);
-        return prevDay?.endOdometer || this.currentTrip.startingOdometer;
-    },
+/**
+ * Get auto start odometer for a day (handles no-driving gaps)
+ */
+getAutoStartOdometer(day) {
+    const prevDay = this.getPreviousDay(day);
+    return prevDay?.endOdometer || this.currentTrip.startingOdometer;
+},
 
-    /**
-     * Show add/edit activity dialog
-     */
-    showAddActivityDialog(dayId, activityId = null) {
-        const day = this.currentTrip.days.find(d => d.id === dayId);
-        if (!day) return;
+/**
+ * Show add/edit activity dialog
+ */
+showAddActivityDialog(dayId, activityId = null) {
+    const day = this.currentTrip.days.find(d => d.id === dayId);
+    if (!day) return;
 
-        let existingActivity = null;
-        if (activityId && day.activities) {
-            existingActivity = day.activities.find(a => a.id === activityId);
-        }
+    let existingActivity = null;
+    if (activityId && day.activities) {
+        existingActivity = day.activities.find(a => a.id === activityId);
+    }
 
-        const content = `
+    const content = `
             <h3 style="margin-bottom: 1rem;">${existingActivity ? 'Edit Activity' : 'Add Activity'}</h3>
             <form id="activityForm">
                 <div class="form-group">
@@ -3219,117 +3153,117 @@ entTrip.rentalInspection.pickupDate ? UIComponents.formatDate(this.currentTrip.r
             </form>
         `;
 
-        UIComponents.showModal(content);
+    UIComponents.showModal(content);
 
-        document.getElementById('cancelActivityBtn').onclick = () => {
+    document.getElementById('cancelActivityBtn').onclick = () => {
+        UIComponents.closeModal();
+    };
+
+    document.getElementById('activityForm').onsubmit = (e) => {
+        e.preventDefault();
+
+        const activityData = {
+            id: existingActivity ? existingActivity.id : this.generateId(),
+            name: document.getElementById('activityName').value.trim(),
+            type: document.getElementById('activityType').value,
+            expectedCost: parseFloat(document.getElementById('activityExpectedCost').value) || 0,
+            // THIS FIXES THE ISSUE:
+            actualCost: parseFloat(document.getElementById('activityActualCost').value) || 0,
+            notes: document.getElementById('activityNotes').value.trim()
+        };
+
+        // Find day and add/update activity
+        if (day) {
+            if (!day.activities) day.activities = [];
+
+            if (existingActivity) {
+                // Update
+                const index = day.activities.findIndex(a => a.id === existingActivity.id);
+                if (index !== -1) {
+                    day.activities[index] = activityData;
+                }
+            } else {
+                // Add
+                day.activities.push(activityData);
+            }
+
+            // Reconcile unified expenses
+            this.reconcileDayExpenses(day);
+
+            Storage.saveTrip(this.currentTrip);
+
+            // Re-render
+            this.renderDays();
+            this.updateTripStats(); // Reactive Update
+
             UIComponents.closeModal();
-        };
+            UIComponents.showToast(`Activity ${existingActivity ? 'updated' : 'added'}!`, 'success');
+        }
+    };
+},
 
-        document.getElementById('activityForm').onsubmit = (e) => {
-            e.preventDefault();
+/**
+ * Delete activity
+ */
+deleteActivity(dayId, activityId) {
+    if (!confirm('Are you sure you want to delete this activity?')) return;
 
-            const activityData = {
-                id: existingActivity ? existingActivity.id : this.generateId(),
-                name: document.getElementById('activityName').value.trim(),
-                type: document.getElementById('activityType').value,
-                expectedCost: parseFloat(document.getElementById('activityExpectedCost').value) || 0,
-                // THIS FIXES THE ISSUE:
-                actualCost: parseFloat(document.getElementById('activityActualCost').value) || 0,
-                notes: document.getElementById('activityNotes').value.trim()
-            };
+    const day = this.currentTrip.days.find(d => d.id === dayId);
+    if (day && day.activities) {
+        const index = day.activities.findIndex(a => a.id === activityId);
+        if (index !== -1) {
+            const activity = day.activities[index];
 
-            // Find day and add/update activity
-            if (day) {
-                if (!day.activities) day.activities = [];
+            // Remove from activities list
+            day.activities.splice(index, 1);
 
-                if (existingActivity) {
-                    // Update
-                    const index = day.activities.findIndex(a => a.id === existingActivity.id);
-                    if (index !== -1) {
-                        day.activities[index] = activityData;
-                    }
-                } else {
-                    // Add
-                    day.activities.push(activityData);
-                }
-
-                // Reconcile unified expenses
-                this.reconcileDayExpenses(day);
-
-                Storage.saveTrip(this.currentTrip);
-
-                // Re-render
-                this.renderDays();
-                this.updateTripStats(); // Reactive Update
-
-                UIComponents.closeModal();
-                UIComponents.showToast(`Activity ${existingActivity ? 'updated' : 'added'}!`, 'success');
+            // Delete from Firestore so other devices don't re-add it
+            if (typeof SyncServiceEnhanced !== 'undefined' && SyncServiceEnhanced.canSync()) {
+                SyncServiceEnhanced.deleteFromCloud('activities', activityId);
             }
-        };
-    },
 
-    /**
-     * Delete activity
-     */
-    deleteActivity(dayId, activityId) {
-        if (!confirm('Are you sure you want to delete this activity?')) return;
+            // Reconcile unified expenses (handles cleanup)
+            this.reconcileDayExpenses(day);
 
-        const day = this.currentTrip.days.find(d => d.id === dayId);
-        if (day && day.activities) {
-            const index = day.activities.findIndex(a => a.id === activityId);
-            if (index !== -1) {
-                const activity = day.activities[index];
+            Storage.saveTrip(this.currentTrip);
+            this.renderDays();
+            this.updateTripStats();
 
-                // Remove from activities list
-                day.activities.splice(index, 1);
+            UIComponents.showToast('Activity deleted', 'info');
+        }
+    }
+},
 
-                // Delete from Firestore so other devices don't re-add it
-                if (typeof SyncServiceEnhanced !== 'undefined' && SyncServiceEnhanced.canSync()) {
-                    SyncServiceEnhanced.deleteFromCloud('activities', activityId);
-                }
+/**
+ * Show add/edit meal dialog
+ */
+showAddMealDialog(dayId, mealId = null) {
+    const day = this.currentTrip.days.find(d => d.id === dayId);
+    if (!day) return;
 
-                // Reconcile unified expenses (handles cleanup)
-                this.reconcileDayExpenses(day);
+    let existingMeal = null;
+    if (mealId && day.meals) {
+        existingMeal = day.meals.find(m => m.id === mealId);
+    }
 
-                Storage.saveTrip(this.currentTrip);
-                this.renderDays();
-                this.updateTripStats();
-
-                UIComponents.showToast('Activity deleted', 'info');
+    // Carry-forward defaults from previous day (only for new meals)
+    let defaultExpectedCost = '';
+    let defaultVenue = 'restaurant';
+    let defaultSplitCount = this.currentTrip.numberOfTravelers || 1;
+    if (!existingMeal) {
+        const prevDay = this.getPreviousDay(day);
+        if (prevDay && prevDay.meals && prevDay.meals.length > 0) {
+            // Try to find the same meal type from previous day
+            const prevMeal = prevDay.meals[0]; // Use first meal as default
+            if (prevMeal) {
+                defaultExpectedCost = prevMeal.expectedCost || '';
+                defaultVenue = prevMeal.venue || 'restaurant';
+                defaultSplitCount = prevMeal.splitCount || this.currentTrip.numberOfTravelers || 1;
             }
         }
-    },
+    }
 
-    /**
-     * Show add/edit meal dialog
-     */
-    showAddMealDialog(dayId, mealId = null) {
-        const day = this.currentTrip.days.find(d => d.id === dayId);
-        if (!day) return;
-
-        let existingMeal = null;
-        if (mealId && day.meals) {
-            existingMeal = day.meals.find(m => m.id === mealId);
-        }
-
-        // Carry-forward defaults from previous day (only for new meals)
-        let defaultExpectedCost = '';
-        let defaultVenue = 'restaurant';
-        let defaultSplitCount = this.currentTrip.numberOfTravelers || 1;
-        if (!existingMeal) {
-            const prevDay = this.getPreviousDay(day);
-            if (prevDay && prevDay.meals && prevDay.meals.length > 0) {
-                // Try to find the same meal type from previous day
-                const prevMeal = prevDay.meals[0]; // Use first meal as default
-                if (prevMeal) {
-                    defaultExpectedCost = prevMeal.expectedCost || '';
-                    defaultVenue = prevMeal.venue || 'restaurant';
-                    defaultSplitCount = prevMeal.splitCount || this.currentTrip.numberOfTravelers || 1;
-                }
-            }
-        }
-
-        const content = `
+    const content = `
             <h3 style="margin-bottom: 1rem;">${existingMeal ? 'Edit Meal' : 'Add Meal'}</h3>
             <form id="mealForm">
                 <div class="form-group">
@@ -3379,102 +3313,102 @@ entTrip.rentalInspection.pickupDate ? UIComponents.formatDate(this.currentTrip.r
             </form>
         `;
 
-        UIComponents.showModal(content);
+    UIComponents.showModal(content);
 
-        document.getElementById('cancelMealBtn').onclick = () => {
+    document.getElementById('cancelMealBtn').onclick = () => {
+        UIComponents.closeModal();
+    };
+
+    document.getElementById('mealForm').onsubmit = (e) => {
+        e.preventDefault();
+
+        const mealData = {
+            id: existingMeal ? existingMeal.id : this.generateId(),
+            type: document.getElementById('mealType').value,
+            venue: document.getElementById('mealVenue').value,
+            restaurantName: document.getElementById('restaurantName').value.trim(),
+            splitCount: parseInt(document.getElementById('mealSplitCount').value) || 1,
+            expectedCost: parseFloat(document.getElementById('mealExpectedCost').value) || 0,
+            actualCost: parseFloat(document.getElementById('mealActualCost').value) || 0,
+            notes: document.getElementById('mealNotes').value.trim()
+        };
+
+        if (day) {
+            if (!day.meals) day.meals = [];
+
+            if (existingMeal) {
+                // Update existing
+                const index = day.meals.findIndex(m => m.id === existingMeal.id);
+                if (index !== -1) {
+                    day.meals[index] = mealData;
+                }
+            } else {
+                // Add new
+                day.meals.push(mealData);
+            }
+
+            // Reconcile unified expenses
+            this.reconcileDayExpenses(day);
+
+            Storage.saveTrip(this.currentTrip);
+            this.renderDays();
+            this.updateTripStats();
+
             UIComponents.closeModal();
-        };
+            UIComponents.showToast(`Meal ${existingMeal ? 'updated' : 'added'}!`, 'success');
+        }
+    };
+},
 
-        document.getElementById('mealForm').onsubmit = (e) => {
-            e.preventDefault();
+/**
+ * Delete meal
+ */
+deleteMeal(dayId, mealId) {
+    if (!confirm('Are you sure you want to delete this meal?')) return;
 
-            const mealData = {
-                id: existingMeal ? existingMeal.id : this.generateId(),
-                type: document.getElementById('mealType').value,
-                venue: document.getElementById('mealVenue').value,
-                restaurantName: document.getElementById('restaurantName').value.trim(),
-                splitCount: parseInt(document.getElementById('mealSplitCount').value) || 1,
-                expectedCost: parseFloat(document.getElementById('mealExpectedCost').value) || 0,
-                actualCost: parseFloat(document.getElementById('mealActualCost').value) || 0,
-                notes: document.getElementById('mealNotes').value.trim()
-            };
+    const day = this.currentTrip.days.find(d => d.id === dayId);
+    if (day && day.meals) {
+        const index = day.meals.findIndex(m => m.id === mealId);
+        if (index !== -1) {
+            day.meals.splice(index, 1);
 
-            if (day) {
-                if (!day.meals) day.meals = [];
-
-                if (existingMeal) {
-                    // Update existing
-                    const index = day.meals.findIndex(m => m.id === existingMeal.id);
-                    if (index !== -1) {
-                        day.meals[index] = mealData;
-                    }
-                } else {
-                    // Add new
-                    day.meals.push(mealData);
-                }
-
-                // Reconcile unified expenses
-                this.reconcileDayExpenses(day);
-
-                Storage.saveTrip(this.currentTrip);
-                this.renderDays();
-                this.updateTripStats();
-
-                UIComponents.closeModal();
-                UIComponents.showToast(`Meal ${existingMeal ? 'updated' : 'added'}!`, 'success');
+            // Delete from Firestore so other devices don't re-add it
+            if (typeof SyncServiceEnhanced !== 'undefined' && SyncServiceEnhanced.canSync()) {
+                SyncServiceEnhanced.deleteFromCloud('meals', mealId);
             }
-        };
-    },
 
-    /**
-     * Delete meal
-     */
-    deleteMeal(dayId, mealId) {
-        if (!confirm('Are you sure you want to delete this meal?')) return;
+            // Reconcile unified expenses
+            this.reconcileDayExpenses(day);
 
-        const day = this.currentTrip.days.find(d => d.id === dayId);
-        if (day && day.meals) {
-            const index = day.meals.findIndex(m => m.id === mealId);
-            if (index !== -1) {
-                day.meals.splice(index, 1);
+            Storage.saveTrip(this.currentTrip);
+            this.renderDays();
+            this.updateTripStats();
 
-                // Delete from Firestore so other devices don't re-add it
-                if (typeof SyncServiceEnhanced !== 'undefined' && SyncServiceEnhanced.canSync()) {
-                    SyncServiceEnhanced.deleteFromCloud('meals', mealId);
-                }
+            UIComponents.showToast('Meal deleted', 'info');
+        }
+    }
+},
 
-                // Reconcile unified expenses
-                this.reconcileDayExpenses(day);
+/**
+ * Show add/edit travel form
+ */
+showTravelForm(dayId, existingTravel = null) {
+    const day = this.currentTrip.days.find(d => d.id === dayId);
+    if (!day) return;
 
-                Storage.saveTrip(this.currentTrip);
-                this.renderDays();
-                this.updateTripStats();
-
-                UIComponents.showToast('Meal deleted', 'info');
+    // Carry-forward defaults from previous day
+    let defaultSplitCount = this.currentTrip.numberOfTravelers || 1;
+    if (!existingTravel) {
+        const prevDay = this.getPreviousDay(day);
+        if (prevDay && prevDay.travel && prevDay.travel.length > 0) {
+            const prevTravel = prevDay.travel[0];
+            if (prevTravel) {
+                defaultSplitCount = prevTravel.splitBetween || this.currentTrip.numberOfTravelers || 1;
             }
         }
-    },
+    }
 
-    /**
-     * Show add/edit travel form
-     */
-    showTravelForm(dayId, existingTravel = null) {
-        const day = this.currentTrip.days.find(d => d.id === dayId);
-        if (!day) return;
-
-        // Carry-forward defaults from previous day
-        let defaultSplitCount = this.currentTrip.numberOfTravelers || 1;
-        if (!existingTravel) {
-            const prevDay = this.getPreviousDay(day);
-            if (prevDay && prevDay.travel && prevDay.travel.length > 0) {
-                const prevTravel = prevDay.travel[0];
-                if (prevTravel) {
-                    defaultSplitCount = prevTravel.splitBetween || this.currentTrip.numberOfTravelers || 1;
-                }
-            }
-        }
-
-        const content = `
+    const content = `
             <h3 style="margin-bottom: 1rem;">${existingTravel ? 'Edit Travel' : 'Add Travel'}</h3>
             <form id="travelForm">
                 <div class="form-group">
@@ -3535,37 +3469,66 @@ entTrip.rentalInspection.pickupDate ? UIComponents.formatDate(this.currentTrip.r
             </form>
         `;
 
-        UIComponents.showModal(content);
+    UIComponents.showModal(content);
 
-        // Form submit handler
-        document.getElementById('travelForm').onsubmit = (e) => {
-            e.preventDefault();
+    // Form submit handler
+    document.getElementById('travelForm').onsubmit = (e) => {
+        e.preventDefault();
 
-            const travelData = {
-                id: existingTravel ? existingTravel.id : this.generateId(),
-                dayId: dayId,
-                type: document.getElementById('travelType').value,
-                from: document.getElementById('travelFrom').value.trim(),
-                to: document.getElementById('travelTo').value.trim(),
-                time: document.getElementById('travelTime').value || null,
-                expectedCost: parseFloat(document.getElementById('travelExpectedCost').value) || 0,
-                actualCost: parseFloat(document.getElementById('travelActualCost').value) || 0,
-                splitBetween: parseInt(document.getElementById('travelSplit').value) || 1,
-                notes: document.getElementById('travelNotes').value.trim()
-            };
+        const travelData = {
+            id: existingTravel ? existingTravel.id : this.generateId(),
+            dayId: dayId,
+            type: document.getElementById('travelType').value,
+            from: document.getElementById('travelFrom').value.trim(),
+            to: document.getElementById('travelTo').value.trim(),
+            time: document.getElementById('travelTime').value || null,
+            expectedCost: parseFloat(document.getElementById('travelExpectedCost').value) || 0,
+            actualCost: parseFloat(document.getElementById('travelActualCost').value) || 0,
+            splitBetween: parseInt(document.getElementById('travelSplit').value) || 1,
+            notes: document.getElementById('travelNotes').value.trim()
+        };
 
-            if (existingTravel) {
-                // Update existing travel
-                const index = day.travel.findIndex(t => t.id === existingTravel.id);
-                if (index !== -1) {
-                    day.travel[index] = travelData;
-                }
-            } else {
-                // Add new travel
-                if (!day.travel) {
-                    day.travel = [];
-                }
-                day.travel.push(travelData);
+        if (existingTravel) {
+            // Update existing travel
+            const index = day.travel.findIndex(t => t.id === existingTravel.id);
+            if (index !== -1) {
+                day.travel[index] = travelData;
+            }
+        } else {
+            // Add new travel
+            if (!day.travel) {
+                day.travel = [];
+            }
+            day.travel.push(travelData);
+        }
+
+        // Reconcile unified expenses
+        this.reconcileDayExpenses(day);
+
+        Storage.saveTrip(this.currentTrip);
+        this.renderDays();
+        this.updateTripStats();
+
+        UIComponents.closeModal();
+        UIComponents.showToast(existingTravel ? 'Travel updated' : 'Travel added', 'success');
+    };
+},
+
+/**
+ * Delete travel
+ */
+deleteTravel(dayId, travelId) {
+    if (!confirm('Are you sure you want to delete this travel entry?')) return;
+
+    const day = this.currentTrip.days.find(d => d.id === dayId);
+    if (day && day.travel) {
+        const index = day.travel.findIndex(t => t.id === travelId);
+        if (index !== -1) {
+            day.travel.splice(index, 1);
+
+            // Delete from Firestore so other devices don't re-add it
+            if (typeof SyncServiceEnhanced !== 'undefined' && SyncServiceEnhanced.canSync()) {
+                SyncServiceEnhanced.deleteFromCloud('travel', travelId);
             }
 
             // Reconcile unified expenses
@@ -3575,55 +3538,26 @@ entTrip.rentalInspection.pickupDate ? UIComponents.formatDate(this.currentTrip.r
             this.renderDays();
             this.updateTripStats();
 
-            UIComponents.closeModal();
-            UIComponents.showToast(existingTravel ? 'Travel updated' : 'Travel added', 'success');
-        };
-    },
-
-    /**
-     * Delete travel
-     */
-    deleteTravel(dayId, travelId) {
-        if (!confirm('Are you sure you want to delete this travel entry?')) return;
-
-        const day = this.currentTrip.days.find(d => d.id === dayId);
-        if (day && day.travel) {
-            const index = day.travel.findIndex(t => t.id === travelId);
-            if (index !== -1) {
-                day.travel.splice(index, 1);
-
-                // Delete from Firestore so other devices don't re-add it
-                if (typeof SyncServiceEnhanced !== 'undefined' && SyncServiceEnhanced.canSync()) {
-                    SyncServiceEnhanced.deleteFromCloud('travel', travelId);
-                }
-
-                // Reconcile unified expenses
-                this.reconcileDayExpenses(day);
-
-                Storage.saveTrip(this.currentTrip);
-                this.renderDays();
-                this.updateTripStats();
-
-                UIComponents.showToast('Travel deleted', 'info');
-            }
+            UIComponents.showToast('Travel deleted', 'info');
         }
-    },
+    }
+},
 
-    /**
-     * Show add accommodation dialog
-     */
-    showAddAccommodationDialog(dayId) {
-        const day = this.currentTrip.days.find(d => d.id === dayId);
-        if (!day) return;
+/**
+ * Show add accommodation dialog
+ */
+showAddAccommodationDialog(dayId) {
+    const day = this.currentTrip.days.find(d => d.id === dayId);
+    if (!day) return;
 
-        const currentAccommodation = day.accommodation || {};
+    const currentAccommodation = day.accommodation || {};
 
-        // Find previous day for "Copy" feature
-        const dayIndex = this.currentTrip.days.findIndex(d => d.id === dayId);
-        const previousDay = dayIndex > 0 ? this.currentTrip.days[dayIndex - 1] : null;
-        const canCopy = previousDay && previousDay.accommodation && previousDay.accommodation.name;
+    // Find previous day for "Copy" feature
+    const dayIndex = this.currentTrip.days.findIndex(d => d.id === dayId);
+    const previousDay = dayIndex > 0 ? this.currentTrip.days[dayIndex - 1] : null;
+    const canCopy = previousDay && previousDay.accommodation && previousDay.accommodation.name;
 
-        const content = `
+    const content = `
             <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
                 <div>
                     <h3 style="margin: 0;">${currentAccommodation.name ? 'Update' : 'Add'} Stay Details</h3>
@@ -3681,88 +3615,88 @@ entTrip.rentalInspection.pickupDate ? UIComponents.formatDate(this.currentTrip.r
             </form>
         `;
 
-        UIComponents.showModal(content);
+    UIComponents.showModal(content);
 
-        // Copy Handler
-        if (canCopy) {
-            document.getElementById('copyPrevStayBtn').onclick = () => {
-                document.getElementById('accommodationName').value = previousDay.accommodation.name || '';
-                document.getElementById('accommodationType').value = previousDay.accommodation.type || 'Hotel';
-                document.getElementById('accExpectedCost').value = previousDay.accommodation.expectedCost || '';
-                document.getElementById('accActualCost').value = previousDay.accommodation.actualCost || '';
-                document.getElementById('accNotes').value = previousDay.accommodation.notes || '';
+    // Copy Handler
+    if (canCopy) {
+        document.getElementById('copyPrevStayBtn').onclick = () => {
+            document.getElementById('accommodationName').value = previousDay.accommodation.name || '';
+            document.getElementById('accommodationType').value = previousDay.accommodation.type || 'Hotel';
+            document.getElementById('accExpectedCost').value = previousDay.accommodation.expectedCost || '';
+            document.getElementById('accActualCost').value = previousDay.accommodation.actualCost || '';
+            document.getElementById('accNotes').value = previousDay.accommodation.notes || '';
 
-                UIComponents.showToast('Copied from Day ' + previousDay.dayNumber, 'success');
-            };
-        }
+            UIComponents.showToast('Copied from Day ' + previousDay.dayNumber, 'success');
+        };
+    }
 
-        // Cancel button
-        document.getElementById('cancelAccBtn').onclick = () => {
-            UIComponents.closeModal();
+    // Cancel button
+    document.getElementById('cancelAccBtn').onclick = () => {
+        UIComponents.closeModal();
+    };
+
+    // Save
+    document.getElementById('accommodationForm').onsubmit = (e) => {
+        e.preventDefault();
+
+        const accommodation = {
+            id: currentAccommodation.id || this.generateId(),
+            name: document.getElementById('accommodationName').value.trim(),
+            type: document.getElementById('accommodationType').value,
+            expectedCost: parseFloat(document.getElementById('accExpectedCost').value) || 0,
+            actualCost: parseFloat(document.getElementById('accActualCost').value) || 0,
+            notes: document.getElementById('accNotes').value.trim()
         };
 
-        // Save
-        document.getElementById('accommodationForm').onsubmit = (e) => {
-            e.preventDefault();
+        day.accommodation = accommodation;
 
-            const accommodation = {
-                id: currentAccommodation.id || this.generateId(),
-                name: document.getElementById('accommodationName').value.trim(),
-                type: document.getElementById('accommodationType').value,
-                expectedCost: parseFloat(document.getElementById('accExpectedCost').value) || 0,
-                actualCost: parseFloat(document.getElementById('accActualCost').value) || 0,
-                notes: document.getElementById('accNotes').value.trim()
-            };
+        // Reconcile unified expenses
+        this.reconcileDayExpenses(day);
 
-            day.accommodation = accommodation;
+        Storage.saveTrip(this.currentTrip);
 
-            // Reconcile unified expenses
-            this.reconcileDayExpenses(day);
+        // Re-render
+        this.renderDays();
+        this.updateTripStats();
 
-            Storage.saveTrip(this.currentTrip);
+        UIComponents.closeModal();
+        UIComponents.showToast('Stay details saved!', 'success');
+    };
+},
 
-            // Re-render
-            this.renderDays();
-            this.updateTripStats();
+/**
+ * Delete accommodation
+ */
+deleteAccommodation(dayId) {
+    if (!confirm('Are you sure you want to remove this stay?')) return;
 
-            UIComponents.closeModal();
-            UIComponents.showToast('Stay details saved!', 'success');
-        };
-    },
+    const day = this.currentTrip.days.find(d => d.id === dayId);
+    if (day) {
+        // Capture ID before deleting locally
+        const accId = day.accommodation ? day.accommodation.id : null;
+        delete day.accommodation;
 
-    /**
-     * Delete accommodation
-     */
-    deleteAccommodation(dayId) {
-        if (!confirm('Are you sure you want to remove this stay?')) return;
-
-        const day = this.currentTrip.days.find(d => d.id === dayId);
-        if (day) {
-            // Capture ID before deleting locally
-            const accId = day.accommodation ? day.accommodation.id : null;
-            delete day.accommodation;
-
-            // Delete from Firestore so other devices don't re-add it
-            if (accId && typeof SyncServiceEnhanced !== 'undefined' && SyncServiceEnhanced.canSync()) {
-                SyncServiceEnhanced.deleteFromCloud('accommodations', accId);
-            }
-
-            // Reconcile unified expenses
-            this.reconcileDayExpenses(day);
-
-            Storage.saveTrip(this.currentTrip);
-            this.renderDays();
-            this.updateTripStats();
-
-            UIComponents.showToast('Stay removed', 'info');
+        // Delete from Firestore so other devices don't re-add it
+        if (accId && typeof SyncServiceEnhanced !== 'undefined' && SyncServiceEnhanced.canSync()) {
+            SyncServiceEnhanced.deleteFromCloud('accommodations', accId);
         }
-    },
 
-    /**
-     * Show add fuel purchase dialog
-     */
-    showAddFuelDialog() {
-        const content = `
+        // Reconcile unified expenses
+        this.reconcileDayExpenses(day);
+
+        Storage.saveTrip(this.currentTrip);
+        this.renderDays();
+        this.updateTripStats();
+
+        UIComponents.showToast('Stay removed', 'info');
+    }
+},
+
+/**
+ * Show add fuel purchase dialog
+ */
+showAddFuelDialog() {
+    const content = `
             <h3 style="margin-bottom: 1rem;">Add Fuel Purchase</h3>
             <form id="fuelForm">
                 <div class="form-group">
@@ -3789,69 +3723,69 @@ entTrip.rentalInspection.pickupDate ? UIComponents.formatDate(this.currentTrip.r
             </form>
         `;
 
-        UIComponents.showModal(content);
+    UIComponents.showModal(content);
 
-        // Auto-calculate total when price and quantity change
-        const priceInput = document.getElementById('fuelPrice');
-        const quantityInput = document.getElementById('fuelQuantity');
-        const totalInput = document.getElementById('fuelTotal');
+    // Auto-calculate total when price and quantity change
+    const priceInput = document.getElementById('fuelPrice');
+    const quantityInput = document.getElementById('fuelQuantity');
+    const totalInput = document.getElementById('fuelTotal');
 
-        const calculateTotal = () => {
-            const price = parseFloat(priceInput.value) || 0;
-            const quantity = parseFloat(quantityInput.value) || 0;
-            if (price > 0 && quantity > 0) {
-                totalInput.value = (price * quantity).toFixed(2);
-            }
+    const calculateTotal = () => {
+        const price = parseFloat(priceInput.value) || 0;
+        const quantity = parseFloat(quantityInput.value) || 0;
+        if (price > 0 && quantity > 0) {
+            totalInput.value = (price * quantity).toFixed(2);
+        }
+    };
+
+    priceInput.oninput = calculateTotal;
+    quantityInput.oninput = calculateTotal;
+
+    document.getElementById('cancelFuelBtn').onclick = () => {
+        UIComponents.closeModal();
+    };
+
+    document.getElementById('fuelForm').onsubmit = (e) => {
+        e.preventDefault();
+
+        const purchase = {
+            id: this.generateId(),
+            location: document.getElementById('fuelLocation').value.trim(),
+            pricePerLiter: parseFloat(document.getElementById('fuelPrice').value),
+            quantity: parseFloat(document.getElementById('fuelQuantity').value) || null,
+            totalCost: parseFloat(document.getElementById('fuelTotal').value),
+            date: new Date().toISOString()
         };
 
-        priceInput.oninput = calculateTotal;
-        quantityInput.oninput = calculateTotal;
+        if (!this.currentTrip.vehicle) {
+            this.currentTrip.vehicle = { type: 'car', odometerStart: null, odometerEnd: null, fuelPurchases: [] };
+        }
+        if (!this.currentTrip.vehicle.fuelPurchases) {
+            this.currentTrip.vehicle.fuelPurchases = [];
+        }
 
-        document.getElementById('cancelFuelBtn').onclick = () => {
-            UIComponents.closeModal();
-        };
+        this.currentTrip.vehicle.fuelPurchases.push(purchase);
 
-        document.getElementById('fuelForm').onsubmit = (e) => {
-            e.preventDefault();
+        Storage.saveTrip(this.currentTrip);
+        this.renderTripDetail();
 
-            const purchase = {
-                id: this.generateId(),
-                location: document.getElementById('fuelLocation').value.trim(),
-                pricePerLiter: parseFloat(document.getElementById('fuelPrice').value),
-                quantity: parseFloat(document.getElementById('fuelQuantity').value) || null,
-                totalCost: parseFloat(document.getElementById('fuelTotal').value),
-                date: new Date().toISOString()
-            };
+        UIComponents.closeModal();
+        UIComponents.showToast('Fuel purchase added!', 'success');
+    };
+},
 
-            if (!this.currentTrip.vehicle) {
-                this.currentTrip.vehicle = { type: 'car', odometerStart: null, odometerEnd: null, fuelPurchases: [] };
-            }
-            if (!this.currentTrip.vehicle.fuelPurchases) {
-                this.currentTrip.vehicle.fuelPurchases = [];
-            }
+/**
+ * Show update odometer & fuel dialog
+ */
+showUpdateOdometerDialog(dayId) {
+    const day = this.currentTrip.days.find(d => d.id === dayId);
+    const autoStartOdometer = this.getAutoStartOdometer(day);
+    const prevDay = this.getPreviousDay(day);
 
-            this.currentTrip.vehicle.fuelPurchases.push(purchase);
+    const dayIndex = this.currentTrip.days.findIndex(d => d.id === dayId);
+    const isFirstDay = dayIndex === 0;
 
-            Storage.saveTrip(this.currentTrip);
-            this.renderTripDetail();
-
-            UIComponents.closeModal();
-            UIComponents.showToast('Fuel purchase added!', 'success');
-        };
-    },
-
-    /**
-     * Show update odometer & fuel dialog
-     */
-    showUpdateOdometerDialog(dayId) {
-        const day = this.currentTrip.days.find(d => d.id === dayId);
-        const autoStartOdometer = this.getAutoStartOdometer(day);
-        const prevDay = this.getPreviousDay(day);
-
-        const dayIndex = this.currentTrip.days.findIndex(d => d.id === dayId);
-        const isFirstDay = dayIndex === 0;
-
-        const content = `
+    const content = `
             <h3 style="margin-bottom: 0.5rem;">Update Transport Details</h3>
             <p style="color: var(--color-text-secondary); font-size: 0.875rem; margin-bottom: 1.5rem;">
                 Day ${day.dayNumber} - ${UIComponents.formatDate(day.date)}
@@ -3934,60 +3868,60 @@ entTrip.rentalInspection.pickupDate ? UIComponents.formatDate(this.currentTrip.r
             </form>
         `;
 
-        UIComponents.showModal(content);
+    UIComponents.showModal(content);
 
-        // Set up no driving toggle
-        const noDrivingCheckbox = document.getElementById('noDrivingToday');
-        const odometerFields = document.getElementById('odometerFields');
-        const startInput = document.getElementById('startOdometer');
-        const endInput = document.getElementById('endOdometer');
-        const fuelInput = document.getElementById('fuelFilled');
-        const distanceDisplay = document.getElementById('distanceDisplay');
-        const efficiencyDisplay = document.getElementById('efficiencyDisplay');
+    // Set up no driving toggle
+    const noDrivingCheckbox = document.getElementById('noDrivingToday');
+    const odometerFields = document.getElementById('odometerFields');
+    const startInput = document.getElementById('startOdometer');
+    const endInput = document.getElementById('endOdometer');
+    const fuelInput = document.getElementById('fuelFilled');
+    const distanceDisplay = document.getElementById('distanceDisplay');
+    const efficiencyDisplay = document.getElementById('efficiencyDisplay');
 
-        const toggleOdometerFields = () => {
-            if (noDrivingCheckbox.checked) {
-                odometerFields.style.display = 'none';
-                startInput.required = false;
-                endInput.required = false;
-            } else {
-                odometerFields.style.display = 'block';
-                startInput.required = true;
-                endInput.required = true;
-            }
-        };
+    const toggleOdometerFields = () => {
+        if (noDrivingCheckbox.checked) {
+            odometerFields.style.display = 'none';
+            startInput.required = false;
+            endInput.required = false;
+        } else {
+            odometerFields.style.display = 'block';
+            startInput.required = true;
+            endInput.required = true;
+        }
+    };
 
-        noDrivingCheckbox.onchange = toggleOdometerFields;
-        toggleOdometerFields(); // Initial state
+    noDrivingCheckbox.onchange = toggleOdometerFields;
+    toggleOdometerFields(); // Initial state
 
-        const updateCalculations = () => {
-            const start = parseFloat(startInput.value) || 0;
-            const end = parseFloat(endInput.value) || 0;
-            const fuel = parseFloat(fuelInput.value) || 0;
-            const expectedCost = parseFloat(document.getElementById('expectedFuelCost').value) || 0;
-            const actualCost = parseFloat(document.getElementById('fuelCost').value) || 0;
+    const updateCalculations = () => {
+        const start = parseFloat(startInput.value) || 0;
+        const end = parseFloat(endInput.value) || 0;
+        const fuel = parseFloat(fuelInput.value) || 0;
+        const expectedCost = parseFloat(document.getElementById('expectedFuelCost').value) || 0;
+        const actualCost = parseFloat(document.getElementById('fuelCost').value) || 0;
 
-            const distance = end - start;
-            const efficiency = fuel > 0 && distance > 0 ? (distance / fuel).toFixed(1) : null;
+        const distance = end - start;
+        const efficiency = fuel > 0 && distance > 0 ? (distance / fuel).toFixed(1) : null;
 
-            // Calculate expected fuel based on distance and trip mileage
-            const expectedFuel = this.currentTrip.mileage && distance > 0
-                ? (distance / this.currentTrip.mileage).toFixed(1)
-                : null;
+        // Calculate expected fuel based on distance and trip mileage
+        const expectedFuel = this.currentTrip.mileage && distance > 0
+            ? (distance / this.currentTrip.mileage).toFixed(1)
+            : null;
 
-            // Update fuel estimate message
-            const fuelEstimate = document.getElementById('fuelEstimate');
-            if (fuelEstimate && expectedFuel) {
-                fuelEstimate.innerHTML = `Estimated: ~${expectedFuel} L needed for ${distance} km`;
-                fuelEstimate.style.color = 'var(--color-primary)';
-            }
+        // Update fuel estimate message
+        const fuelEstimate = document.getElementById('fuelEstimate');
+        if (fuelEstimate && expectedFuel) {
+            fuelEstimate.innerHTML = `Estimated: ~${expectedFuel} L needed for ${distance} km`;
+            fuelEstimate.style.color = 'var(--color-primary)';
+        }
 
-            distanceDisplay.innerHTML = `
+        distanceDisplay.innerHTML = `
                 <div style="font-size: 0.75rem; color: var(--color-text-secondary); margin-bottom: 0.25rem;">Distance</div>
                 <div style="font-weight: 700; font-size: 1.25rem; color: var(--color-primary);">${distance > 0 ? distance : '--'} km</div>
             `;
 
-            efficiencyDisplay.innerHTML = `
+        efficiencyDisplay.innerHTML = `
                 <div style="font-size: 0.75rem; color: var(--color-text-secondary); margin-bottom: 0.25rem;">Efficiency</div>
                 <div style="font-weight: 700; font-size: 1.25rem; color: var(--color-secondary);">${efficiency || '--'} km/l</div>
                 ${efficiency && this.currentTrip.mileage ? `
@@ -3998,14 +3932,14 @@ entTrip.rentalInspection.pickupDate ? UIComponents.formatDate(this.currentTrip.r
                 ` : ''}
             `;
 
-            // Show cost comparison if both expected and actual are present
-            const costComparisonDisplay = document.getElementById('costComparisonDisplay');
-            if (expectedCost > 0 && actualCost > 0) {
-                const difference = actualCost - expectedCost;
-                const percentDiff = ((difference / expectedCost) * 100).toFixed(1);
-                const isOver = difference > 0;
+        // Show cost comparison if both expected and actual are present
+        const costComparisonDisplay = document.getElementById('costComparisonDisplay');
+        if (expectedCost > 0 && actualCost > 0) {
+            const difference = actualCost - expectedCost;
+            const percentDiff = ((difference / expectedCost) * 100).toFixed(1);
+            const isOver = difference > 0;
 
-                costComparisonDisplay.innerHTML = `
+            costComparisonDisplay.innerHTML = `
                     <div style="padding: 0.75rem; background: ${isOver ? 'rgba(239, 68, 68, 0.1)' : 'rgba(34, 197, 94, 0.1)'}; border-radius: 6px; border-left: 3px solid ${isOver ? '#ef4444' : '#22c55e'};">
                         <div style="font-size: 0.75rem; font-weight: 600; margin-bottom: 0.25rem; color: ${isOver ? '#ef4444' : '#22c55e'};">
                             ${isOver ? '⚠️ Over Budget' : '✅ Under Budget'}
@@ -4019,275 +3953,275 @@ entTrip.rentalInspection.pickupDate ? UIComponents.formatDate(this.currentTrip.r
                         </div>
                     </div>
                 `;
-            } else {
-                costComparisonDisplay.innerHTML = '';
-            }
-        };
+        } else {
+            costComparisonDisplay.innerHTML = '';
+        }
+    };
 
-        startInput.oninput = updateCalculations;
-        endInput.oninput = updateCalculations;
-        fuelInput.oninput = updateCalculations;
-        document.getElementById('expectedFuelCost').oninput = updateCalculations;
-        document.getElementById('fuelCost').oninput = updateCalculations;
+    startInput.oninput = updateCalculations;
+    endInput.oninput = updateCalculations;
+    fuelInput.oninput = updateCalculations;
+    document.getElementById('expectedFuelCost').oninput = updateCalculations;
+    document.getElementById('fuelCost').oninput = updateCalculations;
 
-        // Initial calculation
+    // Initial calculation
+    if (!day.noDrivingToday) {
+        updateCalculations();
+    }
+
+    // Set up form submission
+    document.getElementById('odometerForm').onsubmit = (e) => {
+        e.preventDefault();
+
+        day.noDrivingToday = noDrivingCheckbox.checked;
+        day.transportNotes = document.getElementById('transportNotes').value.trim();
+
         if (!day.noDrivingToday) {
-            updateCalculations();
-        }
+            const start = parseFloat(startInput.value);
+            const end = parseFloat(endInput.value);
 
-        // Set up form submission
-        document.getElementById('odometerForm').onsubmit = (e) => {
-            e.preventDefault();
-
-            day.noDrivingToday = noDrivingCheckbox.checked;
-            day.transportNotes = document.getElementById('transportNotes').value.trim();
-
-            if (!day.noDrivingToday) {
-                const start = parseFloat(startInput.value);
-                const end = parseFloat(endInput.value);
-
-                // Validate endOdometer >= startOdometer
-                if (end < start) {
-                    UIComponents.showToast('End odometer must be greater than or equal to start odometer', 'error', 3000);
-                    return;
-                }
-
-                day.startOdometer = start;
-                day.endOdometer = end;
-                day.fuelFilled = parseFloat(fuelInput.value) || null;
-                day.expectedFuelCost = parseFloat(document.getElementById('expectedFuelCost').value) || null;
-                day.fuelCost = parseFloat(document.getElementById('fuelCost').value) || null;
-
-                // Auto-create or update fuel expense
-                this.reconcileDayExpenses(day);
-            } else {
-                // Clear odometer data for no-driving days
-                day.startOdometer = null;
-                day.endOdometer = null;
-                day.fuelFilled = null;
-                day.fuelCost = null;
-
-                if (!day.expenses) day.expenses = [];
-
-                // Find existing fuel expense
-                const existingIndex = day.expenses.findIndex(e =>
-                    e._autoFuel === true || e.name === 'Fuel' || e.category === 'Fuel'
-                );
-
-                if (existingIndex !== -1) {
-                    day.expenses.splice(existingIndex, 1);
-                }
+            // Validate endOdometer >= startOdometer
+            if (end < start) {
+                UIComponents.showToast('End odometer must be greater than or equal to start odometer', 'error', 3000);
+                return;
             }
 
-            this.currentTrip.updatedAt = new Date().toISOString();
-            Storage.saveTrip(this.currentTrip);
+            day.startOdometer = start;
+            day.endOdometer = end;
+            day.fuelFilled = parseFloat(fuelInput.value) || null;
+            day.expectedFuelCost = parseFloat(document.getElementById('expectedFuelCost').value) || null;
+            day.fuelCost = parseFloat(document.getElementById('fuelCost').value) || null;
 
-            UIComponents.closeModal();
-            UIComponents.closeModal();
-            this.renderDays();
-            this.updateTripStats();
-            UIComponents.showToast('Transport details updated!', 'success');
-        };
-
-        // Set up cancel button
-        document.getElementById('cancelBtn').onclick = () => {
-            UIComponents.closeModal();
-        };
-    },
-
-    /**
-     * Reconcile Day Expenses (Nuclear Rebuild)
-     * Derived property: Expenses are calculated purely from Active Items (Activities, Meals, Stay, Fuel).
-     * This eliminates legacy ghosts and ensures perfect tallying.
-     */
-    reconcileDayExpenses(day) {
-        // RESET: Start with a clean slate
-        const autoExpenses = [];
-
-        // 1. Generate Activity Expenses
-        if (day.activities) {
-            day.activities.forEach(activity => {
-                const cost = activity.actualCost || activity.actualExpense || 0;
-                const expected = activity.expectedCost || activity.expectedExpense || 0;
-
-                // Track if either cost exists
-                if (cost > 0 || expected > 0) {
-                    autoExpenses.push(new Expense({
-                        name: activity.name,
-                        category: 'Activity',
-                        actualAmount: cost,
-                        expectedAmount: expected,
-                        splitCount: this.currentTrip.travelers || 1,
-                        source: 'Activity',
-                        linkedDayId: day.id,
-                        linkedActivityId: activity.id
-                    }));
-                }
-            });
-        }
-
-        // 2. Generate Meal Expenses (Grouped by Type)
-        if (day.meals) {
-            ['breakfast', 'lunch', 'dinner', 'snacks'].forEach(type => {
-                const mealsOfType = day.meals.filter(m => m.type === type);
-
-                if (mealsOfType.length > 0) {
-                    const totalActualCost = mealsOfType.reduce((sum, m) => sum + (m.actualCost || 0), 0);
-                    const totalExpectedCost = mealsOfType.reduce((sum, m) => sum + (m.expectedCost || 0), 0);
-
-                    // Use splitCount from the first meal of this type, or fall back to trip travelers
-                    const splitCount = mealsOfType[0].splitCount || this.currentTrip.numberOfTravelers || 1;
-
-                    if (totalActualCost > 0 || totalExpectedCost > 0) {
-                        autoExpenses.push(new Expense({
-                            name: type.charAt(0).toUpperCase() + type.slice(1),
-                            category: 'Food',
-                            actualAmount: totalActualCost,
-                            expectedAmount: totalExpectedCost,
-                            splitCount: splitCount,
-                            source: 'Meal',
-                            linkedDayId: day.id
-                        }));
-                    }
-                }
-            });
-        }
-
-        // 3. Generate Travel Expenses
-        if (day.travel) {
-            day.travel.forEach(travel => {
-                const actualCost = travel.actualCost || 0;
-                const expectedCost = travel.expectedCost || 0;
-                const splitCount = travel.splitBetween || this.currentTrip.numberOfTravelers || 1;
-
-                if (actualCost > 0 || expectedCost > 0) {
-                    autoExpenses.push(new Expense({
-                        name: `${travel.type}: ${travel.from} → ${travel.to}`,
-                        category: 'Travel',
-                        actualAmount: actualCost,
-                        expectedAmount: expectedCost,
-                        splitCount: splitCount,
-                        source: 'Travel',
-                        linkedDayId: day.id,
-                        linkedTravelId: travel.id
-                    }));
-                }
-            });
-        }
-
-        // 4. Generate Stay Expense
-        if (day.accommodation && (day.accommodation.actualCost > 0 || day.accommodation.expectedCost > 0)) {
-            autoExpenses.push(new Expense({
-                name: day.accommodation.name || 'Accommodation',
-                category: 'Stay',
-                actualAmount: day.accommodation.actualCost || 0,
-                expectedAmount: day.accommodation.expectedCost || 0,
-                splitCount: this.currentTrip.travelers || 1,
-                source: 'Accommodation',
-                linkedDayId: day.id,
-                notes: day.accommodation.type
-            }));
-        }
-
-        // 4. Generate Fuel Expense
-        if ((day.fuelCost && day.fuelCost > 0) || (day.expectedFuelCost && day.expectedFuelCost > 0)) {
-            autoExpenses.push(new Expense({
-                name: 'Fuel',
-                category: 'Fuel',
-                actualAmount: day.fuelCost || 0,
-                expectedAmount: day.expectedFuelCost || 0,
-                splitCount: this.currentTrip.travelers || 1,
-                source: 'Fuel',
-                linkedDayId: day.id,
-                notes: day.fuelFilled ? `${day.fuelFilled} L` : ''
-            }));
-        }
-
-        // 5. Finalize
-        const serializedAuto = autoExpenses.map(e => e.toJSON ? e.toJSON() : e);
-        // Replace entire list
-        day.expenses = serializedAuto;
-    },
-
-    /**
-     * Reconcile all days (Global Cleanup)
-     */
-    reconcileAllDays() {
-        if (!this.currentTrip || !this.currentTrip.days) return;
-
-        console.log('[Reconcile] Running global expense reconciliation...');
-        this.currentTrip.days.forEach(day => {
+            // Auto-create or update fuel expense
             this.reconcileDayExpenses(day);
-        });
+        } else {
+            // Clear odometer data for no-driving days
+            day.startOdometer = null;
+            day.endOdometer = null;
+            day.fuelFilled = null;
+            day.fuelCost = null;
 
-        // Save cleaned state
+            if (!day.expenses) day.expenses = [];
+
+            // Find existing fuel expense
+            const existingIndex = day.expenses.findIndex(e =>
+                e._autoFuel === true || e.name === 'Fuel' || e.category === 'Fuel'
+            );
+
+            if (existingIndex !== -1) {
+                day.expenses.splice(existingIndex, 1);
+            }
+        }
+
+        this.currentTrip.updatedAt = new Date().toISOString();
         Storage.saveTrip(this.currentTrip);
-    },
 
-    /**
-     * Calculate per-person cost
-     */
-    calculatePerPersonCost(totalAmount, splitCount) {
-        return splitCount > 0 ? (totalAmount / splitCount) : 0;
-    },
+        UIComponents.closeModal();
+        UIComponents.closeModal();
+        this.renderDays();
+        this.updateTripStats();
+        UIComponents.showToast('Transport details updated!', 'success');
+    };
 
-    /**
-     * Calculate day total expenses
-     */
-    /**
-     * Calculate day total expenses
-     * RELIES 100% on day.expenses (Unified Source of Truth)
-     */
-    calculateDayTotal(day) {
-        let expected = 0, actual = 0;
+    // Set up cancel button
+    document.getElementById('cancelBtn').onclick = () => {
+        UIComponents.closeModal();
+    };
+},
 
-        // Sum ONLY from expenses list (which is now robustly reconciled)
-        if (day.expenses) {
-            day.expenses.forEach(expense => {
-                expected += expense.expectedAmount || 0;
-                actual += expense.actualAmount || 0;
-            });
-        }
+/**
+ * Reconcile Day Expenses (Nuclear Rebuild)
+ * Derived property: Expenses are calculated purely from Active Items (Activities, Meals, Stay, Fuel).
+ * This eliminates legacy ghosts and ensures perfect tallying.
+ */
+reconcileDayExpenses(day) {
+    // RESET: Start with a clean slate
+    const autoExpenses = [];
 
-        const variance = actual - expected;
-        return { expected, actual, variance };
-    },
+    // 1. Generate Activity Expenses
+    if (day.activities) {
+        day.activities.forEach(activity => {
+            const cost = activity.actualCost || activity.actualExpense || 0;
+            const expected = activity.expectedCost || activity.expectedExpense || 0;
 
-    /**
-     * Check if a day has incomplete actual expenses
-     * A day is incomplete if it has at least one expense with actualAmount = 0 or missing
-     */
-    isDayIncomplete(day) {
-        if (!day || !day.expenses || day.expenses.length === 0) {
-            return false; // No expenses = not incomplete
-        }
-
-        // Check if any expense has zero or missing actualAmount
-        return day.expenses.some(expense => {
-            return !expense.actualAmount || expense.actualAmount === 0;
+            // Track if either cost exists
+            if (cost > 0 || expected > 0) {
+                autoExpenses.push(new Expense({
+                    name: activity.name,
+                    category: 'Activity',
+                    actualAmount: cost,
+                    expectedAmount: expected,
+                    splitCount: this.currentTrip.travelers || 1,
+                    source: 'Activity',
+                    linkedDayId: day.id,
+                    linkedActivityId: activity.id
+                }));
+            }
         });
-    },
+    }
 
-    /**
-     * Update trip stats (header totals) reactive
-     * Re-renders the Budget Overview card to reflect expense changes
-     */
-    updateTripStats() {
-        const trip = this.currentTrip;
-        const totalExpected = UIComponents.calculateTotalExpected(trip);
-        const totalActual = UIComponents.calculateTotalActual(trip);
-        const variance = totalActual - totalExpected;
+    // 2. Generate Meal Expenses (Grouped by Type)
+    if (day.meals) {
+        ['breakfast', 'lunch', 'dinner', 'snacks'].forEach(type => {
+            const mealsOfType = day.meals.filter(m => m.type === type);
 
-        // Find and update the Budget Overview card
-        const budgetCard = document.querySelector('.budget-overview-card');
-        if (budgetCard) {
-            // Calculate values
-            const percentage = totalExpected > 0 ? Math.round((totalActual / totalExpected) * 100) : 0;
-            const isOverBudget = totalActual > totalExpected && totalExpected > 0;
-            const difference = Math.abs(variance);
+            if (mealsOfType.length > 0) {
+                const totalActualCost = mealsOfType.reduce((sum, m) => sum + (m.actualCost || 0), 0);
+                const totalExpectedCost = mealsOfType.reduce((sum, m) => sum + (m.expectedCost || 0), 0);
 
-            // Re-render the Budget Overview content
-            budgetCard.innerHTML = `
+                // Use splitCount from the first meal of this type, or fall back to trip travelers
+                const splitCount = mealsOfType[0].splitCount || this.currentTrip.numberOfTravelers || 1;
+
+                if (totalActualCost > 0 || totalExpectedCost > 0) {
+                    autoExpenses.push(new Expense({
+                        name: type.charAt(0).toUpperCase() + type.slice(1),
+                        category: 'Food',
+                        actualAmount: totalActualCost,
+                        expectedAmount: totalExpectedCost,
+                        splitCount: splitCount,
+                        source: 'Meal',
+                        linkedDayId: day.id
+                    }));
+                }
+            }
+        });
+    }
+
+    // 3. Generate Travel Expenses
+    if (day.travel) {
+        day.travel.forEach(travel => {
+            const actualCost = travel.actualCost || 0;
+            const expectedCost = travel.expectedCost || 0;
+            const splitCount = travel.splitBetween || this.currentTrip.numberOfTravelers || 1;
+
+            if (actualCost > 0 || expectedCost > 0) {
+                autoExpenses.push(new Expense({
+                    name: `${travel.type}: ${travel.from} → ${travel.to}`,
+                    category: 'Travel',
+                    actualAmount: actualCost,
+                    expectedAmount: expectedCost,
+                    splitCount: splitCount,
+                    source: 'Travel',
+                    linkedDayId: day.id,
+                    linkedTravelId: travel.id
+                }));
+            }
+        });
+    }
+
+    // 4. Generate Stay Expense
+    if (day.accommodation && (day.accommodation.actualCost > 0 || day.accommodation.expectedCost > 0)) {
+        autoExpenses.push(new Expense({
+            name: day.accommodation.name || 'Accommodation',
+            category: 'Stay',
+            actualAmount: day.accommodation.actualCost || 0,
+            expectedAmount: day.accommodation.expectedCost || 0,
+            splitCount: this.currentTrip.travelers || 1,
+            source: 'Accommodation',
+            linkedDayId: day.id,
+            notes: day.accommodation.type
+        }));
+    }
+
+    // 4. Generate Fuel Expense
+    if ((day.fuelCost && day.fuelCost > 0) || (day.expectedFuelCost && day.expectedFuelCost > 0)) {
+        autoExpenses.push(new Expense({
+            name: 'Fuel',
+            category: 'Fuel',
+            actualAmount: day.fuelCost || 0,
+            expectedAmount: day.expectedFuelCost || 0,
+            splitCount: this.currentTrip.travelers || 1,
+            source: 'Fuel',
+            linkedDayId: day.id,
+            notes: day.fuelFilled ? `${day.fuelFilled} L` : ''
+        }));
+    }
+
+    // 5. Finalize
+    const serializedAuto = autoExpenses.map(e => e.toJSON ? e.toJSON() : e);
+    // Replace entire list
+    day.expenses = serializedAuto;
+},
+
+/**
+ * Reconcile all days (Global Cleanup)
+ */
+reconcileAllDays() {
+    if (!this.currentTrip || !this.currentTrip.days) return;
+
+    console.log('[Reconcile] Running global expense reconciliation...');
+    this.currentTrip.days.forEach(day => {
+        this.reconcileDayExpenses(day);
+    });
+
+    // Save cleaned state
+    Storage.saveTrip(this.currentTrip);
+},
+
+/**
+ * Calculate per-person cost
+ */
+calculatePerPersonCost(totalAmount, splitCount) {
+    return splitCount > 0 ? (totalAmount / splitCount) : 0;
+},
+
+/**
+ * Calculate day total expenses
+ */
+/**
+ * Calculate day total expenses
+ * RELIES 100% on day.expenses (Unified Source of Truth)
+ */
+calculateDayTotal(day) {
+    let expected = 0, actual = 0;
+
+    // Sum ONLY from expenses list (which is now robustly reconciled)
+    if (day.expenses) {
+        day.expenses.forEach(expense => {
+            expected += expense.expectedAmount || 0;
+            actual += expense.actualAmount || 0;
+        });
+    }
+
+    const variance = actual - expected;
+    return { expected, actual, variance };
+},
+
+/**
+ * Check if a day has incomplete actual expenses
+ * A day is incomplete if it has at least one expense with actualAmount = 0 or missing
+ */
+isDayIncomplete(day) {
+    if (!day || !day.expenses || day.expenses.length === 0) {
+        return false; // No expenses = not incomplete
+    }
+
+    // Check if any expense has zero or missing actualAmount
+    return day.expenses.some(expense => {
+        return !expense.actualAmount || expense.actualAmount === 0;
+    });
+},
+
+/**
+ * Update trip stats (header totals) reactive
+ * Re-renders the Budget Overview card to reflect expense changes
+ */
+updateTripStats() {
+    const trip = this.currentTrip;
+    const totalExpected = UIComponents.calculateTotalExpected(trip);
+    const totalActual = UIComponents.calculateTotalActual(trip);
+    const variance = totalActual - totalExpected;
+
+    // Find and update the Budget Overview card
+    const budgetCard = document.querySelector('.budget-overview-card');
+    if (budgetCard) {
+        // Calculate values
+        const percentage = totalExpected > 0 ? Math.round((totalActual / totalExpected) * 100) : 0;
+        const isOverBudget = totalActual > totalExpected && totalExpected > 0;
+        const difference = Math.abs(variance);
+
+        // Re-render the Budget Overview content
+        budgetCard.innerHTML = `
                 <h3 style="margin: 0 0 2rem 0; font-size: 1.125rem; font-weight: 600; color: var(--color-text);">Budget Overview</h3>
                 
                 <!-- Section 1: Primary Budget Summary -->
@@ -4376,405 +4310,405 @@ entTrip.rentalInspection.pickupDate ? UIComponents.formatDate(this.currentTrip.r
                         font-weight: 500;
                     ">
                         ${isOverBudget
-                        ? `⚠️ You overspent by ${UIComponents.formatCurrency(difference)} — ${percentage}% of budget exceeded`
-                        : `✅ You saved ${UIComponents.formatCurrency(difference)} — only ${percentage}% of budget used`
-                    }
+                    ? `⚠️ You overspent by ${UIComponents.formatCurrency(difference)} — ${percentage}% of budget exceeded`
+                    : `✅ You saved ${UIComponents.formatCurrency(difference)} — only ${percentage}% of budget used`
+                }
                     </div>
                 ` : ''}
             `;
-        }
-    },
+    }
+},
 
-    /**
-     * Add a new day to the trip
-     */
-    addDayToTrip() {
-        if (!this.currentTrip || !this.currentTrip.days) return;
+/**
+ * Add a new day to the trip
+ */
+addDayToTrip() {
+    if (!this.currentTrip || !this.currentTrip.days) return;
 
-        const days = this.currentTrip.days;
-        const lastDay = days[days.length - 1];
+    const days = this.currentTrip.days;
+    const lastDay = days[days.length - 1];
 
-        // Calculate new date
-        const newDate = new Date(lastDay.date);
-        newDate.setDate(newDate.getDate() + 1);
+    // Calculate new date
+    const newDate = new Date(lastDay.date);
+    newDate.setDate(newDate.getDate() + 1);
 
-        // Create new ID
-        const newDayId = 'day_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    // Create new ID
+    const newDayId = 'day_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
 
-        // Initialize with complete structure matching generateDays
-        const newDay = {
-            id: newDayId,
-            tripId: this.currentTrip.id,
-            dayNumber: lastDay.dayNumber + 1,
-            date: newDate.toISOString().split('T')[0],
+    // Initialize with complete structure matching generateDays
+    const newDay = {
+        id: newDayId,
+        tripId: this.currentTrip.id,
+        dayNumber: lastDay.dayNumber + 1,
+        date: newDate.toISOString().split('T')[0],
 
-            // Odometer tracking (for self-drive trips)
-            startOdometer: null,
-            endOdometer: null,
+        // Odometer tracking (for self-drive trips)
+        startOdometer: null,
+        endOdometer: null,
 
-            // Fuel tracking
-            fuelFilled: null,
-            fuelCost: null,
-            expectedFuelCost: null,
+        // Fuel tracking
+        fuelFilled: null,
+        fuelCost: null,
+        expectedFuelCost: null,
 
-            // Transport
-            transportNotes: '',
-            noDrivingToday: false,
+        // Transport
+        transportNotes: '',
+        noDrivingToday: false,
 
-            // Accommodation
-            accommodation: {
-                type: 'hotel',
-                name: '',
-                expectedCost: 0,
-                actualCost: 0,
-                notes: ''
-            },
+        // Accommodation
+        accommodation: {
+            type: 'hotel',
+            name: '',
+            expectedCost: 0,
+            actualCost: 0,
+            notes: ''
+        },
 
-            // Collections
-            meals: [],
-            activities: [],
-            travel: [],
-            expenses: [],
+        // Collections
+        meals: [],
+        activities: [],
+        travel: [],
+        expenses: [],
 
-            // Transport override
-            transportOverride: null,
+        // Transport override
+        transportOverride: null,
 
-            // Day notes
-            dayNotes: ''
-        };
+        // Day notes
+        dayNotes: ''
+    };
 
-        // Push and update trip
-        this.currentTrip.days.push(newDay);
-        this.currentTrip.endDate = newDate.toISOString();
+    // Push and update trip
+    this.currentTrip.days.push(newDay);
+    this.currentTrip.endDate = newDate.toISOString();
 
-        // Save and refresh
-        Storage.saveTrip(this.currentTrip);
-        this.renderTripDetail(this.currentTrip.id);
+    // Save and refresh
+    Storage.saveTrip(this.currentTrip);
+    this.renderTripDetail(this.currentTrip.id);
 
-        UIComponents.showToast('Day added successfully', 'success');
+    UIComponents.showToast('Day added successfully', 'success');
 
-        // Scroll to bottom
-        setTimeout(() => {
-            window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
-        }, 100);
-    },
+    // Scroll to bottom
+    setTimeout(() => {
+        window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+    }, 100);
+},
 
-    /**
-     * Delete a day from the trip
-     */
-    confirmDeleteDay(dayId) {
-        const day = this.currentTrip.days.find(d => d.id === dayId);
-        if (!day) return;
+/**
+ * Delete a day from the trip
+ */
+confirmDeleteDay(dayId) {
+    const day = this.currentTrip.days.find(d => d.id === dayId);
+    if (!day) return;
 
-        // Check if day has data
-        const hasData = (day.meals && day.meals.length > 0) ||
-            (day.activities && day.activities.length > 0) ||
-            (day.travel && day.travel.length > 0) ||
-            (day.accommodation) ||
-            (day.expenses && day.expenses.length > 0);
+    // Check if day has data
+    const hasData = (day.meals && day.meals.length > 0) ||
+        (day.activities && day.activities.length > 0) ||
+        (day.travel && day.travel.length > 0) ||
+        (day.accommodation) ||
+        (day.expenses && day.expenses.length > 0);
 
-        if (hasData) {
-            UIComponents.showConfirm(
-                'Delete Day ' + day.dayNumber,
-                'This day includes planned items or expenses. Are you sure you want to delete it? This cannot be undone.',
-                () => this.deleteDay(dayId)
-            );
-        } else {
-            this.deleteDay(dayId);
-        }
-    },
-
-    deleteDay(dayId) {
-        const trip = this.currentTrip;
-        const dayIndex = trip.days.findIndex(d => d.id === dayId);
-        if (dayIndex === -1) return;
-
-        // Cascade-delete day and all sub-entities from Firestore
-        if (typeof SyncServiceEnhanced !== 'undefined' && SyncServiceEnhanced.canSync()) {
-            SyncServiceEnhanced.deleteDayFromCloud(dayId, trip.id);
-        }
-
-        // Remove day
-        trip.days.splice(dayIndex, 1);
-
-        // Recalculate day numbers
-        trip.days.forEach((day, index) => {
-            day.dayNumber = index + 1;
-        });
-
-        // Update trip dates if needed (simplification: if last day deleted, adjust end date)
-        if (trip.days.length > 0) {
-            // Keep start date fixed per requirements "Do NOT change trip start date"
-            // But we might want to update endDate to match the new last day
-            const lastDay = trip.days[trip.days.length - 1];
-            trip.endDate = lastDay.date;
-        }
-
-        // Save and refresh
-        Storage.saveTrip(trip);
-        this.renderTripDetail(trip.id);
-        UIComponents.showToast('Day deleted', 'success');
-    },
-
-    /**
-     * Calculate trip total expenses
-     */
-    calculateTripTotal(trip) {
-        let expected = 0, actual = 0;
-
-        if (trip.days) {
-            trip.days.forEach(day => {
-                const dayTotal = this.calculateDayTotal(day);
-                expected += dayTotal.expected;
-                actual += dayTotal.actual;
-            });
-        }
-
-        return {
-            expected,
-            actual,
-            variance: actual - expected
-        };
-    },
-
-    /**
-     * Calculate distance for a day (self-drive trips)
-     */
-    calculateDayDistance(day) {
-        if (day.startOdometer !== null && day.endOdometer !== null) {
-            return day.endOdometer - day.startOdometer;
-        }
-        return 0;
-    },
-
-    /**
-     * Calculate total trip distance (self-drive trips)
-     */
-    calculateTotalDistance(trip) {
-        if (!trip.isSelfDriveTrip || !trip.days) return 0;
-
-        return trip.days.reduce((total, day) => {
-            return total + this.calculateDayDistance(day);
-        }, 0);
-    },
-
-    /**
-     * Calculate total fuel cost (self-drive trips)
-     */
-    calculateTotalFuelCost(trip) {
-        if (!trip.isSelfDriveTrip || !trip.days) return 0;
-
-        return trip.days.reduce((total, day) => {
-            return total + (day.fuelCost || 0);
-        }, 0);
-    },
-
-    /**
-     * Calculate total fuel filled (self-drive trips)
-     */
-    calculateTotalFuelFilled(trip) {
-        if (!trip.isSelfDriveTrip || !trip.days) return 0;
-
-        return trip.days.reduce((total, day) => {
-            return total + (day.fuelFilled || 0);
-        }, 0);
-    },
-
-    /**
-     // Calculate actual fuel efficiency (self-drive trips)
-    calculateActualFuelEfficiency(trip) {
-        const totalDistance = this.calculateTotalDistance(trip);
-        const totalFuel = this.calculateTotalFuelFilled(trip);
-    
-        if (totalDistance > 0 && totalFuel > 0) {
-            return (totalDistance / totalFuel).toFixed(1);
-        }
-    
-        return null;
-    },
-    
-    /**
-     * Get previous day
-     */
-    getPreviousDay(day) {
-        if (!this.currentTrip || !this.currentTrip.days) return null;
-        const dayIndex = this.currentTrip.days.findIndex(d => d.id === day.id);
-        if (dayIndex <= 0) return null;
-        return this.currentTrip.days[dayIndex - 1];
-    },
-
-    /**
-     * Update day odometer auto-prefill
-     */
-    updateDayOdometerPrefill(dayIndex) {
-        if (!this.currentTrip.isSelfDriveTrip || !this.currentTrip.days) return;
-
-        // Update next day's start odometer from current day's end
-        if (dayIndex < this.currentTrip.days.length - 1) {
-            const currentDay = this.currentTrip.days[dayIndex];
-            const nextDay = this.currentTrip.days[dayIndex + 1];
-
-            if (currentDay.endOdometer !== null) {
-                nextDay.startOdometer = currentDay.endOdometer;
-            }
-        }
-    },
-
-    /**
-     * Copy accommodation from one day to another
-     */
-    copyAccommodationFromDay(fromDayIndex, toDayIndex) {
-        if (!this.currentTrip.days) return;
-
-        const fromDay = this.currentTrip.days[fromDayIndex];
-        const toDay = this.currentTrip.days[toDayIndex];
-
-        if (fromDay && toDay && fromDay.accommodation) {
-            // Deep copy accommodation
-            toDay.accommodation = {
-                type: fromDay.accommodation.type,
-                name: fromDay.accommodation.name,
-                expectedCost: fromDay.accommodation.expectedCost,
-                actualCost: 0, // Reset actual cost
-                notes: fromDay.accommodation.notes
-            };
-
-            // Save changes
-            Storage.saveTrip(this.currentTrip);
-            UIComponents.showToast(`Accommodation copied from Day ${fromDayIndex + 1} `, 'success');
-        }
-    },
-
-    /**
-     * Copy food from one day to another
-     */
-    copyFoodFromDay(fromDayIndex, toDayIndex) {
-        if (!this.currentTrip.days) return;
-
-        const fromDay = this.currentTrip.days[fromDayIndex];
-        const toDay = this.currentTrip.days[toDayIndex];
-
-        if (fromDay && toDay && fromDay.food) {
-            // Deep copy food
-            toDay.food = {
-                breakfast: {
-                    expected: fromDay.food.breakfast.expected,
-                    actual: 0,
-                    venue: fromDay.food.breakfast.venue,
-                    notes: fromDay.food.breakfast.notes
-                },
-                lunch: {
-                    expected: fromDay.food.lunch.expected,
-                    actual: 0,
-                    venue: fromDay.food.lunch.venue,
-                    notes: fromDay.food.lunch.notes
-                },
-                dinner: {
-                    expected: fromDay.food.dinner.expected,
-                    actual: 0,
-                    venue: fromDay.food.dinner.venue,
-                    notes: fromDay.food.dinner.notes
-                }
-            };
-
-            // Save changes
-            Storage.saveTrip(this.currentTrip);
-            UIComponents.showToast(`Food plan copied from Day ${fromDayIndex + 1} `, 'success');
-        }
-    },
-
-    /**
-     * Check if similar expense exists
-     */
-    hasSimilarExpense(dayIndex, expenseName, category) {
-        if (!this.currentTrip.days || !this.currentTrip.days[dayIndex]) return false;
-
-        const day = this.currentTrip.days[dayIndex];
-        if (!day.expenses) return false;
-
-        return day.expenses.some(expense =>
-            expense.expenseName.toLowerCase().trim() === expenseName.toLowerCase().trim() &&
-            expense.category === category
+    if (hasData) {
+        UIComponents.showConfirm(
+            'Delete Day ' + day.dayNumber,
+            'This day includes planned items or expenses. Are you sure you want to delete it? This cannot be undone.',
+            () => this.deleteDay(dayId)
         );
-    },
+    } else {
+        this.deleteDay(dayId);
+    }
+},
 
-    /**
-     * Toggle transport override for a day
-     */
-    toggleTransportOverride(dayIndex, enabled, transportMode = null) {
-        if (!this.currentTrip.days || !this.currentTrip.days[dayIndex]) return;
+deleteDay(dayId) {
+    const trip = this.currentTrip;
+    const dayIndex = trip.days.findIndex(d => d.id === dayId);
+    if (dayIndex === -1) return;
 
-        const day = this.currentTrip.days[dayIndex];
+    // Cascade-delete day and all sub-entities from Firestore
+    if (typeof SyncServiceEnhanced !== 'undefined' && SyncServiceEnhanced.canSync()) {
+        SyncServiceEnhanced.deleteDayFromCloud(dayId, trip.id);
+    }
 
-        if (enabled && transportMode) {
-            day.transportOverride = transportMode;
-        } else {
-            day.transportOverride = null;
+    // Remove day
+    trip.days.splice(dayIndex, 1);
+
+    // Recalculate day numbers
+    trip.days.forEach((day, index) => {
+        day.dayNumber = index + 1;
+    });
+
+    // Update trip dates if needed (simplification: if last day deleted, adjust end date)
+    if (trip.days.length > 0) {
+        // Keep start date fixed per requirements "Do NOT change trip start date"
+        // But we might want to update endDate to match the new last day
+        const lastDay = trip.days[trip.days.length - 1];
+        trip.endDate = lastDay.date;
+    }
+
+    // Save and refresh
+    Storage.saveTrip(trip);
+    this.renderTripDetail(trip.id);
+    UIComponents.showToast('Day deleted', 'success');
+},
+
+/**
+ * Calculate trip total expenses
+ */
+calculateTripTotal(trip) {
+    let expected = 0, actual = 0;
+
+    if (trip.days) {
+        trip.days.forEach(day => {
+            const dayTotal = this.calculateDayTotal(day);
+            expected += dayTotal.expected;
+            actual += dayTotal.actual;
+        });
+    }
+
+    return {
+        expected,
+        actual,
+        variance: actual - expected
+    };
+},
+
+/**
+ * Calculate distance for a day (self-drive trips)
+ */
+calculateDayDistance(day) {
+    if (day.startOdometer !== null && day.endOdometer !== null) {
+        return day.endOdometer - day.startOdometer;
+    }
+    return 0;
+},
+
+/**
+ * Calculate total trip distance (self-drive trips)
+ */
+calculateTotalDistance(trip) {
+    if (!trip.isSelfDriveTrip || !trip.days) return 0;
+
+    return trip.days.reduce((total, day) => {
+        return total + this.calculateDayDistance(day);
+    }, 0);
+},
+
+/**
+ * Calculate total fuel cost (self-drive trips)
+ */
+calculateTotalFuelCost(trip) {
+    if (!trip.isSelfDriveTrip || !trip.days) return 0;
+
+    return trip.days.reduce((total, day) => {
+        return total + (day.fuelCost || 0);
+    }, 0);
+},
+
+/**
+ * Calculate total fuel filled (self-drive trips)
+ */
+calculateTotalFuelFilled(trip) {
+    if (!trip.isSelfDriveTrip || !trip.days) return 0;
+
+    return trip.days.reduce((total, day) => {
+        return total + (day.fuelFilled || 0);
+    }, 0);
+},
+
+/**
+ // Calculate actual fuel efficiency (self-drive trips)
+calculateActualFuelEfficiency(trip) {
+    const totalDistance = this.calculateTotalDistance(trip);
+    const totalFuel = this.calculateTotalFuelFilled(trip);
+ 
+    if (totalDistance > 0 && totalFuel > 0) {
+        return (totalDistance / totalFuel).toFixed(1);
+    }
+ 
+    return null;
+},
+ 
+/**
+ * Get previous day
+ */
+getPreviousDay(day) {
+    if (!this.currentTrip || !this.currentTrip.days) return null;
+    const dayIndex = this.currentTrip.days.findIndex(d => d.id === day.id);
+    if (dayIndex <= 0) return null;
+    return this.currentTrip.days[dayIndex - 1];
+},
+
+/**
+ * Update day odometer auto-prefill
+ */
+updateDayOdometerPrefill(dayIndex) {
+    if (!this.currentTrip.isSelfDriveTrip || !this.currentTrip.days) return;
+
+    // Update next day's start odometer from current day's end
+    if (dayIndex < this.currentTrip.days.length - 1) {
+        const currentDay = this.currentTrip.days[dayIndex];
+        const nextDay = this.currentTrip.days[dayIndex + 1];
+
+        if (currentDay.endOdometer !== null) {
+            nextDay.startOdometer = currentDay.endOdometer;
         }
+    }
+},
+
+/**
+ * Copy accommodation from one day to another
+ */
+copyAccommodationFromDay(fromDayIndex, toDayIndex) {
+    if (!this.currentTrip.days) return;
+
+    const fromDay = this.currentTrip.days[fromDayIndex];
+    const toDay = this.currentTrip.days[toDayIndex];
+
+    if (fromDay && toDay && fromDay.accommodation) {
+        // Deep copy accommodation
+        toDay.accommodation = {
+            type: fromDay.accommodation.type,
+            name: fromDay.accommodation.name,
+            expectedCost: fromDay.accommodation.expectedCost,
+            actualCost: 0, // Reset actual cost
+            notes: fromDay.accommodation.notes
+        };
 
         // Save changes
         Storage.saveTrip(this.currentTrip);
-    },
-
-    /**
-     * Get effective transport mode for a day
-     */
-    getEffectiveTransportMode(dayIndex) {
-        if (!this.currentTrip.days || !this.currentTrip.days[dayIndex]) {
-            return this.currentTrip.defaultTransportMode;
-        }
-
-        const day = this.currentTrip.days[dayIndex];
-        return day.transportOverride || this.currentTrip.defaultTransportMode;
-    },
-
-    /**
-     * Confirm delete trip
-     */
-    confirmDeleteTrip(tripId) {
-        const trip = Storage.getTrip(tripId);
-        if (!trip) return;
-
-        UIComponents.showConfirm(
-            'Delete Trip',
-            `Are you sure you want to delete "${trip.tripName || trip.name}" ? This action cannot be undone.`,
-            () => {
-                this.deleteTrip(tripId);
-            }
-        );
-    },
-
-    /**
-     * Delete a trip
-     */
-    deleteTrip(tripId) {
-        Storage.deleteTrip(tripId);
-        UIComponents.showToast('Trip deleted successfully', 'success');
-
-        // Refresh the view
-        const trips = Storage.getTrips();
-        if (trips.length === 0) {
-            this.showWelcomeScreen();
-        } else {
-            // If we're on the trip detail screen for the deleted trip, go back to list
-            if (this.currentScreen === 'tripDetail' && this.currentTrip?.id === tripId) {
-                this.showTripList();
-            } else {
-                // Otherwise just refresh the trip list
-                this.showTripList();
-            }
-        }
-    },
-
-    /**
-     * Hide all screens
-     */
-    hideAllScreens() {
-        document.getElementById('welcomeScreen').classList.add('hidden');
-        document.getElementById('tripListScreen').classList.add('hidden');
-        document.getElementById('tripFormScreen').classList.add('hidden');
-        document.getElementById('tripDetailScreen').classList.add('hidden');
+        UIComponents.showToast(`Accommodation copied from Day ${fromDayIndex + 1} `, 'success');
     }
+},
+
+/**
+ * Copy food from one day to another
+ */
+copyFoodFromDay(fromDayIndex, toDayIndex) {
+    if (!this.currentTrip.days) return;
+
+    const fromDay = this.currentTrip.days[fromDayIndex];
+    const toDay = this.currentTrip.days[toDayIndex];
+
+    if (fromDay && toDay && fromDay.food) {
+        // Deep copy food
+        toDay.food = {
+            breakfast: {
+                expected: fromDay.food.breakfast.expected,
+                actual: 0,
+                venue: fromDay.food.breakfast.venue,
+                notes: fromDay.food.breakfast.notes
+            },
+            lunch: {
+                expected: fromDay.food.lunch.expected,
+                actual: 0,
+                venue: fromDay.food.lunch.venue,
+                notes: fromDay.food.lunch.notes
+            },
+            dinner: {
+                expected: fromDay.food.dinner.expected,
+                actual: 0,
+                venue: fromDay.food.dinner.venue,
+                notes: fromDay.food.dinner.notes
+            }
+        };
+
+        // Save changes
+        Storage.saveTrip(this.currentTrip);
+        UIComponents.showToast(`Food plan copied from Day ${fromDayIndex + 1} `, 'success');
+    }
+},
+
+/**
+ * Check if similar expense exists
+ */
+hasSimilarExpense(dayIndex, expenseName, category) {
+    if (!this.currentTrip.days || !this.currentTrip.days[dayIndex]) return false;
+
+    const day = this.currentTrip.days[dayIndex];
+    if (!day.expenses) return false;
+
+    return day.expenses.some(expense =>
+        expense.expenseName.toLowerCase().trim() === expenseName.toLowerCase().trim() &&
+        expense.category === category
+    );
+},
+
+/**
+ * Toggle transport override for a day
+ */
+toggleTransportOverride(dayIndex, enabled, transportMode = null) {
+    if (!this.currentTrip.days || !this.currentTrip.days[dayIndex]) return;
+
+    const day = this.currentTrip.days[dayIndex];
+
+    if (enabled && transportMode) {
+        day.transportOverride = transportMode;
+    } else {
+        day.transportOverride = null;
+    }
+
+    // Save changes
+    Storage.saveTrip(this.currentTrip);
+},
+
+/**
+ * Get effective transport mode for a day
+ */
+getEffectiveTransportMode(dayIndex) {
+    if (!this.currentTrip.days || !this.currentTrip.days[dayIndex]) {
+        return this.currentTrip.defaultTransportMode;
+    }
+
+    const day = this.currentTrip.days[dayIndex];
+    return day.transportOverride || this.currentTrip.defaultTransportMode;
+},
+
+/**
+ * Confirm delete trip
+ */
+confirmDeleteTrip(tripId) {
+    const trip = Storage.getTrip(tripId);
+    if (!trip) return;
+
+    UIComponents.showConfirm(
+        'Delete Trip',
+        `Are you sure you want to delete "${trip.tripName || trip.name}" ? This action cannot be undone.`,
+        () => {
+            this.deleteTrip(tripId);
+        }
+    );
+},
+
+/**
+ * Delete a trip
+ */
+deleteTrip(tripId) {
+    Storage.deleteTrip(tripId);
+    UIComponents.showToast('Trip deleted successfully', 'success');
+
+    // Refresh the view
+    const trips = Storage.getTrips();
+    if (trips.length === 0) {
+        this.showWelcomeScreen();
+    } else {
+        // If we're on the trip detail screen for the deleted trip, go back to list
+        if (this.currentScreen === 'tripDetail' && this.currentTrip?.id === tripId) {
+            this.showTripList();
+        } else {
+            // Otherwise just refresh the trip list
+            this.showTripList();
+        }
+    }
+},
+
+/**
+ * Hide all screens
+ */
+hideAllScreens() {
+    document.getElementById('welcomeScreen').classList.add('hidden');
+    document.getElementById('tripListScreen').classList.add('hidden');
+    document.getElementById('tripFormScreen').classList.add('hidden');
+    document.getElementById('tripDetailScreen').classList.add('hidden');
+}
 };
 
 // Initialize app when DOM is ready
