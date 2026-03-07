@@ -61,27 +61,41 @@
     --spacing-xl: 2rem;
     --spacing-2xl: 3rem;
 
-    /* Typography - Clear Hierarchy */
-    --font-primary: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+    /* Typography - Outfit (body) + Playfair Display (headings) */
+    --font-body: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-primary: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+    /* alias */
+    --font-heading: 'Playfair Display', Georgia, serif;
     --font-serif: 'Playfair Display', Georgia, serif;
+    /* alias */
 
-    /* Font Sizes */
-    --font-size-label: 0.75rem;
-    /* 12px - Labels */
-    --font-size-label-lg: 0.875rem;
-    /* 14px - Larger labels */
+    /* Font Sizes — user-specified hierarchy */
+    --font-size-brand: 1.625rem;
+    /* 26px — logo/brand */
+    --font-size-page-title: 1.5rem;
+    /* 24px — page titles */
+    --font-size-day-title: 1.25rem;
+    /* 20px — day card titles */
+    --font-size-value: 1.125rem;
+    /* 18px — amount values */
+    --font-size-item: 1rem;
+    /* 16px — item names */
     --font-size-base: 1rem;
-    /* 16px - Body text */
+    /* 16px — body text */
+    --font-size-button: 0.9375rem;
+    /* 15px — button text */
+    --font-size-label-lg: 0.875rem;
+    /* 14px — larger labels */
     --font-size-card-title: 1.125rem;
-    /* 18px - Card titles */
+    /* 18px — card titles */
     --font-size-section: 1.25rem;
-    /* 20px - Section titles */
-    --font-size-value: 1.375rem;
-    /* 22px - Primary values */
+    /* 20px — section titles */
+    --font-size-body: 0.8125rem;
+    /* 13px — body/helper */
+    --font-size-label: 0.6875rem;
+    /* 11px — small labels/tags */
     --font-size-value-lg: 1.5rem;
-    /* 24px - Large values */
-    --font-size-page-title: 1.75rem;
-    /* 28px - Page titles */
+    /* 24px — large values */
 
     /* Font Weights */
     --font-weight-normal: 400;
@@ -1181,4 +1195,122 @@ details>div {
         font-size: 0.8rem !important;
         padding: 5px 12px !important;
     }
+}
+/* ============================================================
+   TYPOGRAPHY UPGRADE: Playfair Display + Outfit
+   Applied globally — no color/layout changes
+   ============================================================ */
+
+/* --- Body default: Outfit 400 13px --- */
+body {
+    font-family: var(--font-body);
+    font-size: var(--font-size-body);
+}
+
+/* --- All inputs, selects, textareas, buttons: Outfit --- */
+input, select, textarea, button,
+.form-input, .form-select, .form-textarea,
+.btn, .btn-primary, .btn-secondary, .btn-danger {
+    font-family: var(--font-body);
+}
+
+/* --- Button text: Outfit 500 15px --- */
+.btn, .btn-primary, .btn-secondary, .btn-danger, button {
+    font-size: var(--font-size-button);
+    font-weight: 500;
+}
+
+/* ---- PLAYFAIR DISPLAY: Brand / Logo ---- */
+.app-logo, .nav-brand, [class*="brand"],
+h1.app-title, .header-brand, .logo-text {
+    font-family: var(--font-heading) !important;
+    font-size: var(--font-size-brand) !important;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+}
+
+/* ---- PLAYFAIR DISPLAY: Page titles (Plan Your Trip, Day-wise Plan) ---- */
+.screen-title, .form-title,
+.section-heading, [class*="page-title"], [class*="screen-title"] {
+    font-family: var(--font-heading);
+    font-size: var(--font-size-page-title);
+    font-weight: 600;
+    letter-spacing: -0.02em;
+}
+
+/* ---- PLAYFAIR DISPLAY: Trip name heading (e.g. "Ooty Trip") ---- */
+.trip-name, .trip-title,
+[class*="trip-name"], [class*="trip-title"] {
+    font-family: var(--font-heading);
+    font-size: var(--font-size-page-title);
+    font-weight: 600;
+}
+
+/* ---- PLAYFAIR DISPLAY: Day card titles (Day 1 - Friday) ---- */
+.day-title, .day-header h2, .day-header h3,
+[class*="day-title"], [class*="day-name"] {
+    font-family: var(--font-heading);
+    font-size: var(--font-size-day-title);
+    font-weight: 600;
+}
+
+/* ---- OUTFIT: Amount / monetary values ---- */
+.amount, .budget-amount, .expense-amount,
+[class*="amount"], [class*="-value"],
+.budget-number, .stat-value, .summary-value {
+    font-family: var(--font-body);
+    font-size: var(--font-size-value);
+    font-weight: 600;
+}
+
+/* ---- OUTFIT: Section labels (TRAVEL, STAY) ---- */
+.section-label, .category-label,
+[class*="section-label"], [class*="category-label"],
+[class*="-tag"], .label-upper {
+    font-family: var(--font-body);
+    font-size: var(--font-size-label);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+}
+
+/* ---- OUTFIT: Item names (Rental Car, Hotel name etc.) ---- */
+.item-name, .expense-name, .prebooking-title,
+[class*="item-name"], [class*="expense-name"] {
+    font-family: var(--font-body);
+    font-size: var(--font-size-item);
+    font-weight: 500;
+}
+
+/* ---- OUTFIT: Sub-labels (Expected, Actual) ---- */
+.sub-label, .field-label, .stat-label, .amount-label,
+[class*="sub-label"] {
+    font-family: var(--font-body);
+    font-size: var(--font-size-label);
+    font-weight: 300;
+}
+
+/* ---- OUTFIT: Form labels ---- */
+.form-label, label {
+    font-family: var(--font-body);
+    font-size: var(--font-size-label-lg);
+    font-weight: 500;
+}
+
+/* ---- OUTFIT: Helper / hint text ---- */
+.form-hint, .helper-text,
+[class*="hint"], [class*="helper"] {
+    font-family: var(--font-body);
+    font-size: var(--font-size-body);
+    font-weight: 400;
+}
+
+/* ---- Headings: h1-h3 Playfair, h4-h6 Outfit ---- */
+h1, h2, h3 {
+    font-family: var(--font-heading);
+    letter-spacing: -0.02em;
+}
+h4, h5, h6 {
+    font-family: var(--font-body);
+    font-weight: 600;
 }
