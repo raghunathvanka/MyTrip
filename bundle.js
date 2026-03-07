@@ -2912,91 +2912,236 @@ const App = {
         const expectedMileage = this.currentTrip.mileage;
 
         return `
-            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 1rem; border-radius: 8px; margin-bottom: 1rem; color: white;">
-                <div style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;" onclick="this.nextElementSibling.classList.toggle('hidden')">
-                    <h5 style="margin: 0; font-size: 0.875rem; text-transform: uppercase; letter-spacing: 0.05em; opacity: 0.9;">🚗 Self-Drive Details</h5>
-                    <span style="font-size: 1.25rem; opacity: 0.7;">▼</span>
+            <div class="sd-route-card" style="background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);border-radius:10px;margin-bottom:1rem;color:white;overflow:hidden;">
+
+                <!-- COLLAPSED HEADER (always visible) -->
+                <div class="sd-header" style="display:flex;align-items:center;height:56px;padding:0 1rem;cursor:pointer;gap:0.75rem;"
+                     onclick="const card=this.closest('.sd-route-card');card.classList.toggle('sd-open');">
+
+                    <!-- Left: icon + label -->
+                    <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
+                        <span style="font-size:1rem;">🚗</span>
+                        <span style="font-family:'Outfit',sans-serif;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;opacity:0.8;">Self-Drive</span>
+                    </div>
+
+                    <!-- Center: route line with animated dot -->
+                    <div style="flex:1;display:flex;align-items:center;gap:8px;min-width:0;overflow:hidden;">
+                        <span style="font-family:'Outfit',sans-serif;font-size:12px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:80px;">
+                            ${(this.currentTrip.rentalInspection && this.currentTrip.rentalInspection.pickupLocation)
+        ? this.currentTrip.rentalInspection.pickupLocation.split(',')[0]
+        : (this.currentTrip.destination ? this.currentTrip.destination.split(',')[0] : 'Start')}
+                        </span>
+                        <div class="sd-route-line" style="flex:1;position:relative;height:2px;background:rgba(255,255,255,0.2);border-radius:1px;min-width:28px;overflow:visible;">
+                            <div class="sd-route-dot"></div>
+                        </div>
+                        <span style="font-family:'Outfit',sans-serif;font-size:12px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:80px;">
+                            ${(this.currentTrip.rentalInspection && this.currentTrip.rentalInspection.returnLocation)
+        ? this.currentTrip.rentalInspection.returnLocation.split(',')[0]
+        : (this.currentTrip.destination || 'End')}
+                        </span>
+                    </div>
+
+                    <!-- Right: rotating chevron -->
+                    <svg class="sd-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                         stroke="rgba(255,255,255,0.7)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+                         style="flex-shrink:0;transition:transform 300ms ease;">
+                        <polyline points="6 9 12 15 18 9"></polyline>
+                    </svg>
                 </div>
-                
-                <div class="hidden" style="margin-top: 1rem;">
-                    ${hasOdometer ? `
-                        <div style="display: grid; grid-template-columns: 1fr auto 1fr auto; gap: 0.5rem; align-items: center; margin-bottom: 1rem;">
+
+                <!-- EXPANDED BODY -->
+                <div class="sd-body" style="max-height:0;overflow:hidden;transition:max-height 300ms ease;">
+                    <div style="padding:0 1rem 1rem;border-top:1px solid rgba(255,255,255,0.12);">
+
+                        <!-- Pickup / Return location -->
+                        ${(this.currentTrip.rentalInspection && (this.currentTrip.rentalInspection.pickupLocation || this.currentTrip.rentalInspection.returnLocation)) ? `
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;padding:0.75rem 0;border-bottom:1px solid rgba(255,255,255,0.1);">
                             <div>
-                                <div style="font-size: 0.75rem; opacity: 0.8; margin-bottom: 0.25rem;">START</div>
-                                <div style="background: rgba(255,255,255,0.2); padding: 0.5rem; border-radius: 6px; font-weight: 600; font-size: 1.125rem; text-align: center;">
-                                    ${day.startOdometer.toLocaleString()} km
-                                </div>
-                            </div>
-                            <div style="font-size: 1.5rem; opacity: 0.6;">→</div>
-                            <div>
-                                <div style="font-size: 0.75rem; opacity: 0.8; margin-bottom: 0.25rem;">END</div>
-                                <div style="background: rgba(255,255,255,0.2); padding: 0.5rem; border-radius: 6px; font-weight: 600; font-size: 1.125rem; text-align: center;">
-                                    ${day.endOdometer.toLocaleString()} km
-                                </div>
-                            </div>
-                            <div style="text-align: right;">
-                                <div style="font-size: 0.75rem; opacity: 0.8; margin-bottom: 0.25rem;">DISTANCE</div>
-                                <div style="background: rgba(255,255,255,0.3); padding: 0.5rem; border-radius: 6px; font-weight: 700; font-size: 1.125rem;">
-                                    ${distance} km
-                                </div>
-                            </div>
-                        </div>
-                    ` : `
-                        <div style="padding: 1rem; background: rgba(255,255,255,0.1); border-radius: 6px; margin-bottom: 1rem; text-align: center; font-size: 0.875rem; opacity: 0.8;">
-                            No odometer data yet
-                        </div>
-                    `}
-                    
-                    ${hasFuel ? `
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 1rem;">
-                            <div>
-                                <div style="font-size: 0.75rem; opacity: 0.8; margin-bottom: 0.25rem;">FUEL FILLED</div>
-                                <div style="background: rgba(255,255,255,0.2); padding: 0.5rem; border-radius: 6px; font-weight: 600;">
-                                    ${day.fuelFilled} L
-                                </div>
+                                <div style="font-family:'Outfit',sans-serif;font-size:10px;font-weight:400;color:rgba(255,255,255,0.5);margin-bottom:3px;">Pickup Location</div>
+                                <div style="font-family:'Outfit',sans-serif;font-size:13px;font-weight:500;">${this.currentTrip.rentalInspection.pickupLocation || '—'}</div>
                             </div>
                             <div>
-                                <div style="font-size: 0.75rem; opacity: 0.8; margin-bottom: 0.25rem;">FUEL COST</div>
-                                <div style="background: rgba(255,255,255,0.2); padding: 0.5rem; border-radius: 6px; font-weight: 600;">
-                                    ${UIComponents.formatCurrency(day.fuelCost || 0)}
-                                </div>
+                                <div style="font-family:'Outfit',sans-serif;font-size:10px;font-weight:400;color:rgba(255,255,255,0.5);margin-bottom:3px;">Return Location</div>
+                                <div style="font-family:'Outfit',sans-serif;font-size:13px;font-weight:500;">${this.currentTrip.rentalInspection.returnLocation || '—'}</div>
+                            </div>
+                        </div>` : ''}
+
+                        <!-- Vehicle + Rental company -->
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;padding:0.75rem 0;border-bottom:1px solid rgba(255,255,255,0.1);">
+                            <div>
+                                <div style="font-family:'Outfit',sans-serif;font-size:10px;font-weight:400;color:rgba(255,255,255,0.5);margin-bottom:3px;">🚗 Vehicle</div>
+                                <div style="font-family:'Outfit',sans-serif;font-size:13px;font-weight:500;">${this.currentTrip.vehicleName || '—'}</div>
+                            </div>
+                            <div>
+                                <div style="font-family:'Outfit',sans-serif;font-size:10px;font-weight:400;color:rgba(255,255,255,0.5);margin-bottom:3px;">🏢 Rental Co.</div>
+                                <div style="font-family:'Outfit',sans-serif;font-size:13px;font-weight:500;">${(this.currentTrip.rentalInspection && this.currentTrip.rentalInspection.rentalCompany) || '—'}</div>
                             </div>
                         </div>
-                    ` : ''}
-                    
-                    ${efficiency ? `
-                        <div style="margin-bottom: 1rem; padding: 0.75rem; background: rgba(255,255,255,0.15); border-radius: 6px;">
-                            <div style="display: flex; justify-content: space-between; align-items: center;">
-                                <div>
-                                    <div style="font-size: 0.75rem; opacity: 0.8; margin-bottom: 0.25rem;">EFFICIENCY</div>
-                                    <div style="font-weight: 700; font-size: 1.25rem;">${efficiency} km/l</div>
-                                </div>
-                                ${expectedMileage ? `
-                                    <div style="text-align: right;">
-                                        <div style="font-size: 0.75rem; opacity: 0.8;">Expected: ${expectedMileage} km/l</div>
-                                        <div style="font-size: 0.875rem; font-weight: 600;">
-                                            ${efficiency >= expectedMileage ? '✅ Better!' : '⚠️ Lower'}
-                                        </div>
-                                    </div>
-                                ` : ''}
+
+                        <!-- Pickup / Return dates -->
+                        ${(this.currentTrip.rentalInspection && (this.currentTrip.rentalInspection.pickupDate || this.currentTrip.rentalInspection.returnDate)) ? `
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;padding:0.75rem 0;border-bottom:1px solid rgba(255,255,255,0.1);">
+                            <div>
+                                <div style="font-family:'Outfit',sans-serif;font-size:10px;font-weight:400;color:rgba(255,255,255,0.5);margin-bottom:3px;">📅 Pickup Date</div>
+                                <div style="font-family:'Outfit',sans-serif;font-size:13px;font-weight:500;">${this.currentTrip.rentalInspection.pickupDate ? UIComponents.formatDate(this.currentTrip.rentalInspection.pickupDate) : '—'}</div>
                             </div>
+                            <div>
+                                <div style="font-family:'Outfit',sans-serif;font-size:10px;font-weight:400;color:rgba(255,255,255,0.5);margin-bottom:3px;">📅 Return Date</div>
+                                <div style="font-family:'Outfit',sans-serif;font-size:13px;font-weight:500;">${this.currentTrip.rentalInspection.returnDate ? UIComponents.formatDate(this.currentTrip.rentalInspection.returnDate) : '—'}</div>
+                            </div>
+                        </div>` : ''}
+
+                        <!-- Starting ODO + Expected mileage -->
+                        ${(this.currentTrip.startingOdometer != null || this.currentTrip.mileage) ? `
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;padding:0.75rem 0;border-bottom:1px solid rgba(255,255,255,0.1);">
+                            <div>
+                                <div style="font-family:'Outfit',sans-serif;font-size:10px;font-weight:400;color:rgba(255,255,255,0.5);margin-bottom:3px;">📍 Starting ODO</div>
+                                <div style="font-family:'Outfit',sans-serif;font-size:13px;font-weight:500;">${this.currentTrip.startingOdometer != null ? Number(this.currentTrip.startingOdometer).toLocaleString() + ' km' : '—'}</div>
+                            </div>
+                            <div>
+                                <div style="font-family:'Outfit',sans-serif;font-size:10px;font-weight:400;color:rgba(255,255,255,0.5);margin-bottom:3px;">⛽ Expected Mileage</div>
+                                <div style="font-family:'Outfit',sans-serif;font-size:13px;font-weight:500;">${this.currentTrip.mileage ? this.currentTrip.mileage + ' km/l' : '—'}</div>
+                            </div>
+                        </div>` : ''}
+
+                        <!-- Day odometer readings -->
+                        ${(hasOdometer) ? `
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;padding:0.75rem 0;border-bottom:1px solid rgba(255,255,255,0.1);">
+                            <div>
+                                <div style="font-family:'Outfit',sans-serif;font-size:10px;font-weight:400;color:rgba(255,255,255,0.5);margin-bottom:3px;">START ODO</div>
+                                <div style="font-family:'Outfit',sans-serif;font-size:13px;font-weight:500;">${day.startOdometer.toLocaleString()} km</div>
+                            </div>
+                            <div>
+                                <div style="font-family:'Outfit',sans-serif;font-size:10px;font-weight:400;color:rgba(255,255,255,0.5);margin-bottom:3px;">END ODO — ${distance} km driven</div>
+                                <div style="font-family:'Outfit',sans-serif;font-size:13px;font-weight:500;">${day.endOdometer.toLocaleString()} km</div>
+                            </div>
+                        </div>` : `<div style="padding:0.75rem 0;border-bottom:1px solid rgba(255,255,255,0.1);font-family:'Outfit',sans-serif;font-size:12px;color:rgba(255,255,255,0.4);text-align:center;">No odometer data for this day yet</div>`}
+
+                        <!-- Fuel -->
+                        ${hasFuel ? `
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;padding:0.75rem 0;border-bottom:1px solid rgba(255,255,255,0.1);">
+                            <div>
+                                <div style="font-family:'Outfit',sans-serif;font-size:10px;font-weight:400;color:rgba(255,255,255,0.5);margin-bottom:3px;">FUEL FILLED</div>
+                                <div style="font-family:'Outfit',sans-serif;font-size:13px;font-weight:500;">${day.fuelFilled} L</div>
+                            </div>
+                            <div>
+                                <div style="font-family:'Outfit',sans-serif;font-size:10px;font-weight:400;color:rgba(255,255,255,0.5);margin-bottom:3px;">FUEL COST</div>
+                                <div style="font-family:'Outfit',sans-serif;font-size:13px;font-weight:500;">${UIComponents.formatCurrency(day.fuelCost || 0)}</div>
+                            </div>
+                        </div>` : ''}
+
+                        <!-- Efficiency -->
+                        ${efficiency ? `
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;padding:0.75rem 0;border-bottom:1px solid rgba(255,255,255,0.1);">
+                            <div>
+                                <div style="font-family:'Outfit',sans-serif;font-size:10px;font-weight:400;color:rgba(255,255,255,0.5);margin-bottom:3px;">EFFICIENCY</div>
+                                <div style="font-family:'Outfit',sans-serif;font-size:13px;font-weight:500;">${efficiency} km/l ${expectedMileage ? (efficiency >= expectedMileage ? '✅' : '⚠️') : ''}</div>
+                            </div>
+                            ${expectedMileage ? `<div>
+                                <div style="font-family:'Outfit',sans-serif;font-size:10px;font-weight:400;color:rgba(255,255,255,0.5);margin-bottom:3px;">EXPECTED</div>
+                                <div style="font-family:'Outfit',sans-serif;font-size:13px;font-weight:500;">${expectedMileage} km/l</div>
+                            </div>` : ''}
+                        </div>` : ''}
+
+                        <!-- Notes -->
+                        ${day.transportNotes ? `
+                        <div style="padding:0.75rem 0;border-bottom:1px solid rgba(255,255,255,0.1);">
+                            <div style="font-family:'Outfit',sans-serif;font-size:10px;font-weight:400;color:rgba(255,255,255,0.5);margin-bottom:3px;">NOTES</div>
+                            <div style="font-family:'Outfit',sans-serif;font-size:13px;">${day.transportNotes}</div>
+                        </div>` : ''}
+
+                        <!-- Action buttons (pill style) -->
+                        <div style="display:flex;gap:0.6rem;margin-top:0.85rem;flex-wrap:wrap;">
+                            <button id="updateOdometer_${day.id}" style="flex:1;min-width:120px;padding:8px 14px;border:1px solid rgba(255,255,255,0.4);border-radius:20px;background:transparent;color:white;font-family:'Outfit',sans-serif;font-size:13px;font-weight:500;cursor:pointer;transition:background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='transparent'">
+                                ⛽ ${hasOdometer ? 'Update' : 'Add'} Odometer &amp; Fuel
+                            </button>
+                            ${this.currentTrip.isRentalVehicle ? `
+                            <button id="pickupInspection_${day.id}" style="flex:1;min-width:120px;padding:8px 14px;border:1px solid rgba(255,255,255,0.4);border-radius:20px;background:transparent;color:white;font-family:'Outfit',sans-serif;font-size:13px;font-weight:500;cursor:pointer;transition:background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='transparent'">
+                                📋 Pickup
+                            </button>
+                            <button id="dropInspection_${day.id}" style="flex:1;min-width:120px;padding:8px 14px;border:1px solid rgba(255,255,255,0.4);border-radius:20px;background:transparent;color:white;font-family:'Outfit',sans-serif;font-size:13px;font-weight:500;cursor:pointer;transition:background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='transparent'">
+                                📋 Drop
+                            </button>` : ''}
                         </div>
-                    ` : ''}
-                    
-                    ${day.transportNotes ? `
-                        <div style="padding: 0.75rem; background: rgba(255,255,255,0.1); border-radius: 6px; margin-bottom: 1rem;">
-                            <div style="font-size: 0.75rem; opacity: 0.8; margin-bottom: 0.25rem;">NOTES</div>
-                            <div style="font-size: 0.875rem;">${day.transportNotes}</div>
-                        </div>
-                    ` : ''}
-                    
-                    <button id="updateOdometer_${day.id}" class="btn btn-secondary" style="width: 100%; background: rgba(255,255,255,0.9); color: #764ba2; border: none; font-weight: 600;">
-                        ${hasOdometer ? 'Update' : 'Add'} Odometer & Fuel
-                    </button>
+
+                    </div>
                 </div>
             </div>
         `;
     },
+entTrip.rentalInspection.pickupDate ? UIComponents.formatDate(this.currentTrip.rentalInspection.pickupDate) : '—'}</div>
+                            </div>
+                            <div>
+                                <div style="font-family:'Outfit',sans-serif;font-size:10px;color:rgba(255,255,255,0.5);margin-bottom:3px;"> Return Date</div>
+                                <div style="font-family:'Outfit',sans-serif;font-size:13px;font-weight:500;">${this.currentTrip.rentalInspection.returnDate ? UIComponents.formatDate(this.currentTrip.rentalInspection.returnDate) : '—'}</div>
+                            </div>
+                        </div>` : ''}
+
+                        <!-- Row 4: Odometer + Mileage -->
+                        ${(day.startOdometer != null || this.currentTrip.mileage) ? `
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;padding:0.85rem 0;border-bottom:1px solid rgba(255,255,255,0.1);">
+                            <div>
+                                <div style="font-family:'Outfit',sans-serif;font-size:10px;color:rgba(255,255,255,0.5);margin-bottom:3px;"> Starting ODO</div>
+                                <div style="font-family:'Outfit',sans-serif;font-size:13px;font-weight:500;">${day.startOdometer != null ? day.startOdometer.toLocaleString() + ' km' : '—'}</div>
+                            </div>
+                            <div>
+                                <div style="font-family:'Outfit',sans-serif;font-size:10px;color:rgba(255,255,255,0.5);margin-bottom:3px;"> Expected Mileage</div>
+                                <div style="font-family:'Outfit',sans-serif;font-size:13px;font-weight:500;">${this.currentTrip.mileage ? this.currentTrip.mileage + ' km/l' : '—'}</div>
+                            </div>
+                        </div>` : ''}
+
+                        <!-- Day odometer data -->
+                        ${(day.startOdometer != null && day.endOdometer != null) ? `
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;padding:0.85rem 0;border-bottom:1px solid rgba(255,255,255,0.1);">
+                            <div>
+                                <div style="font-family:'Outfit',sans-serif;font-size:10px;color:rgba(255,255,255,0.5);margin-bottom:3px;">START ODO</div>
+                                <div style="font-family:'Outfit',sans-serif;font-size:13px;font-weight:500;">${day.startOdometer.toLocaleString()} km</div>
+                            </div>
+                            <div>
+                                <div style="font-family:'Outfit',sans-serif;font-size:10px;color:rgba(255,255,255,0.5);margin-bottom:3px;">END ODO — ${day.endOdometer - day.startOdometer} km driven</div>
+                                <div style="font-family:'Outfit',sans-serif;font-size:13px;font-weight:500;">${day.endOdometer.toLocaleString()} km</div>
+                            </div>
+                        </div>` : (day.startOdometer == null && day.endOdometer == null ? `
+                        <div style="padding:0.85rem 0;border-bottom:1px solid rgba(255,255,255,0.1);font-family:'Outfit',sans-serif;font-size:12px;color:rgba(255,255,255,0.45);text-align:center;">No odometer data yet</div>` : '')}
+
+                        <!-- Fuel data -->
+                        ${(day.fuelFilled && day.fuelFilled > 0) ? `
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;padding:0.85rem 0;border-bottom:1px solid rgba(255,255,255,0.1);">
+                            <div>
+                                <div style="font-family:'Outfit',sans-serif;font-size:10px;color:rgba(255,255,255,0.5);margin-bottom:3px;">FUEL FILLED</div>
+                                <div style="font-family:'Outfit',sans-serif;font-size:13px;font-weight:500;">${day.fuelFilled} L</div>
+                            </div>
+                            <div>
+                                <div style="font-family:'Outfit',sans-serif;font-size:10px;color:rgba(255,255,255,0.5);margin-bottom:3px;">FUEL COST</div>
+                                <div style="font-family:'Outfit',sans-serif;font-size:13px;font-weight:500;">${UIComponents.formatCurrency(day.fuelCost || 0)}</div>
+                            </div>
+                        </div>` : ''}
+
+                        <!-- Notes -->
+                        ${day.transportNotes ? `
+                        <div style="padding:0.85rem 0;border-bottom:1px solid rgba(255,255,255,0.1);">
+                            <div style="font-family:'Outfit',sans-serif;font-size:10px;color:rgba(255,255,255,0.5);margin-bottom:3px;">NOTES</div>
+                            <div style="font-family:'Outfit',sans-serif;font-size:13px;">${day.transportNotes}</div>
+                        </div>` : ''}
+
+                        <!-- Action buttons -->
+                        <div style="display:flex;gap:0.75rem;margin-top:1rem;flex-wrap:wrap;">
+                            <button id="updateOdometer_${day.id}" style="flex:1;min-width:120px;padding:8px 14px;border:1px solid rgba(255,255,255,0.4);border-radius:20px;background:transparent;color:white;font-family:'Outfit',sans-serif;font-size:13px;font-weight:500;cursor:pointer;transition:background 0.2s;">
+                                ${(day.startOdometer != null && day.endOdometer != null) ? 'Update' : 'Add'} Odometer &amp; Fuel
+                            </button>
+                            ${this.currentTrip.isRentalVehicle ? `
+                            <button id="pickupInspection_${day.id}" style="flex:1;min-width:120px;padding:8px 14px;border:1px solid rgba(255,255,255,0.4);border-radius:20px;background:transparent;color:white;font-family:'Outfit',sans-serif;font-size:13px;font-weight:500;cursor:pointer;transition:background 0.2s;">
+                                 Pickup Inspection
+                            </button>
+                            <button id="dropInspection_${day.id}" style="flex:1;min-width:120px;padding:8px 14px;border:1px solid rgba(255,255,255,0.4);border-radius:20px;background:transparent;color:white;font-family:'Outfit',sans-serif;font-size:13px;font-weight:500;cursor:pointer;transition:background 0.2s;">
+                                 Drop Inspection
+                            </button>` : ''}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }, },
 
     /**
      * Get previous day with odometer reading (skipping no-driving days)

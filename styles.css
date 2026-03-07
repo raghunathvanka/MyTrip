@@ -1621,3 +1621,37 @@ h4, h5, h6 {
     0%   { left: -80%; opacity: 1; }
     100% { left: 130%;  opacity: 1; }
 }
+
+/* ============================================================
+   SELF-DRIVE ROUTE CARD: collapsed / expanded + animations
+   ============================================================ */
+
+/* Open state: expand the body panel */
+.sd-route-card.sd-open .sd-body {
+    max-height: 600px !important;
+}
+
+/* Rotate chevron when open */
+.sd-route-card.sd-open .sd-chevron {
+    transform: rotate(180deg);
+}
+
+/* Animated dot travelling along the route line */
+.sd-route-dot {
+    position: absolute;
+    top: 50%;
+    left: 0%;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.85);
+    transform: translate(-50%, -50%);
+    animation: routeDotTravel 2s ease-in-out infinite;
+    box-shadow: 0 0 4px rgba(255,255,255,0.5);
+}
+
+@keyframes routeDotTravel {
+    0%   { left: 8%; }
+    50%  { left: 92%; }
+    100% { left: 8%; }
+}
