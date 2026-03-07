@@ -1314,3 +1314,96 @@ h4, h5, h6 {
     font-family: var(--font-body);
     font-weight: 600;
 }
+
+/* ============================================================
+   CATEGORY COLOR SYSTEM: Travel / Stay / Meal / Activity
+   ============================================================ */
+
+:root {
+    --color-travel:   #4FC3F7;  /* sky blue  */
+    --color-stay:     #FFB74D;  /* warm amber */
+    --color-meal:     #81C784;  /* soft green */
+    --color-activity: #CE93D8;  /* soft purple */
+}
+
+/* --- Category Chip (section header label) --- */
+.cat-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-family: var(--font-body, 'Outfit', sans-serif);
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-bottom: 0.6rem;
+}
+.cat-chip.travel   { color: var(--color-travel);   background: rgba(79,195,247,0.15); }
+.cat-chip.stay     { color: var(--color-stay);     background: rgba(255,183,77,0.15); }
+.cat-chip.meal     { color: var(--color-meal);     background: rgba(129,199,132,0.15); }
+.cat-chip.activity { color: var(--color-activity); background: rgba(206,147,216,0.15); }
+
+/* --- Category Pill Add-Button --- */
+.cat-pill-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    padding: 8px 16px;
+    border-radius: 20px;
+    border: 1.5px solid;
+    background: transparent;
+    font-family: var(--font-body, 'Outfit', sans-serif);
+    font-size: var(--font-size-button, 0.9375rem);
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s ease, opacity 0.2s ease;
+    text-align: center;
+}
+.cat-pill-btn.travel {
+    color: var(--color-travel);
+    border-color: var(--color-travel);
+}
+.cat-pill-btn.travel:hover,
+.cat-pill-btn.travel:active {
+    background: rgba(79,195,247,0.2);
+}
+.cat-pill-btn.stay {
+    color: var(--color-stay);
+    border-color: var(--color-stay);
+}
+.cat-pill-btn.stay:hover,
+.cat-pill-btn.stay:active {
+    background: rgba(255,183,77,0.2);
+}
+.cat-pill-btn.meal {
+    color: var(--color-meal);
+    border-color: var(--color-meal);
+}
+.cat-pill-btn.meal:hover,
+.cat-pill-btn.meal:active {
+    background: rgba(129,199,132,0.2);
+}
+.cat-pill-btn.activity {
+    color: var(--color-activity);
+    border-color: var(--color-activity);
+}
+.cat-pill-btn.activity:hover,
+.cat-pill-btn.activity:active {
+    background: rgba(206,147,216,0.2);
+}
+
+/* --- Item Card Left-Border Accent --- */
+.item-card {
+    padding: 0.75rem;
+    background: var(--color-bg-secondary);
+    border-radius: 8px;
+    margin-bottom: 0.5rem;
+    border-left: 3px solid transparent;
+}
+.item-card.travel   { border-left-color: var(--color-travel); }
+.item-card.stay     { border-left-color: var(--color-stay); }
+.item-card.meal     { border-left-color: var(--color-meal); }
+.item-card.activity { border-left-color: var(--color-activity); }

@@ -2604,9 +2604,9 @@ const App = {
                 
                 ${day.meals && day.meals.length > 0 ? `
                     <div style="margin-bottom: 1rem;">
-                        <h5 style="font-size: 0.875rem; color: var(--color-text-secondary); margin-bottom: 0.5rem;">MEALS</h5>
+                        <div class="cat-chip meal">🍽 MEAL</div>
                         ${day.meals.map(meal => `
-                            <div style="padding: 0.75rem; background: var(--color-bg-secondary); border-radius: 8px; margin-bottom: 0.5rem;">
+                            <div class="item-card meal">
                                 <div style="display: flex; justify-content: space-between; align-items: start;">
                                     <div style="flex: 1;">
                                         <div style="font-weight: 600; margin-bottom: 0.25rem;">${this.getMealIcon(meal.type)} ${meal.type.charAt(0).toUpperCase() + meal.type.slice(1)}</div>
@@ -2650,9 +2650,9 @@ const App = {
                 
                 ${day.activities && day.activities.length > 0 ? `
                     <div style="margin-bottom: 1rem;">
-                        <h5 style="font-size: 0.875rem; color: var(--color-text-secondary); margin-bottom: 0.5rem;">ACTIVITIES</h5>
+                        <div class="cat-chip activity">⭐ ACTIVITY</div>
                         ${day.activities.map(activity => `
-                            <div style="padding: 0.75rem; background: var(--color-bg-secondary); border-radius: 8px; margin-bottom: 0.5rem;">
+                            <div class="item-card activity">
                                 <div style="display: flex; justify-content: space-between; align-items: start;">
                                     <div style="flex: 1;">
                                         <div style="font-weight: 600; margin-bottom: 0.25rem;">${activity.name}</div>
@@ -2691,9 +2691,9 @@ const App = {
                 
                 ${day.travel && day.travel.length > 0 ? `
                     <div style="margin-bottom: 1rem;">
-                        <h5 style="font-size: 0.875rem; color: var(--color-text-secondary); margin-bottom: 0.5rem;">TRAVEL</h5>
+                        <div class="cat-chip travel">✈ TRAVEL</div>
                         ${day.travel.map(travel => `
-                            <div style="padding: 0.75rem; background: var(--color-bg-secondary); border-radius: 8px; margin-bottom: 0.5rem;">
+                            <div class="item-card travel">
                                 <div style="display: flex; justify-content: space-between; align-items: start;">
                                     <div style="flex: 1;">
                                         <div style="font-weight: 600; margin-bottom: 0.25rem;">🚗 ${travel.type}${travel.time ? ` • ${travel.time}` : ''}</div>
@@ -2738,8 +2738,8 @@ const App = {
 
                 ${day.accommodation && day.accommodation.name ? `
                     <div style="margin-bottom: 1rem;">
-                        <h5 style="font-size: 0.875rem; color: var(--color-text-secondary); margin-bottom: 0.5rem;">STAY</h5>
-                        <div style="padding: 0.75rem; background: var(--color-bg-secondary); border-radius: 8px;">
+                        <div class="cat-chip stay">🛏 STAY</div>
+                        <div class="item-card stay">
                             <div style="display: flex; justify-content: space-between; align-items: start;">
                                 <div style="flex: 1;">
                                     <div style="font-weight: 600; margin-bottom: 0.25rem;">🏨 ${day.accommodation.name}</div>
@@ -2781,34 +2781,10 @@ const App = {
                 ` : ''}
                 
                 <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 0.5rem;">
-                    <button id="addMeal_${day.id}" class="btn btn-secondary">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <line x1="12" y1="5" x2="12" y2="19"></line>
-                            <line x1="5" y1="12" x2="19" y2="12"></line>
-                        </svg>
-                        Meal
-                    </button>
-                    <button id="addActivity_${day.id}" class="btn btn-secondary">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <line x1="12" y1="5" x2="12" y2="19"></line>
-                            <line x1="5" y1="12" x2="19" y2="12"></line>
-                        </svg>
-                        Activity
-                    </button>
-                    <button id="addTravel_${day.id}" class="btn btn-secondary">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <line x1="12" y1="5" x2="12" y2="19"></line>
-                            <line x1="5" y1="12" x2="19" y2="12"></line>
-                        </svg>
-                        Travel
-                    </button>
-                    <button id="addAccommodation_${day.id}" class="btn btn-secondary">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <line x1="12" y1="5" x2="12" y2="19"></line>
-                            <line x1="5" y1="12" x2="19" y2="12"></line>
-                        </svg>
-                        Stay
-                    </button>
+                    <button id="addMeal_${day.id}" class="cat-pill-btn meal">🍽 Meal</button>
+                    <button id="addActivity_${day.id}" class="cat-pill-btn activity">⭐ Activity</button>
+                    <button id="addTravel_${day.id}" class="cat-pill-btn travel">✈ Travel</button>
+                    <button id="addAccommodation_${day.id}" class="cat-pill-btn stay">🛏 Stay</button>
                 </div>
             </div>
         `;
