@@ -1695,10 +1695,9 @@ const App = {
                             </div>
                             ${pb.notes ? `<div style="font-size:0.78rem;color:var(--color-text-secondary);margin-top:0.35rem;font-style:italic;">${pb.notes}</div>` : ''}
                         </div>
-                        <div style="display:flex;gap:0.35rem;flex-shrink:0;">
+                        <div style="display:flex;gap:0.35rem;flex-shrink:0;align-items:flex-start;">
                             ${(!pb.paid && remaining > 0) ? `<button class="pb-action-btn" onclick="App.markPrebookingPaid('${pb.id}')" title="Mark as paid">✅</button>` : ''}
-                            <button class="pb-action-btn" onclick="App.editPrebooking('${pb.id}')" title="Edit">✏️</button>
-                            <button class="pb-action-btn" onclick="App.deletePrebooking('${pb.id}')" title="Delete" style="color:var(--color-error);">🗑️</button>
+                            <button class="item-menu-btn" title="Options" onclick="event.stopPropagation();App.showItemMenu(this,()=>App.editPrebooking('${pb.id}'),()=>App.deletePrebooking('${pb.id}'))">&#8942;</button>
                         </div>
                     </div>
                 </div>`;
@@ -2615,22 +2614,11 @@ const App = {
                                         </div>
                                         ${meal.notes ? `<div style="font-size: 0.875rem; color: var(--color-text-secondary); margin-top: 0.25rem;">${meal.notes}</div>` : ''}
                                         
-                                        <div style="display: flex; gap: 0.75rem; margin-top: 0.75rem; border-top: 1px solid var(--color-border); padding-top: 0.75rem;">
-                                            <button id="editMeal_${day.id}_${meal.id}" class="btn-action" style="font-size: 0.875rem; display: flex; align-items: center; gap: 0.25rem; color: var(--color-primary); background: rgba(59, 130, 246, 0.1); padding: 0.35rem 0.75rem; border-radius: 6px; border: none; cursor: pointer; font-weight: 500;">
-                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                                                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                                                </svg>
-                                                Edit
-                                            </button>
-                                            <button id="deleteMeal_${day.id}_${meal.id}" class="btn-action" style="font-size: 0.875rem; display: flex; align-items: center; gap: 0.25rem; color: var(--color-error); background: rgba(239, 68, 68, 0.1); padding: 0.35rem 0.75rem; border-radius: 6px; border: none; cursor: pointer; font-weight: 500;">
-                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                                    <polyline points="3 6 5 6 21 6"></polyline>
-                                                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                                                </svg>
-                                                Delete
-                                            </button>
+                                        <div style="display:none">
+                                            <button id="editMeal_${day.id}_${meal.id}"></button>
+                                            <button id="deleteMeal_${day.id}_${meal.id}"></button>
                                         </div>
+                                        <button class="item-menu-btn" title="Options" onclick="event.stopPropagation();App.showItemMenu(this,'editMeal_${day.id}_${meal.id}','deleteMeal_${day.id}_${meal.id}')">&#8942;</button>
                                     </div>
                                     <div style="text-align: right;">
                                         ${meal.expectedCost > 0 ? `
@@ -2658,22 +2646,11 @@ const App = {
                                         <div style="font-weight: 600; margin-bottom: 0.25rem;">${activity.name}</div>
                                         ${activity.notes ? `<div style="font-size: 0.875rem; color: var(--color-text-secondary);">${activity.notes}</div>` : ''}
                                         
-                                        <div style="display: flex; gap: 0.75rem; margin-top: 0.75rem; border-top: 1px solid var(--color-border); padding-top: 0.75rem;">
-                                            <button id="editActivity_${day.id}_${activity.id}" class="btn-action" style="font-size: 0.875rem; display: flex; align-items: center; gap: 0.25rem; color: var(--color-primary); background: rgba(59, 130, 246, 0.1); padding: 0.35rem 0.75rem; border-radius: 6px; border: none; cursor: pointer; font-weight: 500;">
-                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                                                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                                                </svg>
-                                                Edit
-                                            </button>
-                                            <button id="deleteActivity_${day.id}_${activity.id}" class="btn-action" style="font-size: 0.875rem; display: flex; align-items: center; gap: 0.25rem; color: var(--color-error); background: rgba(239, 68, 68, 0.1); padding: 0.35rem 0.75rem; border-radius: 6px; border: none; cursor: pointer; font-weight: 500;">
-                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                                    <polyline points="3 6 5 6 21 6"></polyline>
-                                                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                                                </svg>
-                                                Delete
-                                            </button>
+                                        <div style="display:none">
+                                            <button id="editActivity_${day.id}_${activity.id}"></button>
+                                            <button id="deleteActivity_${day.id}_${activity.id}"></button>
                                         </div>
+                                        <button class="item-menu-btn" title="Options" onclick="event.stopPropagation();App.showItemMenu(this,'editActivity_${day.id}_${activity.id}','deleteActivity_${day.id}_${activity.id}')">&#8942;</button>
                                     </div>
                                     <div style="text-align: right;">
                                         <div style="font-size: 0.75rem; color: var(--color-text-secondary);">Expected</div>
@@ -2703,22 +2680,11 @@ const App = {
                                         ${travel.splitBetween > 1 ? `<div style="font-size: 0.75rem; color: var(--color-text-tertiary);">Split: ${travel.splitBetween} people</div>` : ''}
                                         ${travel.notes ? `<div style="font-size: 0.875rem; color: var(--color-text-secondary); margin-top: 0.25rem;">${travel.notes}</div>` : ''}
                                         
-                                        <div style="display: flex; gap: 0.75rem; margin-top: 0.75rem; border-top: 1px solid var(--color-border); padding-top: 0.75rem;">
-                                            <button id="editTravel_${day.id}_${travel.id}" class="btn-action" style="font-size: 0.875rem; display: flex; align-items: center; gap: 0.25rem; color: var(--color-primary); background: rgba(59, 130, 246, 0.1); padding: 0.35rem 0.75rem; border-radius: 6px; border: none; cursor: pointer; font-weight: 500;">
-                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                                                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                                                </svg>
-                                                Edit
-                                            </button>
-                                            <button id="deleteTravel_${day.id}_${travel.id}" class="btn-action" style="font-size: 0.875rem; display: flex; align-items: center; gap: 0.25rem; color: var(--color-error); background: rgba(239, 68, 68, 0.1); padding: 0.35rem 0.75rem; border-radius: 6px; border: none; cursor: pointer; font-weight: 500;">
-                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                                    <polyline points="3 6 5 6 21 6"></polyline>
-                                                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                                                </svg>
-                                                Delete
-                                            </button>
+                                        <div style="display:none">
+                                            <button id="editTravel_${day.id}_${travel.id}"></button>
+                                            <button id="deleteTravel_${day.id}_${travel.id}"></button>
                                         </div>
+                                        <button class="item-menu-btn" title="Options" onclick="event.stopPropagation();App.showItemMenu(this,'editTravel_${day.id}_${travel.id}','deleteTravel_${day.id}_${travel.id}')">&#8942;</button>
                                     </div>
                                     <div style="text-align: right;">
                                         <div style="font-size: 0.75rem; color: var(--color-text-secondary);">Expected</div>
@@ -2748,22 +2714,11 @@ const App = {
                                     </div>
                                     ${day.accommodation.notes ? `<div style="font-size: 0.875rem; color: var(--color-text-secondary); margin-top: 0.25rem;">${day.accommodation.notes}</div>` : ''}
                                     
-                                    <div style="display: flex; gap: 0.75rem; margin-top: 0.75rem; border-top: 1px solid var(--color-border); padding-top: 0.75rem;">
-                                        <button id="editAcc_${day.id}" class="btn-action" style="font-size: 0.875rem; display: flex; align-items: center; gap: 0.25rem; color: var(--color-primary); background: rgba(59, 130, 246, 0.1); padding: 0.35rem 0.75rem; border-radius: 6px; border: none; cursor: pointer; font-weight: 500;">
-                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                                            </svg>
-                                            Edit
-                                        </button>
-                                        <button id="deleteAcc_${day.id}" class="btn-action" style="font-size: 0.875rem; display: flex; align-items: center; gap: 0.25rem; color: var(--color-error); background: rgba(239, 68, 68, 0.1); padding: 0.35rem 0.75rem; border-radius: 6px; border: none; cursor: pointer; font-weight: 500;">
-                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                                <polyline points="3 6 5 6 21 6"></polyline>
-                                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                                            </svg>
-                                            Delete
-                                        </button>
+                                    <div style="display:none">
+                                        <button id="editAcc_${day.id}"></button>
+                                        <button id="deleteAcc_${day.id}"></button>
                                     </div>
+                                    <button class="item-menu-btn" title="Options" onclick="event.stopPropagation();App.showItemMenu(this,'editAcc_${day.id}','deleteAcc_${day.id}')">&#8942;</button>
                                 </div>
                                 <div style="text-align: right;">
                                     ${day.accommodation.expectedCost > 0 ? `
@@ -2801,6 +2756,64 @@ const App = {
             snacks: '🍿'
         };
         return icons[type] || '🍴';
+    },
+
+    /**
+     * Show a ⋯ overflow dropdown near the given trigger button.
+     * editId / deleteId: DOM id strings of the hidden action buttons.
+     * For pre-bookings (no hidden buttons), pass null and use editFn/deleteFn strings (eval'd).
+     */
+    showItemMenu(triggerBtn, editId, deleteId) {
+        // Remove any existing dropdown
+        document.querySelectorAll('.item-overflow-dd').forEach(el => el.remove());
+
+        const dd = document.createElement('div');
+        dd.className = 'item-overflow-dd';
+
+        const editBtn = document.createElement('button');
+        editBtn.innerHTML = '✏️ &nbsp;Edit';
+        editBtn.onclick = (e) => {
+            e.stopPropagation();
+            dd.remove();
+            if (typeof editId === 'function') { editId(); }
+            else { const b = document.getElementById(editId); if (b) b.click(); }
+        };
+
+        const hr = document.createElement('hr');
+
+        const delBtn = document.createElement('button');
+        delBtn.className = 'dd-delete';
+        delBtn.innerHTML = '🗑️ &nbsp;Delete';
+        delBtn.onclick = (e) => {
+            e.stopPropagation();
+            dd.remove();
+            if (typeof deleteId === 'function') { deleteId(); }
+            else { const b = document.getElementById(deleteId); if (b) b.click(); }
+        };
+
+        dd.appendChild(editBtn);
+        dd.appendChild(hr);
+        dd.appendChild(delBtn);
+        document.body.appendChild(dd);
+
+        // Position below / above the trigger button
+        const rect = triggerBtn.getBoundingClientRect();
+        const ddW = 150, ddH = 90;
+        let top = rect.bottom + 4;
+        let left = rect.right - ddW;
+        if (top + ddH > window.innerHeight) top = rect.top - ddH - 4;
+        if (left < 8) left = 8;
+        dd.style.top = top + 'px';
+        dd.style.left = left + 'px';
+
+        // Close on outside click
+        const close = (e) => {
+            if (!dd.contains(e.target) && e.target !== triggerBtn) {
+                dd.remove();
+                document.removeEventListener('click', close, true);
+            }
+        };
+        setTimeout(() => document.addEventListener('click', close, true), 0);
     },
 
     /**
