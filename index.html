@@ -112,13 +112,73 @@
 
             <!-- Welcome Screen (shown when no trips) -->
             <section id="welcomeScreen" class="welcome-screen">
+                <!-- Background star dots -->
+                <span class="star-dot" style="top:8%;left:12%;animation-delay:0s;"></span>
+                <span class="star-dot" style="top:14%;left:70%;animation-delay:0.4s;"></span>
+                <span class="star-dot" style="top:6%;left:45%;animation-delay:0.8s;"></span>
+                <span class="star-dot" style="top:20%;left:85%;animation-delay:1.2s;"></span>
+                <span class="star-dot" style="top:11%;left:28%;animation-delay:0.6s;"></span>
+
                 <div class="welcome-content">
-                    <div class="welcome-illustration">🗺️</div>
+                    <!-- SVG Scenic Landscape Illustration -->
+                    <div class="welcome-illustration">
+                        <svg width="220" height="140" viewBox="0 0 220 140" xmlns="http://www.w3.org/2000/svg"
+                            style="display:block;margin:0 auto;">
+                            <defs>
+                                <linearGradient id="skyGrad" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="0%" stop-color="#1a1a2e" />
+                                    <stop offset="100%" stop-color="#2d3561" />
+                                </linearGradient>
+                                <clipPath id="svgClip">
+                                    <rect width="220" height="140" rx="12" />
+                                </clipPath>
+                            </defs>
+                            <!-- Sky background -->
+                            <rect width="220" height="140" rx="12" fill="url(#skyGrad)" />
+                            <!-- Stars -->
+                            <circle cx="30" cy="20" r="1.5" fill="rgba(255,255,255,0.7)" />
+                            <circle cx="80" cy="12" r="1" fill="rgba(255,255,255,0.5)" />
+                            <circle cx="150" cy="18" r="1.5" fill="rgba(255,255,255,0.6)" />
+                            <circle cx="190" cy="10" r="1" fill="rgba(255,255,255,0.5)" />
+                            <!-- Moon -->
+                            <circle cx="175" cy="24" r="9" fill="#c9b8e8" opacity="0.9" />
+                            <circle cx="180" cy="20" r="7" fill="#2d3561" />
+                            <!-- Far mountains (dark teal) -->
+                            <polygon points="0,95 30,50 60,75 85,42 115,70 145,38 175,62 200,40 220,58 220,100 0,100"
+                                fill="#1B4F72" opacity="0.85" />
+                            <!-- Near hills -->
+                            <polygon points="0,110 40,80 80,95 120,78 165,90 210,75 220,85 220,115 0,115" fill="#154360"
+                                opacity="0.9" />
+                            <!-- Ground -->
+                            <rect y="112" width="220" height="28" rx="0" fill="#0d2137" />
+                            <!-- Road (winding path) -->
+                            <path d="M 0,132 Q 55,118 110,126 Q 165,132 220,120" stroke="#334155" stroke-width="8"
+                                fill="none" stroke-linecap="round" />
+                            <!-- Road dashes -->
+                            <path d="M 0,132 Q 55,118 110,126 Q 165,132 220,120" stroke="rgba(255,220,0,0.35)"
+                                stroke-width="1.5" fill="none" stroke-dasharray="10,8" stroke-linecap="round" />
+                            <!-- Car (group that animates) -->
+                            <g class="landing-car">
+                                <!-- Car body -->
+                                <rect x="0" y="-6" width="22" height="9" rx="3" fill="#4FC3F7" />
+                                <!-- Windshield -->
+                                <rect x="13" y="-5" width="7" height="5" rx="1.5" fill="rgba(255,255,255,0.25)" />
+                                <!-- Wheels -->
+                                <circle cx="5" cy="3" r="3" fill="#1a1a2e" />
+                                <circle cx="17" cy="3" r="3" fill="#1a1a2e" />
+                                <circle cx="5" cy="3" r="1.5" fill="#64748b" />
+                                <circle cx="17" cy="3" r="1.5" fill="#64748b" />
+                            </g>
+                        </svg>
+                    </div>
+
                     <h2 class="welcome-title">Ready for your next adventure?</h2>
                     <p class="welcome-text">Let's plan your trip together. I'll help you organize everything and track
                         your expenses.</p>
+                    <p class="welcome-tagline">Built for families who travel together</p>
+
                     <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
-                        <button id="createFirstTripBtn" class="btn btn-primary btn-large">
+                        <button id="createFirstTripBtn" class="btn btn-primary btn-large btn-shimmer">
                             <span>Start Planning</span>
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                 stroke-width="2">
