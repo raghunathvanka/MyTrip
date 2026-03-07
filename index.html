@@ -30,6 +30,19 @@
     <title>MyTrip - Travel Planner</title>
     <link rel="stylesheet" href="styles.css?v=105">
     <link rel="stylesheet" href="cloud-sync-styles.css?v=105">
+    <style>
+        /* Landing page: desktop button sizing */
+        @media (min-width: 768px) {
+            .welcome-btn-row {
+                gap: 16px !important;
+            }
+
+            .welcome-btn-row .btn {
+                min-width: 200px;
+                justify-content: center;
+            }
+        }
+    </style>
 
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
@@ -113,7 +126,8 @@
         <main id="mainContent" class="main-content">
 
             <!-- Welcome Screen (shown when no trips) -->
-            <section id="welcomeScreen" class="welcome-screen">
+            <section id="welcomeScreen" class="welcome-screen"
+                style="background:radial-gradient(ellipse at 50% 40%, rgba(212,175,55,0.07) 0%, transparent 65%);">
                 <!-- Background star dots -->
                 <span class="star-dot" style="top:8%;left:12%;animation-delay:0s;"></span>
                 <span class="star-dot" style="top:14%;left:70%;animation-delay:0.4s;"></span>
@@ -124,19 +138,8 @@
                 <div class="welcome-content">
                     <!-- SVG Scenic Landscape Illustration -->
                     <div class="welcome-illustration">
-                        <svg width="220" height="140" viewBox="0 0 220 140" xmlns="http://www.w3.org/2000/svg"
+                        <svg width="280" height="180" viewBox="0 0 220 140" xmlns="http://www.w3.org/2000/svg"
                             style="display:block;margin:0 auto;">
-                            <defs>
-                                <linearGradient id="skyGrad" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="0%" stop-color="#1a1a2e" />
-                                    <stop offset="100%" stop-color="#2d3561" />
-                                </linearGradient>
-                                <clipPath id="svgClip">
-                                    <rect width="220" height="140" rx="12" />
-                                </clipPath>
-                            </defs>
-                            <!-- Sky background -->
-                            <rect width="220" height="140" rx="12" fill="url(#skyGrad)" />
                             <!-- Stars -->
                             <circle cx="30" cy="20" r="1.5" fill="rgba(255,255,255,0.7)" />
                             <circle cx="80" cy="12" r="1" fill="rgba(255,255,255,0.5)" />
@@ -179,7 +182,8 @@
                         your expenses.</p>
                     <p class="welcome-tagline">Built for families who travel together</p>
 
-                    <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+                    <div class="welcome-btn-row"
+                        style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
                         <button id="createFirstTripBtn" class="btn btn-primary btn-large btn-shimmer">
                             <span>Start Planning</span>
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
