@@ -1377,6 +1377,47 @@ const App = {
                 const isOverBudget = totalActual > totalExpected && totalExpected > 0;
                 const difference = Math.abs(variance);
 
+                // Category spend breakdown
+                const catSpend = { Travel: 0, Stay: 0, Meal: 0, Activity: 0 };
+                const catColors = { Travel: '#4FC3F7', Stay: '#FFB74D', Meal: '#81C784', Activity: '#CE93D8' };
+                const catIcons  = { Travel: '\u2708', Stay: '\uD83D\uDECF', Meal: '\uD83C\uDF7D', Activity: '\u2B50' };
+                (trip.days || []).forEach(d => {
+                    (d.travel || []).forEach(t => { catSpend.Travel += t.actualCost || 0; });
+                    if (d.accommodation) catSpend.Stay += d.accommodation.actualCost || 0;
+                    (d.meals || []).forEach(m => { catSpend.Meal += m.actualCost || 0; });
+                    (d.activities || []).forEach(a => { catSpend.Activity += a.actualCost || 0; });
+                });
+                const catTotal = Object.values(catSpend).reduce((s, v) => s + v, 0);
+                const activeCats = Object.entries(catSpend).filter(([,v]) => v > 0).sort((a,b)=>b[1]-a[1]);
+                const biggestCat = activeCats[0];
+
+                // SVG donut helpers
+                const CX = 65, CY = 65, R = 47;
+                function polarXY(cx,cy,r,deg) {
+                    const a = (deg-90)*Math.PI/180;
+                    return [cx+r*Math.cos(a), cy+r*Math.sin(a)];
+                }
+                function arcPath(cx,cy,r,s,e) {
+                    const large = (e-s)>180?1:0;
+                    const [x1,y1]=polarXY(cx,cy,r,s);
+                    const [x2,y2]=polarXY(cx,cy,r,e);
+                    return M   A   0  1  ;
+                }
+                const GAP = activeCats.length > 1 ? 3 : 0;
+                let donutSvg='', legendHtml='', startAngle=0;
+                const circ = 2*Math.PI*R;
+                activeCats.forEach(([cat,amt],i) => {
+                    const sweep = (amt/catTotal)*360;
+                    const endAngle = startAngle + sweep - (i<activeCats.length-1?GAP:0);
+                    donutSvg += <path d="" fill="none" stroke="" stroke-width="18" stroke-linecap="butt" style="stroke-dasharray:;stroke-dashoffset:;animation:donutDraw 0.9s ease-out s forwards;"/>;
+                    legendHtml += <div style="display:flex;align-items:center;gap:8px;margin-bottom:7px;"><span style="width:10px;height:10px;border-radius:50%;background:;flex-shrink:0;display:inline-block;"></span><span style="font-family:'Outfit',sans-serif;font-size:12px;color:rgba(255,255,255,0.7);flex:1;"></span><span style="font-family:'Outfit',sans-serif;font-size:12px;font-weight:600;color:rgba(255,255,255,0.9);"></span></div>;
+                    startAngle += sweep;
+                });
+
+                // Bar color based on percentage
+                const barColor = percentage > 100 ? '#FF5252' : percentage > 90 ? '#FF8A65' : percentage > 70 ? '#FFB74D' : '#4DB6AC';
+                const barPct = Math.min(percentage, 100);
+
                 return `
                     <!-- Section 1: Primary Budget Summary -->
                     <div class="budget-primary-summary">
@@ -1409,45 +1450,32 @@ const App = {
                             ` : ''}
                         </div>
                         
-                        <!-- Progress Bar -->
-                        ${totalExpected > 0 && totalActual > 0 ? `
-                            <div class="budget-progress-bar" style="margin: 2rem 0 1.5rem 0;">
-                                <div class="progress-track" style="
-                                    height: 10px;
-                                    background: rgba(255, 255, 255, 0.08);
-                                    border-radius: 999px;
-                                    overflow: hidden;
-                                    position: relative;
-                                ">
-                                    <div class="progress-fill ${isOverBudget ? 'over-budget' : 'under-budget'}" style="
-                                        height: 100%;
-                                        width: ${Math.min(percentage, 100)}%;
-                                        border-radius: 999px;
-                                        background: ${isOverBudget ? 'linear-gradient(90deg, #ef4444, #dc2626)' : 'linear-gradient(90deg, #10b981, #059669)'};
-                                        transition: width 200ms ease;
-                                    "></div>
-                                    ${percentage > 100 ? `
-                                        <div style="
-                                            position: absolute;
-                                            top: 0;
-                                            left: 0;
-                                            right: 0;
-                                            bottom: 0;
-                                            background: linear-gradient(90deg, #ef4444, #dc2626);
-                                            animation: pulse 2s ease-in-out infinite;
-                                        "></div>
-                                    ` : ''}
+                    <!-- Progress Bar (animated) -->
+                    ${totalExpected > 0 && totalActual > 0 ? `
+                        <div style="margin: 2rem 0 1.5rem 0;">
+                            <div style="height:12px;background:rgba(255,255,255,0.08);border-radius:6px;overflow:visible;position:relative;">
+                                <div style="height:100%;width:${barPct}%;border-radius:6px;background:${barColor};position:relative;transform-origin:left;animation:budgetBarIn 800ms ease-out both;display:flex;align-items:center;justify-content:flex-end;">
+                                    ${barPct > 15 ? `<span style="font-family:'Outfit',sans-serif;font-size:11px;font-weight:600;color:#fff;padding-right:7px;">${percentage}%</span>` : ''}
                                 </div>
-                                <div style="
-                                    font-size: 0.75rem;
-                                    color: var(--color-text-secondary);
-                                    text-align: right;
-                                    margin-top: 0.5rem;
-                                ">${percentage}% of budget</div>
+                                ${percentage > 100 ? `<div style="position:absolute;top:0;left:0;right:0;bottom:0;border-radius:6px;background:linear-gradient(90deg,transparent 70%,rgba(255,82,82,0.4));animation:pulse 2s ease-in-out infinite;"></div>` : ''}
                             </div>
-                        ` : ''}
-                    </div>
-                    
+                        </div>
+                    ` : ''}
+
+                    <!-- Donut Chart + Legend -->
+                    ${catTotal > 0 ? `
+                        <div style="margin-top:1.5rem;">
+                            <div style="font-family:'Outfit',sans-serif;font-size:14px;font-weight:500;color:rgba(255,255,255,0.6);margin-bottom:1rem;">Spend Breakdown</div>
+                            <div style="display:flex;align-items:center;gap:1.5rem;">
+                                <svg width="130" height="130" viewBox="0 0 130 130" style="flex-shrink:0;">
+                                    <circle cx="${CX}" cy="${CY}" r="${R}" fill="none" stroke="rgba(255,255,255,0.07)" stroke-width="18"/>
+                                    ${donutSvg}
+                                    ${biggestCat ? `<text x="${CX}" y="${CY}" text-anchor="middle" dominant-baseline="central" font-size="26">${catIcons[biggestCat[0]]}</text>` : ''}
+                                </svg>
+                                <div style="flex:1;">${legendHtml}</div>
+                            </div>
+                        </div>
+                    ` : ''}
                     <!-- Section 3: Informational Message -->
                     ${totalActual > 0 && totalExpected > 0 ? `
                         <div class="budget-info-message ${isOverBudget ? 'warning' : 'success'}" style="

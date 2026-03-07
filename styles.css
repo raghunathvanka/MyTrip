@@ -1519,3 +1519,18 @@ h4, h5, h6 {
     from { transform: scaleX(0); }
     to   { transform: scaleX(1); }
 }
+
+/* ============================================================
+   BUDGET OVERVIEW: Animated progress bar + donut chart
+   ============================================================ */
+
+/* Budget progress bar animate from left */
+@keyframes budgetBarIn {
+    from { transform: scaleX(0); }
+    to   { transform: scaleX(1); }
+}
+
+/* Donut segment draw animation */
+@keyframes donutDraw {
+    to { stroke-dashoffset: 0; }
+}
