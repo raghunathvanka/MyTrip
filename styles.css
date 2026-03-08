@@ -3188,14 +3188,14 @@ button[id="saveBasicBtn"] {
     stroke: white !important;
 }
 
-/* The flex container (holds trip info div and the closing tag seems malformed in original — it's the direct child div.flex) */
+/* Hero content wrapper — column flex so action buttons sit below dates */
 #tripDetailContent>div:first-child>div:first-child {
     display: flex !important;
     flex-direction: column !important;
     align-items: flex-start !important;
     justify-content: center !important;
     width: 100% !important;
-    padding: 64px 24px 40px !important;
+    padding: 56px 24px 28px !important;
     gap: 6px !important;
 }
 
@@ -3227,14 +3227,16 @@ button[id="saveBasicBtn"] {
     margin: 0 !important;
 }
 
-/* Action buttons row: position bottom-right of hero */
-#tripDetailContent>div:first-child>div:nth-child(2) {
-    position: absolute !important;
-    bottom: 20px !important;
-    right: 20px !important;
+/* Action buttons row — in-flow BELOW dates, not overlapping title */
+#tripDetailContent>div:first-child>div:nth-child(2),
+#tripDetailContent>div:first-child>div:last-child:not(:first-child) {
+    position: static !important;
     display: flex !important;
-    gap: 6px !important;
+    gap: 8px !important;
+    flex-wrap: wrap !important;
+    margin-top: 16px !important;
     z-index: 2 !important;
+    padding: 0 24px 24px !important;
 }
 
 /* Share/Edit/Delete as glass pill chips */
@@ -4024,4 +4026,111 @@ body>[id="app"] {
     -webkit-backdrop-filter: blur(20px) !important;
     border: 1px solid rgba(255, 255, 255, 0.12) !important;
     border-radius: var(--radius-card, 20px) !important;
+}
+
+/* ====================================================================
+   TRIP DETAIL — FIXES (action buttons, hero fade, prebookings)
+   ==================================================================== */
+
+/* ── Hero bottom gradient fade ──────────────────────────────────────── */
+#tripDetailContent>div:first-child::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 60px;
+    background: linear-gradient(to bottom, transparent, #0A1628);
+    pointer-events: none;
+    z-index: 1;
+}
+
+/* ── Action buttons — refined size ─────────────────────────────────── */
+#shareTripBtn,
+#editTripBtn,
+#deleteTripDetailBtn {
+    height: 36px !important;
+    padding: 0 16px !important;
+    border-radius: 20px !important;
+    font-family: 'Outfit', sans-serif !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    background: rgba(255, 255, 255, 0.1) !important;
+    border: 1px solid rgba(255, 255, 255, 0.18) !important;
+    backdrop-filter: blur(8px) !important;
+    -webkit-backdrop-filter: blur(8px) !important;
+    color: white !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+    white-space: nowrap !important;
+    transition: background 0.2s ease !important;
+}
+
+#deleteTripDetailBtn {
+    background: rgba(255, 107, 107, 0.12) !important;
+    border-color: rgba(255, 107, 107, 0.28) !important;
+    color: var(--accent-coral) !important;
+}
+
+/* ── Pre-bookings section title — one line ──────────────────────────── */
+#tripDetailContent .card>div>h3,
+#prebookingsList~*,
+#tripDetailContent .card h3 {
+    white-space: nowrap !important;
+    font-family: var(--font-serif) !important;
+    font-size: 20px !important;
+    font-weight: 600 !important;
+    color: var(--text-primary) !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+
+/* ── Pre-booking individual cards — glass styling ───────────────────── */
+.prebooking-card {
+    background: rgba(255, 255, 255, 0.07) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    border-radius: 16px !important;
+    padding: 16px !important;
+    margin-bottom: 12px !important;
+    position: relative !important;
+    overflow: visible !important;
+}
+
+/* Left accent border based on paid state — driven by inline border-left style */
+/* .prebooking-card inline style already sets border-left colour; upgrade border width */
+.prebooking-card[style*="border-left"] {
+    border-left-width: 4px !important;
+}
+
+/* ── Payment progress bar ───────────────────────────────────────────── */
+/* Inserted via JS (PolishController) after the paid/balance row */
+.pb-progress-wrap {
+    margin-top: 10px;
+}
+
+.pb-progress-label {
+    font-family: 'Outfit', sans-serif;
+    font-size: 11px;
+    color: var(--text-secondary);
+    margin-bottom: 5px;
+}
+
+.pb-progress-track {
+    width: 100%;
+    height: 5px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.pb-progress-fill {
+    height: 100%;
+    background: var(--accent-seafoam);
+    border-radius: 3px;
+    width: 0;
+    /* start at 0 — animated by JS / IO */
+    transition: width 600ms ease-out;
 }

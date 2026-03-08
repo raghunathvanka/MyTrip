@@ -773,6 +773,69 @@
                 screenObserver.observe(detailScreen, { attributes: true, attributeFilter: ['class'] });
             })();
 
+            /* ── 7. PAYMENT PROGRESS BARS in prebooking cards ─────────── */
+            (function () {
+                function injectPbBars() {
+                    var cards = document.querySelectorAll('#prebookingsList .prebooking-card');
+                    cards.forEach(function (card) {
+                        // Skip if already injected
+                        if (card.querySelector('.pb-progress-wrap')) return;
+
+                        // Extract paid and total amounts from the text in the card
+                        var text = card.textContent || '';
+                        var totalMatch = text.match(/Total[:\s]+₹([\d,]+)/);
+                        var paidMatch = text.match(/Paid[:\s]+₹([\d,]+)/);
+                        if (!totalMatch || !paidMatch) return;
+
+                        var total = parseFloat(totalMatch[1].replace(/,/g, '')) || 0;
+                        var paid = parseFloat(paidMatch[1].replace(/,/g, '')) || 0;
+                        if (total <= 0) return;
+
+                        var pct = Math.min(Math.round((paid / total) * 100), 100);
+                        var label = '\u20b9' + paid.toLocaleString('en-IN') +
+                            ' paid of \u20b9' + total.toLocaleString('en-IN');
+
+                        var wrap = document.createElement('div');
+                        wrap.className = 'pb-progress-wrap';
+                        wrap.innerHTML =
+                            '<div class="pb-progress-label">' + label + '</div>' +
+                            '<div class="pb-progress-track">' +
+                            '<div class="pb-progress-fill" data-pct="' + pct + '"></div>' +
+                            '</div>';
+
+                        // Insert below the info row (last child of the content div)
+                        var contentDiv = card.querySelector('div > div:first-child');
+                        if (contentDiv) contentDiv.appendChild(wrap);
+                        else card.appendChild(wrap);
+
+                        // Animate on scroll into view
+                        var fill = wrap.querySelector('.pb-progress-fill');
+                        var io = new IntersectionObserver(function (entries) {
+                            entries.forEach(function (entry) {
+                                if (!entry.isIntersecting) return;
+                                setTimeout(function () { fill.style.width = pct + '%'; }, 60);
+                                io.unobserve(entry.target);
+                            });
+                        }, { threshold: 0.2 });
+                        io.observe(card);
+                    });
+                }
+
+                // Run on prebookingsList changes
+                var pbList = document.getElementById('prebookingsList');
+                if (pbList) {
+                    new MutationObserver(function () {
+                        setTimeout(injectPbBars, 150);
+                    }).observe(pbList, { childList: true, subtree: true });
+                }
+
+                // Poll for initial render
+                setInterval(function () {
+                    var pbList2 = document.getElementById('prebookingsList');
+                    if (pbList2 && pbList2.children.length) injectPbBars();
+                }, 1500);
+            })();
+
         })();
     </script>
 
