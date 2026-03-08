@@ -3533,3 +3533,421 @@ button[id="saveBasicBtn"] {
 div:has(> #exportJSONBtn) {
     gap: 12px !important;
 }
+
+/* ====================================================================
+   FINAL POLISH — MICRO-INTERACTIONS & CINEMATIC TRANSITIONS
+   ==================================================================== */
+
+/* ─── PAGE TRANSITIONS ─────────────────────────────────────────────── */
+
+/* Welcome Screen: exits scale-down */
+#welcomeScreen.screen-exit {
+    animation: screenExitScale 250ms ease-in forwards;
+}
+
+@keyframes screenExitScale {
+    to {
+        transform: scale(0.95);
+        opacity: 0;
+    }
+}
+
+/* Form/Detail enters from right */
+.screen-enter-right {
+    animation: screenEnterRight 350ms ease-out both;
+}
+
+@keyframes screenEnterRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* Back navigation — enters from left */
+.screen-enter-left {
+    animation: screenEnterLeft 300ms ease-out both;
+}
+
+@keyframes screenEnterLeft {
+    from {
+        transform: translateX(-100%);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* Trip detail opens like a bottom sheet */
+#tripDetailScreen:not(.hidden) {
+    animation: sheetUp 400ms cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}
+
+@keyframes sheetUp {
+    from {
+        transform: translateY(60px);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* Trip form slides in from right */
+#tripFormScreen:not(.hidden) {
+    animation: pfSlideIn 300ms ease-out both;
+}
+
+/* ─── BUTTON MICRO-INTERACTIONS ─────────────────────────────────────── */
+
+/* Primary gold buttons — press */
+.btn-primary:active,
+#saveBasicBtn:active,
+.landing-btn-primary:active {
+    transform: scale(0.96) !important;
+    filter: brightness(0.9) !important;
+    transition: transform 80ms ease, filter 80ms ease !important;
+}
+
+/* Release spring */
+.btn-primary,
+#saveBasicBtn {
+    transition: transform 150ms cubic-bezier(0.34, 1.56, 0.64, 1),
+        filter 150ms ease,
+        box-shadow 200ms ease !important;
+}
+
+/* Glass buttons hover */
+.btn-secondary:hover,
+.icon-btn:hover,
+.pf-back-btn:hover,
+#backToListFromDetail:hover {
+    background: rgba(255, 255, 255, 0.11) !important;
+    border-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+.btn-secondary:active {
+    transform: scale(0.97);
+    transition: transform 80ms ease !important;
+}
+
+/* Category pill add-buttons — press with glow */
+[id^="addTravel"]:active {
+    transform: scale(0.94) !important;
+    box-shadow: 0 0 12px rgba(79, 195, 247, 0.4) !important;
+}
+
+[id^="addMeal"]:active {
+    transform: scale(0.94) !important;
+    box-shadow: 0 0 12px rgba(129, 199, 132, 0.4) !important;
+}
+
+[id^="addActivity"]:active {
+    transform: scale(0.94) !important;
+    box-shadow: 0 0 12px rgba(206, 147, 216, 0.4) !important;
+}
+
+[id^="addAccommodation"]:active {
+    transform: scale(0.94) !important;
+    box-shadow: 0 0 12px rgba(255, 183, 77, 0.4) !important;
+}
+
+[id^="addTravel"],
+[id^="addMeal"],
+[id^="addActivity"],
+[id^="addAccommodation"] {
+    transition: transform 100ms ease, box-shadow 100ms ease !important;
+}
+
+/* ─── FORM MICRO-INTERACTIONS ─────────────────────────────────────── */
+
+/* Input lift on focus */
+#tripForm .form-input:focus,
+#tripForm .form-select:focus,
+#tripForm .form-textarea:focus {
+    transform: translateY(-1px) !important;
+    box-shadow: 0 0 0 3px rgba(78, 205, 196, 0.15), 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+}
+
+#tripForm .form-input,
+#tripForm .form-select,
+#tripForm .form-textarea {
+    transition: border-color 200ms ease, box-shadow 200ms ease, transform 200ms ease !important;
+}
+
+/* Toggle switch transition */
+#tripForm input[type="checkbox"]::before {
+    transition: transform 200ms cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+#tripForm input[type="checkbox"] {
+    transition: background 300ms ease !important;
+}
+
+/* Step dot bounce on activation */
+.pf-step.active .pf-step-dot {
+    animation: stepDotBounce 300ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@keyframes stepDotBounce {
+    0% {
+        transform: scale(0.8);
+    }
+
+    60% {
+        transform: scale(1.25);
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
+
+/* ─── CARD INTERACTIONS ─────────────────────────────────────────────── */
+
+/* Day cards: IntersectionObserver-driven — start hidden, JS adds .bp-visible */
+#daysList .card {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity 500ms ease-out, transform 500ms ease-out;
+}
+
+#daysList .card.bp-visible {
+    opacity: 1 !important;
+    transform: translateY(0) !important;
+    animation: none !important;
+    /* override the old staggered animation */
+}
+
+/* Item card new-item animation — JS adds .item-new class */
+.item-card.item-new {
+    animation: itemScaleIn 300ms ease-out both !important;
+    transform-origin: top !important;
+}
+
+@keyframes itemScaleIn {
+    from {
+        transform: scaleY(0);
+        opacity: 0;
+    }
+
+    to {
+        transform: scaleY(1);
+        opacity: 1;
+    }
+}
+
+/* ⋯ dropdown menu open/close */
+.item-context-menu {
+    transform-origin: top right;
+    animation: menuOpen 200ms ease-out both;
+}
+
+@keyframes menuOpen {
+    from {
+        transform: scale(0.85);
+        opacity: 0;
+    }
+
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.item-context-menu.closing {
+    animation: menuClose 150ms ease-in forwards;
+}
+
+@keyframes menuClose {
+    to {
+        transform: scale(0.9);
+        opacity: 0;
+    }
+}
+
+/* ─── HEADER SCROLL TRANSITION ──────────────────────────────────────── */
+
+.app-header {
+    transition: background-color 200ms ease, backdrop-filter 200ms ease !important;
+}
+
+.app-header.header-scrolled {
+    background-color: rgba(10, 22, 40, 0.92) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+}
+
+/* ─── AI SCAN ROTATING BORDER ───────────────────────────────────────── */
+
+/* Scanning state: animated conic gradient border */
+.trip-form>div:first-child.scanning {
+    border: 2px solid transparent !important;
+    position: relative !important;
+}
+
+.trip-form>div:first-child.scanning::before {
+    content: '' !important;
+    position: absolute !important;
+    inset: -2px !important;
+    border-radius: inherit !important;
+    background: conic-gradient(var(--accent-seafoam) 0deg,
+            var(--accent-gold) 90deg,
+            var(--accent-coral) 180deg,
+            var(--accent-seafoam) 360deg) !important;
+    animation: scanBorderSpin 2s linear infinite !important;
+    z-index: -1 !important;
+}
+
+.trip-form>div:first-child.scanning::after {
+    content: '' !important;
+    position: absolute !important;
+    inset: 2px !important;
+    border-radius: 14px !important;
+    background: rgba(78, 205, 196, 0.04) !important;
+    z-index: -1 !important;
+}
+
+@keyframes scanBorderSpin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* ─── BUDGET SHAKE ──────────────────────────────────────────────────── */
+.budget-shake {
+    animation: budgetShake 400ms ease both;
+}
+
+@keyframes budgetShake {
+
+    0%,
+    100% {
+        transform: translateX(0);
+    }
+
+    20% {
+        transform: translateX(-4px);
+    }
+
+    40% {
+        transform: translateX(4px);
+    }
+
+    60% {
+        transform: translateX(-4px);
+    }
+
+    80% {
+        transform: translateX(2px);
+    }
+}
+
+/* ─── ITEM CONFIRMED GLOW ───────────────────────────────────────────── */
+.item-confirmed-glow {
+    animation: itemGlow 600ms ease both;
+}
+
+@keyframes itemGlow {
+    0% {
+        box-shadow: 0 0 0 0 rgba(78, 205, 196, 0);
+    }
+
+    30% {
+        box-shadow: 0 0 20px 4px rgba(78, 205, 196, 0.5);
+    }
+
+    100% {
+        box-shadow: 0 0 0 0 rgba(78, 205, 196, 0);
+    }
+}
+
+/* ─── DAY FULLY CONFIRMED SHIMMER ───────────────────────────────────── */
+#daysList .card.day-all-confirmed>div:first-child {
+    animation: dayHeaderShimmer 800ms ease-out;
+    background: rgba(255, 255, 255, 0.1) !important;
+}
+
+@keyframes dayHeaderShimmer {
+    0% {
+        background: rgba(255, 255, 255, 0.10);
+    }
+
+    20% {
+        background: rgba(247, 201, 72, 0.18);
+    }
+
+    100% {
+        background: rgba(255, 255, 255, 0.10);
+    }
+}
+
+/* ─── "✓ All confirmed" text entrance ───────────────────────────────── */
+.confirmed-label-anim {
+    animation: confirmedPop 300ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@keyframes confirmedPop {
+    from {
+        transform: scale(0);
+        opacity: 0;
+    }
+
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+/* ─── DUE SOON PULSE ────────────────────────────────────────────────── */
+.pb-badge-soon {
+    animation: duePulse 2s ease-in-out infinite;
+}
+
+@keyframes duePulse {
+
+    0%,
+    100% {
+        box-shadow: 0 0 0 0 rgba(255, 152, 0, 0);
+    }
+
+    50% {
+        box-shadow: 0 0 0 4px rgba(255, 152, 0, 0.25);
+    }
+}
+
+/* ─── SYNC ICON SPIN ────────────────────────────────────────────────── */
+.sync-spinning svg,
+.sync-spinning .sync-icon {
+    animation: syncSpin 1s linear infinite;
+}
+
+@keyframes syncSpin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* ─── DONUT CHART LEGEND HOVER ──────────────────────────────────────── */
+.donut-legend-item {
+    cursor: pointer;
+    transition: opacity 200ms ease;
+}
+
+.donut-legend-item:hover {
+    opacity: 1 !important;
+}
+
+.donut-legend-dimmed {
+    opacity: 0.4 !important;
+}

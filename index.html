@@ -571,6 +571,211 @@
         })();
     </script>
 
+    <!-- ═══ POLISH JS CONTROLLER — micro-interactions & transitions ═══ -->
+    <script>
+        (function () {
+            'use strict';
+
+            /* ── 1. HEADER SCROLL OPACITY ─────────────────────────────── */
+            (function () {
+                var header = document.querySelector('.app-header');
+                if (!header) return;
+                var scroller = document.querySelector('.app-container') || document.getElementById('app');
+                if (!scroller) return;
+                var lastY = 0;
+                scroller.addEventListener('scroll', function () {
+                    var y = scroller.scrollTop;
+                    if (y > 40) {
+                        header.classList.add('header-scrolled');
+                    } else {
+                        header.classList.remove('header-scrolled');
+                    }
+                    lastY = y;
+                }, { passive: true });
+            })();
+
+            /* ── 2. PAGE TRANSITIONS — watch hidden class changes ─────── */
+            (function () {
+                var SCREENS = ['welcomeScreen', 'tripFormScreen', 'tripListScreen', 'tripDetailScreen'];
+                var prevVisible = null;
+
+                function getVisible() {
+                    for (var i = 0; i < SCREENS.length; i++) {
+                        var el = document.getElementById(SCREENS[i]);
+                        if (el && !el.classList.contains('hidden')) return SCREENS[i];
+                    }
+                    return null;
+                }
+
+                var observer = new MutationObserver(function () {
+                    var now = getVisible();
+                    if (now === prevVisible) return;
+
+                    var fromScreen = prevVisible;
+                    var toScreen = now;
+                    prevVisible = now;
+
+                    if (!toScreen) return;
+                    var toEl = document.getElementById(toScreen);
+                    if (!toEl) return;
+
+                    // Determine direction
+                    var ORDER = { welcomeScreen: 0, tripListScreen: 1, tripFormScreen: 2, tripDetailScreen: 3 };
+                    var fromIdx = fromScreen ? (ORDER[fromScreen] || 0) : -1;
+                    var toIdx = ORDER[toScreen] || 0;
+
+                    if (toScreen === 'tripDetailScreen') {
+                        // Sheet-up handled purely by CSS :not(.hidden)
+                    } else if (toIdx > fromIdx) {
+                        // Forward — enter from right
+                        toEl.classList.add('screen-enter-right');
+                        setTimeout(function () { toEl.classList.remove('screen-enter-right'); }, 400);
+                    } else if (fromScreen && toIdx < fromIdx) {
+                        // Back — enter from left
+                        toEl.classList.add('screen-enter-left');
+                        setTimeout(function () { toEl.classList.remove('screen-enter-left'); }, 350);
+                    }
+                });
+
+                // Observe each screen for class changes
+                SCREENS.forEach(function (id) {
+                    var el = document.getElementById(id);
+                    if (el) observer.observe(el, { attributes: true, attributeFilter: ['class'] });
+                });
+
+                prevVisible = getVisible();
+            })();
+
+            /* ── 3. INTERSECTION OBSERVER — boarding pass day cards ────── */
+            (function () {
+                var delay = 0;
+
+                function observeCards() {
+                    var cards = document.querySelectorAll('#daysList .card:not(.bp-visible)');
+                    if (!cards.length) return;
+
+                    var io = new IntersectionObserver(function (entries) {
+                        entries.forEach(function (entry) {
+                            if (!entry.isIntersecting) return;
+                            var card = entry.target;
+                            var idx = Array.from(card.parentNode.children).indexOf(card);
+                            setTimeout(function () {
+                                card.classList.add('bp-visible');
+                            }, idx * 100);
+                            io.unobserve(card);
+                        });
+                    }, { threshold: 0.1 });
+
+                    cards.forEach(function (c) { io.observe(c); });
+                }
+
+                // Re-run whenever #daysList content changes
+                var daysListEl = document.getElementById('daysList');
+                if (daysListEl) {
+                    var cardObserver = new MutationObserver(function () {
+                        setTimeout(observeCards, 80);
+                    });
+                    cardObserver.observe(daysListEl, { childList: true });
+                }
+
+                // Also run immediately and on a poll for initial render
+                setInterval(function () {
+                    if (document.querySelector('#daysList .card:not(.bp-visible)')) {
+                        observeCards();
+                    }
+                }, 800);
+            })();
+
+            /* ── 4. AI SCAN BORDER SPINNER ──────────────────────────── */
+            (function () {
+                function watchScanState() {
+                    var scanDiv = document.querySelector('.trip-form > div:first-child');
+                    if (!scanDiv) return;
+
+                    var loadingEl = document.getElementById('trip_scan_loading');
+                    if (!loadingEl) return;
+
+                    var mo = new MutationObserver(function () {
+                        var isLoading = loadingEl.style.display !== 'none';
+                        if (isLoading) {
+                            scanDiv.classList.add('scanning');
+                        } else {
+                            scanDiv.classList.remove('scanning');
+                        }
+                    });
+                    mo.observe(loadingEl, { attributes: true, attributeFilter: ['style'] });
+                }
+
+                // Run when form is visible
+                setInterval(function () {
+                    var fs = document.getElementById('tripFormScreen');
+                    if (fs && !fs.classList.contains('hidden')) {
+                        watchScanState();
+                    }
+                }, 1200);
+            })();
+
+            /* ── 5. ITEM CARD NEW — animate on DOM insert ─────────────── */
+            (function () {
+                function watchItemCards() {
+                    var daysList = document.getElementById('daysList');
+                    if (!daysList) return;
+
+                    var cardObserver = new MutationObserver(function (mutations) {
+                        mutations.forEach(function (m) {
+                            m.addedNodes.forEach(function (node) {
+                                if (node.nodeType !== 1) return;
+                                // Find .item-card elements inside newly added nodes
+                                var items = node.classList && node.classList.contains('item-card')
+                                    ? [node]
+                                    : Array.from(node.querySelectorAll('.item-card'));
+                                items.forEach(function (item) {
+                                    item.classList.add('item-new');
+                                    setTimeout(function () { item.classList.remove('item-new'); }, 400);
+                                });
+                            });
+                        });
+                    });
+
+                    cardObserver.observe(daysList, { childList: true, subtree: true });
+                }
+                setTimeout(watchItemCards, 500);
+            })();
+
+            /* ── 6. BUDGET BAR RE-ANIMATE on detail entry ───────────── */
+            (function () {
+                var detailScreen = document.getElementById('tripDetailScreen');
+                if (!detailScreen) return;
+
+                var screenObserver = new MutationObserver(function () {
+                    if (!detailScreen.classList.contains('hidden')) {
+                        // give detail time to render, then restart bar animation
+                        setTimeout(function () {
+                            var bars = detailScreen.querySelectorAll('[style*="animation:budgetBarIn"]');
+                            bars.forEach(function (bar) {
+                                bar.style.animation = 'none';
+                                // Force reflow
+                                void bar.offsetWidth;
+                                bar.style.animation = '';
+                            });
+                            // Also check if over-budget — shake
+                            var overPill = detailScreen.querySelector('.budget-status-pill.over-budget');
+                            if (overPill) {
+                                var valEl = overPill.closest('.budget-primary-summary');
+                                if (valEl) {
+                                    valEl.classList.add('budget-shake');
+                                    setTimeout(function () { valEl.classList.remove('budget-shake'); }, 500);
+                                }
+                            }
+                        }, 600);
+                    }
+                });
+                screenObserver.observe(detailScreen, { attributes: true, attributeFilter: ['class'] });
+            })();
+
+        })();
+    </script>
+
 </body>
 
 </html>
