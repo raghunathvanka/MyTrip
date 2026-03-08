@@ -130,86 +130,80 @@
         <!-- Main Content -->
         <main id="mainContent" class="main-content">
 
-            <!-- Welcome Screen (shown when no trips) -->
-            <section id="welcomeScreen" class="welcome-screen"
-                style="background:radial-gradient(ellipse at 50% 40%, rgba(212,175,55,0.07) 0%, transparent 65%);">
-                <!-- Background star dots -->
-                <span class="star-dot" style="top:8%;left:12%;animation-delay:0s;"></span>
-                <span class="star-dot" style="top:14%;left:70%;animation-delay:0.4s;"></span>
-                <span class="star-dot" style="top:6%;left:45%;animation-delay:0.8s;"></span>
-                <span class="star-dot" style="top:20%;left:85%;animation-delay:1.2s;"></span>
-                <span class="star-dot" style="top:11%;left:28%;animation-delay:0.6s;"></span>
+            <!-- Welcome Screen: Immersive Landing (shown when no trips) -->
+            <section id="welcomeScreen" class="landing-screen">
 
-                <div class="welcome-content">
-                    <!-- SVG Scenic Landscape Illustration -->
-                    <div class="welcome-illustration">
-                        <svg width="280" height="180" viewBox="0 0 220 140" xmlns="http://www.w3.org/2000/svg"
-                            style="display:block;margin:0 auto;">
-                            <!-- Stars -->
-                            <circle cx="30" cy="20" r="1.5" fill="rgba(255,255,255,0.7)" />
-                            <circle cx="80" cy="12" r="1" fill="rgba(255,255,255,0.5)" />
-                            <circle cx="150" cy="18" r="1.5" fill="rgba(255,255,255,0.6)" />
-                            <circle cx="190" cy="10" r="1" fill="rgba(255,255,255,0.5)" />
-                            <!-- Moon -->
-                            <circle cx="175" cy="24" r="9" fill="#c9b8e8" opacity="0.9" />
-                            <circle cx="180" cy="20" r="7" fill="#2d3561" />
-                            <!-- Far mountains (dark teal) -->
-                            <polygon points="0,95 30,50 60,75 85,42 115,70 145,38 175,62 200,40 220,58 220,100 0,100"
-                                fill="#1B4F72" opacity="0.85" />
-                            <!-- Near hills -->
-                            <polygon points="0,110 40,80 80,95 120,78 165,90 210,75 220,85 220,115 0,115" fill="#154360"
-                                opacity="0.9" />
-                            <!-- Ground -->
-                            <rect y="112" width="220" height="28" rx="0" fill="#0d2137" />
-                            <!-- Road (winding path) -->
-                            <path d="M 0,132 Q 55,118 110,126 Q 165,132 220,120" stroke="#334155" stroke-width="8"
-                                fill="none" stroke-linecap="round" />
-                            <!-- Road dashes -->
-                            <path d="M 0,132 Q 55,118 110,126 Q 165,132 220,120" stroke="rgba(255,220,0,0.35)"
-                                stroke-width="1.5" fill="none" stroke-dasharray="10,8" stroke-linecap="round" />
-                            <!-- Car (group that animates) -->
-                            <g class="landing-car">
-                                <!-- Car body -->
-                                <rect x="0" y="-6" width="22" height="9" rx="3" fill="#4FC3F7" />
-                                <!-- Windshield -->
-                                <rect x="13" y="-5" width="7" height="5" rx="1.5" fill="rgba(255,255,255,0.25)" />
-                                <!-- Wheels -->
-                                <circle cx="5" cy="3" r="3" fill="#1a1a2e" />
-                                <circle cx="17" cy="3" r="3" fill="#1a1a2e" />
-                                <circle cx="5" cy="3" r="1.5" fill="#64748b" />
-                                <circle cx="17" cy="3" r="1.5" fill="#64748b" />
-                            </g>
+                <!-- Layer 1+2: Mountain silhouettes -->
+                <div class="landing-bg" id="landingBg">
+                    <div class="land-mountains land-back" id="landBack"></div>
+                    <div class="land-mountains land-mid" id="landMid"></div>
+                    <div class="land-mountains land-front" id="landFront"></div>
+
+                    <!-- Layer 3: Moon -->
+                    <div class="land-moon"></div>
+
+                    <!-- Layer 3: Stars -->
+                    <div class="land-star" style="top:8%;left:12%;width:2px;height:2px;animation-delay:0s;"></div>
+                    <div class="land-star" style="top:5%;left:38%;width:3px;height:3px;animation-delay:0.6s;"></div>
+                    <div class="land-star" style="top:14%;left:62%;width:2px;height:2px;animation-delay:1.2s;"></div>
+                    <div class="land-star" style="top:7%;left:80%;width:2px;height:2px;animation-delay:0.3s;"></div>
+                    <div class="land-star" style="top:20%;left:25%;width:2px;height:2px;animation-delay:1.8s;"></div>
+                    <div class="land-star" style="top:18%;left:50%;width:3px;height:3px;animation-delay:0.9s;"></div>
+                    <div class="land-star" style="top:11%;left:72%;width:2px;height:2px;animation-delay:2.4s;"></div>
+                    <div class="land-star" style="top:24%;left:88%;width:2px;height:2px;animation-delay:1.5s;"></div>
+
+                    <!-- Layer 4: Road + car SVG -->
+                    <div class="land-road-wrap">
+                        <svg class="land-road-svg" viewBox="0 0 400 80" preserveAspectRatio="none"
+                            xmlns="http://www.w3.org/2000/svg">
+                            <!-- Road surface -->
+                            <path d="M -20,65 Q 100,50 200,58 Q 300,66 420,52" stroke="rgba(255,255,255,0.07)"
+                                stroke-width="18" fill="none" stroke-linecap="round" />
+                            <!-- Dashed centre line -->
+                            <path d="M -20,65 Q 100,50 200,58 Q 300,66 420,52" stroke="rgba(255,255,255,0.15)"
+                                stroke-width="1.5" fill="none" stroke-dasharray="18,12" stroke-linecap="round" />
+                        </svg>
+                        <!-- Animated car -->
+                        <svg class="land-car" viewBox="0 0 32 16" xmlns="http://www.w3.org/2000/svg">
+                            <rect x="1" y="4" width="30" height="10" rx="3" fill="#4FC3F7" />
+                            <rect x="18" y="5" width="10" height="6" rx="1.5" fill="rgba(255,255,255,0.22)" />
+                            <circle cx="8" cy="14" r="3.5" fill="#0a1628" />
+                            <circle cx="24" cy="14" r="3.5" fill="#0a1628" />
+                            <circle cx="8" cy="14" r="1.5" fill="#4FC3F7" opacity="0.5" />
+                            <circle cx="24" cy="14" r="1.5" fill="#4FC3F7" opacity="0.5" />
+                            <!-- headlights -->
+                            <circle cx="31" cy="8" r="2" fill="rgba(255,240,180,0.7)" />
                         </svg>
                     </div>
-
-                    <h2 class="welcome-title">Ready for your next adventure?</h2>
-                    <p class="welcome-text">Let's plan your trip together. I'll help you organize everything and track
-                        your expenses.</p>
-                    <p class="welcome-tagline">Built for families who travel together</p>
-
-                    <div class="welcome-btn-row"
-                        style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
-                        <button id="createFirstTripBtn" class="btn btn-primary btn-large btn-shimmer">
-                            <span>Start Planning</span>
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2">
-                                <line x1="5" y1="12" x2="19" y2="12"></line>
-                                <polyline points="12 5 19 12 12 19"></polyline>
-                            </svg>
-                        </button>
-                        <button id="importFirstTripBtn" class="btn btn-secondary btn-large"
-                            onclick="window.app && window.app.triggerImport()">
-                            <span>Import Trip</span>
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2">
-                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                                <polyline points="17 8 12 3 7 8"></polyline>
-                                <line x1="12" y1="3" x2="12" y2="15"></line>
-                            </svg>
-                        </button>
-                    </div>
                 </div>
+
+                <!-- Content: heading + subtitle + tagline (center) -->
+                <div class="landing-content">
+                    <div class="landing-heading">
+                        <div class="lh-line1 land-anim-word">Ready for your next</div>
+                        <div class="lh-line2 land-anim-word" style="animation-delay:0.72s;">adventure?</div>
+                    </div>
+                    <p class="landing-subtitle land-anim-word" style="animation-delay:1.0s;">
+                        Let's plan your trip together. I'll help you organize everything and track your expenses.
+                    </p>
+                    <p class="landing-tagline land-anim-word" style="animation-delay:1.15s;">
+                        BUILT FOR FAMILIES WHO TRAVEL TOGETHER
+                    </p>
+                </div>
+
+                <!-- Buttons: pinned to bottom -->
+                <div class="landing-btns land-anim-btns">
+                    <button id="createFirstTripBtn" class="landing-btn-primary">
+                        Start Planning &rarr;
+                    </button>
+                    <button id="importFirstTripBtn" class="landing-btn-secondary"
+                        onclick="window.app && window.app.triggerImport()">
+                        Import Trip &uarr;
+                    </button>
+                </div>
+
             </section>
+
 
             <!-- Trip List (shown when trips exist) -->
             <section id="tripListScreen" class="trip-list-screen hidden">
@@ -494,6 +488,23 @@
             setInterval(updateVisibility, 400);
             // Also run immediately after app boots
             setTimeout(updateVisibility, 800);
+        })();
+    </script>
+
+    <!-- Parallax scroll for landing mountains -->
+    <script>
+        (function () {
+            var back = document.getElementById('landBack');
+            var mid = document.getElementById('landMid');
+            var front = document.getElementById('landFront');
+            var scroller = document.querySelector('.app-container') || document.getElementById('app');
+            if (!scroller || !back) return;
+            scroller.addEventListener('scroll', function () {
+                var s = scroller.scrollTop;
+                if (back) back.style.transform = 'translateY(' + (s * 0.1) + 'px)';
+                if (mid) mid.style.transform = 'translateY(' + (s * 0.2) + 'px)';
+                if (front) front.style.transform = 'translateY(' + (s * 0.3) + 'px)';
+            }, { passive: true });
         })();
     </script>
 

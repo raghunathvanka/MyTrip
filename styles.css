@@ -1932,3 +1932,399 @@ h6 {
 .tab-item.active .tab-label {
     color: var(--accent-seafoam);
 }
+
+/* ====================================================================
+   IMMERSIVE LANDING PAGE
+   ==================================================================== */
+
+/* The landing screen fills the full available viewport height */
+.landing-screen {
+    position: relative;
+    width: 100%;
+    height: calc(100dvh - 64px);
+    /* full height minus header */
+    min-height: 500px;
+    overflow: hidden;
+    background: linear-gradient(180deg, #0A1628 0%, #0D2137 40%, #0A2E1F 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    /* Entry: fade the whole screen in */
+    animation: landingFadeIn 800ms ease-out both;
+}
+
+@keyframes landingFadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+/* ---- Background layer: mountains + sky + road ---- */
+.landing-bg {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    overflow: hidden;
+}
+
+/* Mountain silhouettes — drawn as CSS clip-path polygons */
+.land-mountains {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    will-change: transform;
+    transition: transform 0.1s linear;
+}
+
+/* Back range — tallest, darkest teal, 35vh */
+.land-back {
+    height: 35vh;
+    background: #0D3B2E;
+    clip-path: polygon(0% 100%, 0% 55%, 6% 30%, 12% 55%, 18% 20%, 26% 50%,
+            34% 15%, 42% 48%, 50% 22%, 57% 50%, 65% 10%, 72% 45%,
+            80% 18%, 88% 40%, 94% 25%, 100% 42%, 100% 100%);
+    animation: landMountainIn 900ms 200ms ease-out both;
+}
+
+/* Mid range */
+.land-mid {
+    height: 28vh;
+    background: #0F4A38;
+    clip-path: polygon(0% 100%, 0% 62%, 8% 38%, 16% 65%, 24% 30%, 33% 58%,
+            42% 35%, 52% 60%, 60% 28%, 70% 55%, 78% 32%, 88% 58%,
+            95% 38%, 100% 52%, 100% 100%);
+    animation: landMountainIn 900ms 300ms ease-out both;
+}
+
+/* Front hills */
+.land-front {
+    height: 18vh;
+    background: #0A2F24;
+    clip-path: polygon(0% 100%, 0% 75%, 10% 52%, 22% 75%, 35% 48%, 48% 70%,
+            60% 50%, 75% 68%, 88% 45%, 100% 65%, 100% 100%);
+    animation: landMountainIn 900ms 400ms ease-out both;
+}
+
+@keyframes landMountainIn {
+    from {
+        transform: translateY(30px);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* ---- Moon ---- */
+.land-moon {
+    position: absolute;
+    top: 12%;
+    right: 18%;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: rgba(247, 201, 72, 0.9);
+    box-shadow: 0 0 40px rgba(247, 201, 72, 0.3), 0 0 80px rgba(247, 201, 72, 0.12);
+    animation: moonGlow 4s ease-in-out infinite alternate;
+}
+
+@keyframes moonGlow {
+    from {
+        box-shadow: 0 0 30px rgba(247, 201, 72, 0.25), 0 0 60px rgba(247, 201, 72, 0.1);
+    }
+
+    to {
+        box-shadow: 0 0 50px rgba(247, 201, 72, 0.4), 0 0 100px rgba(247, 201, 72, 0.18);
+    }
+}
+
+/* ---- Stars ---- */
+.land-star {
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.7);
+    animation: starTwinkle 3s ease-in-out infinite;
+}
+
+@keyframes starTwinkle {
+
+    0%,
+    100% {
+        opacity: 0.25;
+        transform: scale(1);
+    }
+
+    50% {
+        opacity: 0.85;
+        transform: scale(1.3);
+    }
+}
+
+/* ---- Road + car ---- */
+.land-road-wrap {
+    position: absolute;
+    bottom: 18vh;
+    /* sits just above the front hill */
+    left: 0;
+    width: 100%;
+    height: 80px;
+    overflow: visible;
+}
+
+.land-road-svg {
+    width: 100%;
+    height: 80px;
+    display: block;
+}
+
+.land-car {
+    position: absolute;
+    bottom: 20px;
+    width: 36px;
+    height: 18px;
+    animation: carRoll 12s ease-in-out infinite;
+}
+
+@keyframes carRoll {
+    0% {
+        left: -5%;
+        bottom: 30px;
+    }
+
+    25% {
+        left: 25%;
+        bottom: 22px;
+    }
+
+    50% {
+        left: 52%;
+        bottom: 28px;
+    }
+
+    75% {
+        left: 78%;
+        bottom: 20px;
+    }
+
+    100% {
+        left: 105%;
+        bottom: 30px;
+    }
+}
+
+/* ====================================================================
+   CONTENT: heading, subtitle, tagline
+   ==================================================================== */
+.landing-content {
+    position: relative;
+    z-index: 2;
+    flex: 1;
+    /* push buttons to bottom */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 0 24px;
+    padding-top: 10vh;
+    /* let top sky breathe */
+    max-width: 400px;
+    width: 100%;
+    gap: 12px;
+}
+
+.landing-heading {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+.lh-line1 {
+    font-family: var(--font-serif);
+    font-size: 32px;
+    font-weight: 400;
+    color: rgba(255, 255, 255, 0.9);
+    line-height: 1.2;
+}
+
+.lh-line2 {
+    font-family: var(--font-serif);
+    font-size: 40px;
+    font-weight: 700;
+    color: var(--accent-gold);
+    line-height: 1.1;
+    margin-top: 4px;
+}
+
+.landing-subtitle {
+    font-family: 'Outfit', sans-serif;
+    font-size: 16px;
+    font-weight: 300;
+    color: rgba(255, 255, 255, 0.55);
+    line-height: 1.6;
+    max-width: 280px;
+    margin: 4px 0 0;
+}
+
+.landing-tagline {
+    font-family: 'Outfit', sans-serif;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 2.5px;
+    color: rgba(255, 255, 255, 0.25);
+    text-transform: uppercase;
+    margin: 0;
+}
+
+/* ====================================================================
+   ENTRY ANIMATIONS
+   ==================================================================== */
+.land-anim-word {
+    animation: landWordIn 500ms ease-out 600ms both;
+}
+
+@keyframes landWordIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.land-anim-btns {
+    animation: landBtnsIn 500ms ease-out 1200ms both;
+}
+
+@keyframes landBtnsIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ====================================================================
+   BUTTONS
+   ==================================================================== */
+.landing-btns {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+    max-width: 360px;
+    padding: 0 24px calc(24px + env(safe-area-inset-bottom, 0px));
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    /* stay at bottom */
+    margin-top: auto;
+    padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+}
+
+.landing-btn-primary {
+    width: 100%;
+    height: 56px;
+    border: none;
+    border-radius: 16px;
+    background: linear-gradient(135deg, #F7C948, #E8A020);
+    color: #0A1628;
+    font-family: 'Outfit', sans-serif;
+    font-size: 17px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 8px 32px rgba(247, 201, 72, 0.35);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.landing-btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 40px rgba(247, 201, 72, 0.45);
+}
+
+.landing-btn-primary:active {
+    transform: translateY(0);
+    box-shadow: 0 4px 16px rgba(247, 201, 72, 0.3);
+}
+
+/* One-time shimmer on load */
+.landing-btn-primary::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 60%;
+    height: 100%;
+    background: linear-gradient(105deg, transparent 20%, rgba(255, 255, 255, 0.22) 50%, transparent 80%);
+    transform: skewX(-15deg);
+    animation: shimmerOnce 700ms ease-out 1.8s forwards;
+    opacity: 0;
+}
+
+@keyframes shimmerOnce {
+    0% {
+        left: -80%;
+        opacity: 1;
+    }
+
+    100% {
+        left: 130%;
+        opacity: 1;
+    }
+}
+
+.landing-btn-secondary {
+    width: 100%;
+    height: 48px;
+    border: 1px solid var(--glass-border);
+    border-radius: 14px;
+    background: var(--glass-bg);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    color: rgba(255, 255, 255, 0.7);
+    font-family: 'Outfit', sans-serif;
+    font-size: 15px;
+    font-weight: 400;
+    cursor: pointer;
+    transition: background 0.2s ease, transform 0.15s ease;
+}
+
+.landing-btn-secondary:hover {
+    background: var(--glass-hover);
+    transform: translateY(-1px);
+}
+
+.landing-btn-secondary:active {
+    transform: translateY(0);
+}
+
+/* ====================================================================
+   PARALLAX: JS will set --scroll-y via inline style; CSS uses it
+   ==================================================================== */
+.land-back {
+    transform: translateY(calc(var(--parallax-back, 0px)));
+}
+
+.land-mid {
+    transform: translateY(calc(var(--parallax-mid, 0px)));
+}
+
+.land-front {
+    transform: translateY(calc(var(--parallax-front, 0px)));
+}
