@@ -3788,39 +3788,42 @@ div:has(> #exportJSONBtn) {
     -webkit-backdrop-filter: blur(20px) !important;
 }
 
-/* ─── AI SCAN ROTATING BORDER ───────────────────────────────────────── */
+/* ─── AI SCAN BORDER — contained pulse only ─────────────────────────── */
 
-/* Scanning state: animated conic gradient border */
-.trip-form>div:first-child.scanning {
-    border: 2px solid transparent !important;
+/* Scan card container: strictly contained, no bleed possible */
+.trip-form>div:first-child {
+    overflow: hidden !important;
+    isolation: isolate !important;
     position: relative !important;
 }
 
-.trip-form>div:first-child.scanning::before {
-    content: '' !important;
-    position: absolute !important;
-    inset: -2px !important;
-    border-radius: inherit !important;
-    background: conic-gradient(var(--accent-seafoam) 0deg,
-            var(--accent-gold) 90deg,
-            var(--accent-coral) 180deg,
-            var(--accent-seafoam) 360deg) !important;
-    animation: scanBorderSpin 2s linear infinite !important;
-    z-index: -1 !important;
+/* Scanning state: seafoam box-shadow glow pulse only — no pseudo-elements */
+.trip-form>div:first-child.scanning {
+    border: 2px solid rgba(78, 205, 196, 0.5) !important;
+    box-shadow: 0 0 0 3px rgba(78, 205, 196, 0.2) !important;
+    animation: scanPulse 1.5s ease-in-out infinite !important;
+    transition: border-color 300ms ease, box-shadow 300ms ease !important;
 }
 
-.trip-form>div:first-child.scanning::after {
-    content: '' !important;
-    position: absolute !important;
-    inset: 2px !important;
-    border-radius: 14px !important;
-    background: rgba(78, 205, 196, 0.04) !important;
-    z-index: -1 !important;
+/* Not-scanning: restore plain dashed border, no glow */
+.trip-form>div:first-child:not(.scanning) {
+    border: 2px dashed rgba(78, 205, 196, 0.4) !important;
+    box-shadow: none !important;
+    animation: none !important;
+    transition: border-color 500ms ease, box-shadow 500ms ease, opacity 500ms ease !important;
 }
 
-@keyframes scanBorderSpin {
-    to {
-        transform: rotate(360deg);
+@keyframes scanPulse {
+
+    0%,
+    100% {
+        box-shadow: 0 0 0 3px rgba(78, 205, 196, 0.2);
+        border-color: rgba(78, 205, 196, 0.5);
+    }
+
+    50% {
+        box-shadow: 0 0 0 6px rgba(78, 205, 196, 0.08);
+        border-color: rgba(78, 205, 196, 0.8);
     }
 }
 
