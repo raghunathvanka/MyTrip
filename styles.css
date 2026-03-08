@@ -3954,3 +3954,74 @@ div:has(> #exportJSONBtn) {
 .donut-legend-dimmed {
     opacity: 0.4 !important;
 }
+
+/* ====================================================================
+   BACKGROUND BLOBS — glassmorphism depth layer
+   Elements are in HTML (blob-1, blob-2, blob-3) but CSS was missing.
+   ==================================================================== */
+
+.bg-blob {
+    position: fixed;
+    border-radius: 50%;
+    z-index: 0;
+    pointer-events: none;
+    will-change: transform;
+    /* GPU composited — no layout cost */
+}
+
+.blob-1 {
+    width: 500px;
+    height: 500px;
+    background: rgba(78, 205, 196, 0.08);
+    filter: blur(100px);
+    top: -100px;
+    right: -150px;
+}
+
+.blob-2 {
+    width: 600px;
+    height: 600px;
+    background: rgba(255, 107, 107, 0.05);
+    filter: blur(120px);
+    bottom: 5%;
+    left: -200px;
+}
+
+.blob-3 {
+    width: 400px;
+    height: 400px;
+    background: rgba(247, 201, 72, 0.06);
+    filter: blur(90px);
+    top: 45%;
+    right: 10%;
+}
+
+/* ── Ensure all page content sits above blobs ── */
+body>#app,
+body>.app-container,
+body>[id="app"] {
+    position: relative;
+    z-index: 1;
+}
+
+/* Every direct screen child of the app also at z-index 1 */
+#welcomeScreen,
+#tripListScreen,
+#tripFormScreen,
+#tripDetailScreen,
+.app-header,
+#toastContainer,
+#modalOverlay,
+#loadingIndicator {
+    position: relative;
+    z-index: 1;
+}
+
+/* ── .glass-card — proper glassmorphism, works now blobs are behind it ── */
+.glass-card {
+    background: rgba(255, 255, 255, 0.07) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    border-radius: var(--radius-card, 20px) !important;
+}
