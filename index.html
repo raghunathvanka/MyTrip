@@ -70,6 +70,11 @@
 </head>
 
 <body>
+    <!-- Decorative background blobs (fixed, non-interactive) -->
+    <div class="bg-blob blob-1" aria-hidden="true"></div>
+    <div class="bg-blob blob-2" aria-hidden="true"></div>
+    <div class="bg-blob blob-3" aria-hidden="true"></div>
+
     <!-- App Container -->
     <div id="app" class="app-container">
 
@@ -80,7 +85,7 @@
                 <h1 class="app-title">
                     <span>MyTrip</span>
                     <span
-                        style="font-family:'Outfit',sans-serif;font-size:10px;font-weight:600;letter-spacing:0.5px;background:rgba(255,255,255,0.15);color:rgba(255,255,255,0.8);padding:2px 7px;border-radius:10px;vertical-align:middle;margin-left:6px;border:1px solid rgba(255,255,255,0.2);">v2.0</span>
+                        style="font-family:'Outfit',sans-serif;font-size:10px;font-weight:500;letter-spacing:0.5px;background:rgba(247,201,72,0.15);color:var(--accent-gold);padding:2px 8px;border-radius:20px;vertical-align:middle;margin-left:6px;border:1px solid rgba(247,201,72,0.3);">v2.0</span>
                 </h1>
                 <div class="header-actions">
                     <!-- Sync Status with label -->
@@ -401,6 +406,95 @@
                 console.log('[App] Service Worker disabled in development');
             }
         }
+    </script>
+
+    <!-- Bottom Tab Bar -->
+    <nav class="bottom-tab-bar" id="bottomTabBar" aria-label="Section navigation">
+        <button class="tab-item active" data-tab="itinerary">
+            <span class="tab-dot" aria-hidden="true"></span>
+            <span class="tab-icon">🗓</span>
+            <span class="tab-label">Itinerary</span>
+        </button>
+        <button class="tab-item" data-tab="budget">
+            <span class="tab-dot" aria-hidden="true"></span>
+            <span class="tab-icon">💰</span>
+            <span class="tab-label">Budget</span>
+        </button>
+        <button class="tab-item" data-tab="bookings">
+            <span class="tab-dot" aria-hidden="true"></span>
+            <span class="tab-icon">📋</span>
+            <span class="tab-label">Bookings</span>
+        </button>
+    </nav>
+
+    <!-- Tab Bar Controller (safe: no MutationObserver) -->
+    <script>
+        (function () {
+            var tabBar = document.getElementById('bottomTabBar');
+            if (!tabBar) return;
+
+            // Screen IDs that should HIDE the tab bar
+            var HIDE_ON = ['welcomeScreen', 'tripFormScreen', 'tripListScreen'];
+
+            // Scroll targets per tab (multiple selectors, first match wins)
+            var TARGETS = {
+                itinerary: ['.day-card', '.day-section', '[data-section="itinerary"]'],
+                budget: ['.budget-primary-summary', '.budget-overview-grid', '[data-section="budget"]'],
+                bookings: ['.prebooking-card', '[data-section="bookings"]']
+            };
+
+            function isTripDetailActive() {
+                // All HIDE_ON screens must be hidden
+                for (var i = 0; i < HIDE_ON.length; i++) {
+                    var el = document.getElementById(HIDE_ON[i]);
+                    if (el && !el.classList.contains('hidden')) return false;
+                }
+                // At least one day card must exist in the DOM
+                return !!document.querySelector('.day-card, .day-section');
+            }
+
+            function updateVisibility() {
+                var show = isTripDetailActive();
+                if (show && !tabBar.classList.contains('visible')) {
+                    tabBar.classList.add('visible');
+                } else if (!show && tabBar.classList.contains('visible')) {
+                    tabBar.classList.remove('visible');
+                }
+            }
+
+            function setActive(name) {
+                tabBar.querySelectorAll('.tab-item').forEach(function (btn) {
+                    btn.classList.toggle('active', btn.dataset.tab === name);
+                });
+            }
+
+            function scrollTo(name) {
+                var selectors = TARGETS[name];
+                if (!selectors) return;
+                var container = document.querySelector('.app-container') || document.getElementById('app') || window;
+                for (var i = 0; i < selectors.length; i++) {
+                    var el = document.querySelector(selectors[i]);
+                    if (el) {
+                        var top = el.getBoundingClientRect().top + (container.scrollTop || 0) - 80;
+                        try { container.scrollTo({ top: top, behavior: 'smooth' }); } catch (e) { }
+                        return;
+                    }
+                }
+            }
+
+            // Tab clicks
+            tabBar.addEventListener('click', function (e) {
+                var btn = e.target.closest('.tab-item');
+                if (!btn) return;
+                setActive(btn.dataset.tab);
+                scrollTo(btn.dataset.tab);
+            });
+
+            // Poll every 400ms — lightweight, no infinite loop risk
+            setInterval(updateVisibility, 400);
+            // Also run immediately after app boots
+            setTimeout(updateVisibility, 800);
+        })();
     </script>
 
 </body>
