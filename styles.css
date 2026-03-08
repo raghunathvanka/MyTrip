@@ -2675,3 +2675,435 @@ button[id="saveBasicBtn"] {
     font-size: 11px;
     color: var(--text-muted);
 }
+
+/* ====================================================================
+   ITINERARY PAGE — BOARDING PASS DESIGN
+   Targeting: .card (day cards), .cat-chip, .item-card, .item-menu-btn
+               #addDayBtn, .day-progress-row, #daysList
+   ==================================================================== */
+
+/* ---- Trip detail page header: slide down on entry ---- */
+#tripDetailContent>div:first-child {
+    animation: itinHeaderIn 400ms ease-out both;
+}
+
+@keyframes itinHeaderIn {
+    from {
+        transform: translateY(-20px);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* ---- Trip name in header: Playfair Display ---- */
+#tripDetailContent h2 {
+    font-family: var(--font-serif) !important;
+    font-size: 22px !important;
+    font-weight: 600 !important;
+    color: var(--text-primary) !important;
+    margin-bottom: 2px !important;
+}
+
+/* ---- Destination subtitle ---- */
+#tripDetailContent>div:first-child>button+div>div>p:first-of-type {
+    font-family: 'Outfit', sans-serif;
+    font-size: 14px !important;
+    color: var(--text-secondary) !important;
+}
+
+/* ---- Date range text ---- */
+#tripDetailContent>div:first-child>button+div>div>p:last-of-type {
+    font-family: 'Outfit', sans-serif;
+    font-size: 13px !important;
+    color: var(--text-secondary) !important;
+}
+
+/* ---- #daysList: vertical column of boarding passes ---- */
+#daysList {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+/* ====================================================================
+   BOARDING PASS DAY CARD
+   The existing .card class is re-styled into a boarding pass.
+   ==================================================================== */
+
+/* Override the #daysList > .card — only target day cards, not budget card */
+#daysList .card {
+    padding: 0 !important;
+    border-radius: 20px !important;
+    overflow: hidden !important;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4) !important;
+    cursor: default !important;
+    position: relative !important;
+    border: 1px solid var(--glass-border) !important;
+    background: var(--glass-bg) !important;
+    backdrop-filter: var(--glass-blur) !important;
+    -webkit-backdrop-filter: var(--glass-blur) !important;
+    animation: boardingPassIn 500ms ease-out both;
+}
+
+/* Stagger each day card */
+#daysList .card:nth-child(1) {
+    animation-delay: 150ms;
+}
+
+#daysList .card:nth-child(2) {
+    animation-delay: 300ms;
+}
+
+#daysList .card:nth-child(3) {
+    animation-delay: 450ms;
+}
+
+#daysList .card:nth-child(4) {
+    animation-delay: 600ms;
+}
+
+#daysList .card:nth-child(5) {
+    animation-delay: 750ms;
+}
+
+#daysList .card:nth-child(6) {
+    animation-delay: 900ms;
+}
+
+#daysList .card:nth-child(7) {
+    animation-delay: 1050ms;
+}
+
+@keyframes boardingPassIn {
+    from {
+        transform: translateY(40px);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* No hover lift on day cards */
+#daysList .card:hover {
+    transform: none !important;
+    background: var(--glass-bg) !important;
+}
+
+/* ---- TICKET TOP SECTION (day header) ---- */
+/* This is the first child div inside the day card */
+#daysList .card>div:first-child {
+    background: rgba(255, 255, 255, 0.1) !important;
+    padding: 20px !important;
+    margin: 0 !important;
+}
+
+/* "Day N - Weekday" h4 */
+#daysList .card h4 {
+    font-family: var(--font-serif) !important;
+    font-size: 22px !important;
+    font-weight: 700 !important;
+    color: var(--accent-gold) !important;
+    margin: 0 !important;
+}
+
+/* Date below the day number */
+#daysList .card h4+p,
+#daysList .card>div:first-child>div:first-child>div:first-child>p {
+    font-family: 'Outfit', sans-serif !important;
+    font-size: 11px !important;
+    color: rgba(255, 255, 255, 0.5) !important;
+    margin-top: 2px !important;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 20px;
+    padding: 2px 10px;
+    display: inline-block;
+}
+
+/* ---- PERFORATION LINE: between top section and body ---- */
+#daysList .card .day-progress-row {
+    position: relative;
+    margin: 0 !important;
+    padding: 10px 20px !important;
+    border-top: 2px dashed rgba(255, 255, 255, 0.12);
+    background: transparent !important;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Semicircle notches at left and right edges */
+#daysList .card .day-progress-row::before,
+#daysList .card .day-progress-row::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--bg-primary);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+#daysList .card .day-progress-row::before {
+    left: -7px;
+}
+
+#daysList .card .day-progress-row::after {
+    right: -7px;
+}
+
+/* Progress track & fill */
+.day-progress-track {
+    flex: 1;
+    height: 5px !important;
+    background: rgba(255, 255, 255, 0.1) !important;
+    border-radius: 3px !important;
+    overflow: hidden !important;
+}
+
+.day-progress-fill {
+    height: 100% !important;
+    border-radius: 3px !important;
+}
+
+/* ---- TICKET BODY: item list area ---- */
+/* Everything after the progress row row inside the card */
+#daysList .card>div:nth-child(3),
+#daysList .card>div:nth-child(4),
+#daysList .card>div:nth-child(5),
+#daysList .card>div:nth-child(6),
+#daysList .card>div:last-child {
+    padding: 16px 20px !important;
+    background: transparent !important;
+    margin: 0 !important;
+}
+
+/* ---- Category chips ---- */
+.cat-chip {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    padding: 4px 12px !important;
+    border-radius: 20px !important;
+    font-family: 'Outfit', sans-serif !important;
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.5px !important;
+    margin-bottom: 10px !important;
+}
+
+.cat-chip.meal {
+    background: rgba(129, 199, 132, 0.12);
+    color: var(--color-meal);
+    border: 1px solid rgba(129, 199, 132, 0.25);
+}
+
+.cat-chip.activity {
+    background: rgba(206, 147, 216, 0.12);
+    color: var(--color-activity);
+    border: 1px solid rgba(206, 147, 216, 0.25);
+}
+
+.cat-chip.travel {
+    background: rgba(79, 195, 247, 0.12);
+    color: var(--color-travel);
+    border: 1px solid rgba(79, 195, 247, 0.25);
+}
+
+.cat-chip.stay {
+    background: rgba(255, 183, 77, 0.12);
+    color: var(--color-stay);
+    border: 1px solid rgba(255, 183, 77, 0.25);
+}
+
+/* ---- Item cards: mini glass lines with left color stripe ---- */
+.item-card {
+    background: rgba(255, 255, 255, 0.05) !important;
+    border: none !important;
+    border-radius: 12px !important;
+    padding: 12px 14px !important;
+    margin-bottom: 8px !important;
+    position: relative !important;
+    overflow: hidden !important;
+    animation: itemFadeIn 400ms ease-out both !important;
+}
+
+.item-card::before {
+    content: '' !important;
+    position: absolute !important;
+    top: 0;
+    left: 0;
+    bottom: 0 !important;
+    width: 3px !important;
+    border-radius: 0 !important;
+}
+
+.item-card.meal::before {
+    background: var(--color-meal);
+}
+
+.item-card.activity::before {
+    background: var(--color-activity);
+}
+
+.item-card.travel::before {
+    background: var(--color-travel);
+}
+
+.item-card.stay::before {
+    background: var(--color-stay);
+}
+
+@keyframes itemFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(8px) scaleY(0.95);
+        transform-origin: top;
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scaleY(1);
+    }
+}
+
+/* ⋯ menu button */
+.item-menu-btn {
+    position: absolute !important;
+    top: 8px !important;
+    right: 8px !important;
+    background: none !important;
+    border: none !important;
+    color: var(--text-muted) !important;
+    font-size: 18px !important;
+    cursor: pointer !important;
+    line-height: 1 !important;
+    padding: 4px !important;
+    transition: color 0.15s ease !important;
+}
+
+.item-menu-btn:hover {
+    color: var(--text-primary) !important;
+}
+
+/* Item name text */
+.item-card>div>div>div:first-child {
+    font-family: 'Outfit', sans-serif !important;
+    font-size: 15px !important;
+    font-weight: 500 !important;
+    color: var(--text-primary) !important;
+}
+
+/* Item sub-info text */
+.item-card>div>div>div:nth-child(2) {
+    font-family: 'Outfit', sans-serif !important;
+    font-size: 12px !important;
+    color: var(--text-secondary) !important;
+}
+
+/* Expected amount label */
+.item-card>div>div:last-child>div:first-child {
+    font-size: 11px !important;
+    color: var(--text-muted) !important;
+}
+
+/* Actual amount */
+.item-card>div>div:last-child>div:nth-child(2) {
+    font-family: 'Outfit', sans-serif !important;
+    font-size: 16px !important;
+    font-weight: 600 !important;
+    color: var(--text-primary) !important;
+}
+
+/* ---- Add-item buttons strip (bottom of card) ---- */
+#daysList .card>div:last-child {
+    border-top: 1px solid rgba(255, 255, 255, 0.06) !important;
+    display: flex !important;
+    gap: 8px !important;
+    overflow-x: auto !important;
+    padding: 12px 20px 16px !important;
+    scrollbar-width: none !important;
+}
+
+#daysList .card>div:last-child::-webkit-scrollbar {
+    display: none;
+}
+
+/* Pill-style add buttons */
+#daysList .card>div:last-child .btn {
+    flex-shrink: 0 !important;
+    border-radius: 50px !important;
+    padding: 8px 16px !important;
+    font-family: 'Outfit', sans-serif !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    white-space: nowrap !important;
+}
+
+/* Add Travel pill */
+[id^="addTravel"] {
+    background: rgba(79, 195, 247, 0.08) !important;
+    border: 1.5px solid rgba(79, 195, 247, 0.35) !important;
+    color: var(--color-travel) !important;
+}
+
+/* Add Stay pill */
+[id^="addAccommodation"] {
+    background: rgba(255, 183, 77, 0.08) !important;
+    border: 1.5px solid rgba(255, 183, 77, 0.35) !important;
+    color: var(--color-stay) !important;
+}
+
+/* Add Meal pill */
+[id^="addMeal"] {
+    background: rgba(129, 199, 132, 0.08) !important;
+    border: 1.5px solid rgba(129, 199, 132, 0.35) !important;
+    color: var(--color-meal) !important;
+}
+
+/* Add Activity pill */
+[id^="addActivity"] {
+    background: rgba(206, 147, 216, 0.08) !important;
+    border: 1.5px solid rgba(206, 147, 216, 0.35) !important;
+    color: var(--color-activity) !important;
+}
+
+/* ---- Self-drive banner ---- */
+.sd-route-card,
+[class*="sd-"] {
+    border-radius: 14px;
+    background: linear-gradient(135deg, #4A3F8F, #6B5EAD) !important;
+}
+
+/* ---- Add Day button ---- */
+#addDayBtn {
+    width: 100% !important;
+    height: 56px !important;
+    border: 2px dashed rgba(255, 255, 255, 0.15) !important;
+    border-radius: 20px !important;
+    background: transparent !important;
+    color: rgba(255, 255, 255, 0.4) !important;
+    font-family: 'Outfit', sans-serif !important;
+    font-size: 15px !important;
+    font-weight: 500 !important;
+    cursor: pointer !important;
+    transition: background 0.2s ease, border-color 0.2s ease !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 8px !important;
+}
+
+#addDayBtn:hover {
+    background: rgba(255, 255, 255, 0.03) !important;
+    border-color: rgba(255, 255, 255, 0.25) !important;
+    color: rgba(255, 255, 255, 0.6) !important;
+}
