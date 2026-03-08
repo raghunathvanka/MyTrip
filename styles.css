@@ -3107,3 +3107,429 @@ button[id="saveBasicBtn"] {
     border-color: rgba(255, 255, 255, 0.25) !important;
     color: rgba(255, 255, 255, 0.6) !important;
 }
+
+/* ====================================================================
+   TRIP DETAIL PAGE — DESTINATION HERO + BUDGET OVERVIEW REDESIGN
+   ==================================================================== */
+
+/* ---- 1. DESTINATION HERO ---- */
+#tripDetailContent>div:first-child {
+    position: relative !important;
+    min-height: 200px !important;
+    margin-bottom: 28px !important;
+    margin-left: -24px !important;
+    margin-right: -24px !important;
+    padding: 0 !important;
+    border-radius: 0 !important;
+    overflow: hidden !important;
+    background: linear-gradient(135deg, #0D3B2E 0%, #1B5E4A 40%, #0D2137 100%) !important;
+    /* Dot texture overlay */
+    background-image:
+        radial-gradient(circle, rgba(255, 255, 255, 0.06) 1px, transparent 1px),
+        linear-gradient(135deg, #0D3B2E 0%, #1B5E4A 40%, #0D2137 100%) !important;
+    background-size: 22px 22px, 100% 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    align-items: flex-start !important;
+    animation: heroSlideDown 400ms ease-out both !important;
+}
+
+@keyframes heroSlideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Soft fade-out at bottom */
+#tripDetailContent>div:first-child::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 60px;
+    background: linear-gradient(to bottom, transparent, var(--bg-primary));
+    pointer-events: none;
+}
+
+/* Back button: glass circle, top-left absolute */
+#backToListFromDetail {
+    position: absolute !important;
+    top: 16px !important;
+    left: 20px !important;
+    width: 40px !important;
+    height: 40px !important;
+    border-radius: 50% !important;
+    background: rgba(255, 255, 255, 0.1) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    color: white !important;
+    margin-bottom: 0 !important;
+    z-index: 2 !important;
+    transition: background 0.2s ease !important;
+}
+
+#backToListFromDetail:hover {
+    background: rgba(255, 255, 255, 0.18) !important;
+}
+
+#backToListFromDetail svg {
+    stroke: white !important;
+}
+
+/* The flex container (holds trip info div and the closing tag seems malformed in original — it's the direct child div.flex) */
+#tripDetailContent>div:first-child>div:first-child {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    justify-content: center !important;
+    width: 100% !important;
+    padding: 64px 24px 40px !important;
+    gap: 6px !important;
+}
+
+/* Trip name h2 inside hero */
+#tripDetailContent>div:first-child h2 {
+    font-family: var(--font-serif) !important;
+    font-size: 32px !important;
+    font-weight: 700 !important;
+    color: var(--accent-gold) !important;
+    margin: 4px 0 !important;
+    text-shadow: 0 2px 12px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* Destination p (📍 …) */
+#tripDetailContent>div:first-child>div:first-child>div>p:first-of-type {
+    font-family: 'Outfit', sans-serif !important;
+    font-size: 13px !important;
+    font-weight: 400 !important;
+    color: rgba(255, 255, 255, 0.6) !important;
+    margin: 0 !important;
+}
+
+/* Date range p */
+#tripDetailContent>div:first-child>div:first-child>div>p:last-of-type {
+    font-family: 'Outfit', sans-serif !important;
+    font-size: 13px !important;
+    font-weight: 300 !important;
+    color: rgba(255, 255, 255, 0.55) !important;
+    margin: 0 !important;
+}
+
+/* Action buttons row: position bottom-right of hero */
+#tripDetailContent>div:first-child>div:nth-child(2) {
+    position: absolute !important;
+    bottom: 20px !important;
+    right: 20px !important;
+    display: flex !important;
+    gap: 6px !important;
+    z-index: 2 !important;
+}
+
+/* Share/Edit/Delete as glass pill chips */
+#shareTripBtn,
+#editTripBtn,
+#deleteTripDetailBtn {
+    height: 34px !important;
+    padding: 0 14px !important;
+    border-radius: 20px !important;
+    font-family: 'Outfit', sans-serif !important;
+    font-size: 12px !important;
+    font-weight: 500 !important;
+    background: rgba(255, 255, 255, 0.1) !important;
+    border: 1px solid rgba(255, 255, 255, 0.18) !important;
+    backdrop-filter: blur(8px) !important;
+    -webkit-backdrop-filter: blur(8px) !important;
+    color: white !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+    transition: background 0.2s ease !important;
+}
+
+#shareTripBtn:hover,
+#editTripBtn:hover {
+    background: rgba(255, 255, 255, 0.2) !important;
+}
+
+#deleteTripDetailBtn {
+    background: rgba(255, 107, 107, 0.15) !important;
+    border-color: rgba(255, 107, 107, 0.3) !important;
+    color: var(--accent-coral) !important;
+}
+
+#deleteTripDetailBtn:hover {
+    background: rgba(255, 107, 107, 0.25) !important;
+}
+
+/* ---- 2. BUDGET OVERVIEW CARD ---- */
+.budget-overview-card {
+    background: var(--glass-bg) !important;
+    backdrop-filter: var(--glass-blur) !important;
+    -webkit-backdrop-filter: var(--glass-blur) !important;
+    border: 1px solid var(--glass-border) !important;
+    border-radius: var(--radius-card) !important;
+    box-shadow: var(--shadow-glass) !important;
+    animation: budgetCardIn 400ms 200ms ease-out both !important;
+}
+
+@keyframes budgetCardIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Two-column budget numbers layout */
+.budget-primary-summary {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 0 !important;
+}
+
+.budget-expected-primary,
+.budget-actual-primary {
+    flex: 1 !important;
+    min-width: 120px !important;
+    margin-top: 0 !important;
+}
+
+/* Divider between the two columns */
+.budget-expected-primary {
+    padding-right: 20px !important;
+    border-right: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+.budget-actual-primary {
+    padding-left: 20px !important;
+}
+
+/* Label: "BUDGET" / "SPENT" */
+.budget-label-primary {
+    font-family: 'Outfit', sans-serif !important;
+    font-size: 10px !important;
+    font-weight: 600 !important;
+    letter-spacing: 2px !important;
+    color: var(--text-muted) !important;
+    text-transform: uppercase !important;
+    margin-bottom: 8px !important;
+}
+
+/* Budget value: Playfair serif, gold */
+.budget-value-primary {
+    font-family: var(--font-serif) !important;
+    font-size: 28px !important;
+    font-weight: 700 !important;
+    margin-top: 0 !important;
+}
+
+/* Status pill (under/over budget) */
+.budget-status-pill {
+    font-family: 'Outfit', sans-serif !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    border-radius: 50px !important;
+    padding: 6px 16px !important;
+    margin-top: 10px !important;
+    display: inline-block !important;
+}
+
+.budget-status-pill.under-budget {
+    background: rgba(78, 205, 196, 0.1) !important;
+    border: 1px solid rgba(78, 205, 196, 0.3) !important;
+    color: var(--accent-seafoam) !important;
+}
+
+.budget-status-pill.over-budget {
+    background: rgba(255, 107, 107, 0.1) !important;
+    border: 1px solid rgba(255, 107, 107, 0.3) !important;
+    color: var(--accent-coral) !important;
+}
+
+/* ---- 3. SPEND BREAKDOWN (title) ---- */
+.budget-overview-card h3 {
+    font-family: var(--font-serif) !important;
+    font-size: 16px !important;
+    font-weight: 600 !important;
+    color: var(--text-primary) !important;
+}
+
+/* ---- 4. PRE-BOOKINGS SECTION TITLE ---- */
+#tripDetailContent>div>h3:first-child,
+.card h3:first-child {
+    font-family: var(--font-serif) !important;
+    font-size: 18px !important;
+    font-weight: 600 !important;
+    color: var(--text-primary) !important;
+}
+
+/* ---- 5. PREBOOKING INDIVIDUAL CARDS ---- */
+.prebooking-card {
+    background: rgba(255, 255, 255, 0.06) !important;
+    border-radius: 16px !important;
+    padding: 16px !important;
+    margin-bottom: 12px !important;
+    border: 1px solid var(--glass-border) !important;
+    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+    position: relative !important;
+    overflow: hidden !important;
+    animation: pbCardIn 400ms ease-out both !important;
+}
+
+/* Stagger prebooking cards */
+.prebooking-card:nth-child(1) {
+    animation-delay: 600ms;
+}
+
+.prebooking-card:nth-child(2) {
+    animation-delay: 700ms;
+}
+
+.prebooking-card:nth-child(3) {
+    animation-delay: 800ms;
+}
+
+.prebooking-card:nth-child(4) {
+    animation-delay: 900ms;
+}
+
+@keyframes pbCardIn {
+    from {
+        opacity: 0;
+        transform: translateY(12px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Booking title */
+.prebooking-card strong {
+    font-family: 'Outfit', sans-serif !important;
+    font-size: 15px !important;
+    font-weight: 600 !important;
+    color: var(--text-primary) !important;
+}
+
+/* Status badges */
+.pb-badge {
+    font-family: 'Outfit', sans-serif !important;
+    font-size: 10px !important;
+    font-weight: 600 !important;
+    border-radius: 20px !important;
+    padding: 3px 10px !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+}
+
+.pb-badge-paid {
+    background: rgba(78, 205, 196, 0.12) !important;
+    color: var(--accent-seafoam) !important;
+    border: 1px solid rgba(78, 205, 196, 0.3) !important;
+}
+
+.pb-badge-upcoming {
+    background: rgba(255, 183, 77, 0.12) !important;
+    color: var(--accent-gold) !important;
+    border: 1px solid rgba(255, 183, 77, 0.3) !important;
+}
+
+.pb-badge-overdue {
+    background: rgba(255, 107, 107, 0.12) !important;
+    color: var(--accent-coral) !important;
+    border: 1px solid rgba(255, 107, 107, 0.3) !important;
+}
+
+.pb-badge-soon {
+    background: rgba(255, 152, 0, 0.12) !important;
+    color: #FF9800 !important;
+    border: 1px solid rgba(255, 152, 0, 0.3) !important;
+}
+
+/* Due chip */
+.pb-due-chip {
+    font-family: 'Outfit', sans-serif !important;
+    font-size: 10px !important;
+    font-weight: 500 !important;
+    border-radius: 20px !important;
+    padding: 3px 10px !important;
+}
+
+/* Info row below title */
+.prebooking-card>div>div:first-child>div:last-child {
+    font-family: 'Outfit', sans-serif !important;
+    font-size: 12px !important;
+    color: var(--text-secondary) !important;
+}
+
+/* Reference / notes */
+.prebooking-card>div>div:first-child>div[style*="italic"] {
+    font-family: 'Outfit', sans-serif !important;
+    font-size: 11px !important;
+    color: var(--text-muted) !important;
+}
+
+/* Paid ✅ action button */
+.pb-action-btn {
+    background: rgba(78, 205, 196, 0.1) !important;
+    border: 1px solid rgba(78, 205, 196, 0.25) !important;
+    border-radius: 50% !important;
+    width: 32px !important;
+    height: 32px !important;
+    cursor: pointer !important;
+    font-size: 14px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    transition: background 0.2s ease !important;
+}
+
+.pb-action-btn:hover {
+    background: rgba(78, 205, 196, 0.2) !important;
+}
+
+/* ---- 6. EXPORT BUTTONS — compact side-by-side ---- */
+#exportJSONBtn,
+#exportCSVBtn {
+    flex: 1 !important;
+    height: 44px !important;
+    border-radius: 12px !important;
+    font-family: 'Outfit', sans-serif !important;
+    font-size: 14px !important;
+    font-weight: 500 !important;
+    background: var(--glass-bg) !important;
+    border: 1px solid var(--glass-border) !important;
+    color: var(--text-secondary) !important;
+    transition: background 0.2s ease, color 0.2s ease !important;
+}
+
+#exportJSONBtn:hover,
+#exportCSVBtn:hover {
+    background: var(--glass-hover) !important;
+    color: var(--text-primary) !important;
+}
+
+/* The export button row: keep as two side-by-side compact buttons */
+#exportJSONBtn+button,
+div:has(> #exportJSONBtn) {
+    gap: 12px !important;
+}
