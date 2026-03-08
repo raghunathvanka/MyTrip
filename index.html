@@ -233,22 +233,45 @@
                 <div id="tripList" class="trip-list"></div>
             </section>
 
-            <!-- Trip Creation/Edit Form -->
+            <!-- Trip Form Screen -->
             <section id="tripFormScreen" class="trip-form-screen hidden">
                 <div class="form-container">
-                    <div class="form-header">
-                        <button id="backToListBtn" class="icon-btn" aria-label="Back">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2">
+
+                    <!-- Form Hero -->
+                    <div class="pf-hero">
+                        <button id="backToListBtn" class="pf-back-btn" aria-label="Back">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2.5">
                                 <line x1="19" y1="12" x2="5" y2="12"></line>
                                 <polyline points="12 19 5 12 12 5"></polyline>
                             </svg>
                         </button>
-                        <h2 id="formTitle" class="form-title">Plan Your Trip</h2>
+                        <div class="pf-title-area">
+                            <h2 id="formTitle" class="pf-page-title">Plan Your Trip</h2>
+                            <!-- 3 step indicator -->
+                            <div class="pf-steps" id="pfSteps">
+                                <div class="pf-step active" data-step="0">
+                                    <div class="pf-step-dot"></div>
+                                    <span class="pf-step-label">Details</span>
+                                </div>
+                                <div class="pf-step-line"></div>
+                                <div class="pf-step" data-step="1">
+                                    <div class="pf-step-dot"></div>
+                                    <span class="pf-step-label">Vehicle</span>
+                                </div>
+                                <div class="pf-step-line"></div>
+                                <div class="pf-step" data-step="2">
+                                    <div class="pf-step-dot"></div>
+                                    <span class="pf-step-label">Bookings</span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
+
                     <form id="tripForm" class="trip-form"></form>
                 </div>
             </section>
+
 
             <!-- Trip Detail View -->
             <section id="tripDetailScreen" class="trip-detail-screen hidden">
@@ -505,6 +528,46 @@
                 if (mid) mid.style.transform = 'translateY(' + (s * 0.2) + 'px)';
                 if (front) front.style.transform = 'translateY(' + (s * 0.3) + 'px)';
             }, { passive: true });
+        })();
+    </script>
+
+    <!-- Step indicator controller for planning form -->
+    <script>
+        (function () {
+            function updateSteps() {
+                var steps = document.querySelectorAll('.pf-step');
+                var lines = document.querySelectorAll('.pf-step-line');
+                if (!steps.length) return;
+
+                var scroller = document.querySelector('.app-container') || document.getElementById('app');
+                if (!scroller) return;
+
+                // Milestones: percentage of total scroll within the form screen
+                var totalH = scroller.scrollHeight - scroller.clientHeight;
+                var pct = totalH > 0 ? scroller.scrollTop / totalH : 0;
+
+                var activeIdx = pct < 0.35 ? 0 : pct < 0.70 ? 1 : 2;
+
+                steps.forEach(function (s, i) {
+                    s.classList.toggle('active', i === activeIdx);
+                    s.classList.toggle('done', i < activeIdx);
+                });
+                lines.forEach(function (l, i) {
+                    l.classList.toggle('done', i < activeIdx);
+                });
+            }
+
+            // Run when form becomes visible
+            var scroller = document.querySelector('.app-container') || document.getElementById('app');
+            if (scroller) {
+                scroller.addEventListener('scroll', updateSteps, { passive: true });
+            }
+            // Also update when form is shown (poll)
+            setInterval(function () {
+                if (!document.getElementById('tripFormScreen').classList.contains('hidden')) {
+                    updateSteps();
+                }
+            }, 600);
         })();
     </script>
 
