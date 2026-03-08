@@ -532,23 +532,22 @@ const App = {
             <div id="vehicleSection" style="display: ${trip.isSelfDriveTrip ? 'block' : 'none'};">
                 <div class="form-group">
                     <label class="form-label" for="vehicleName">Vehicle Name/Model</label>
-                    <select 
+                    <input 
+                        type="text" 
                         id="vehicleName" 
-                        class="form-select"
+                        class="form-input"
+                        list="vehicleModelList"
+                        placeholder="Type or select vehicle model..."
+                        value="${trip.vehicleName || ''}"
                     >
-                        <option value="">-- Select Vehicle --</option>
+                    <datalist id="vehicleModelList">
                         ${Object.entries(INDIAN_CAR_MODELS).map(([brand, models]) => `
-                            <optgroup label="${brand}">
-                                ${models.map(model => `
-                                    <option value="${brand} ${model}" ${trip.vehicleName === `${brand} ${model}` ? 'selected' : ''}>
-                                        ${model}
-                                    </option>
-                                `).join('')}
-                            </optgroup>
+                            ${models.map(model => `
+                                <option value="${brand} ${model}">
+                            `).join('')}
                         `).join('')}
-                        <option value="other">Other (Manual Entry)</option>
-                    </select>
-                    <p class="form-hint" style="font-size: 0.75rem; margin-top: 0.25rem;">Select from popular Indian car models</p>
+                    </datalist>
+                    <p class="form-hint" style="font-size: 0.75rem; margin-top: 0.25rem;">Type to search popular Indian car models</p>
                 </div>
                 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
