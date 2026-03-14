@@ -1318,53 +1318,98 @@ const App = {
         const variance = totalActual - totalExpected;
 
         content.innerHTML = `
-            <!-- Header -->
-            <div style="margin-bottom: 2rem;">
-                <button id="backToListFromDetail" class="icon-btn" style="margin-bottom: 1rem;">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <!-- Hero Section: 200px, gradient, back button + ⋯ more menu -->
+            <div id="tripDetailHero" style="
+                position: relative;
+                width: 100%;
+                min-height: 200px;
+                background: linear-gradient(135deg, #0D3B2E 0%, #1B5E4A 50%, #0D2137 100%);
+                overflow: hidden;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                margin-bottom: 2rem;
+                border-radius: 0 0 24px 24px;
+            ">
+                <!-- Dot texture overlay -->
+                <div style="position:absolute;inset:0;background-image:radial-gradient(circle,rgba(255,255,255,0.06) 1px,transparent 1px);background-size:20px 20px;pointer-events:none;"></div>
+
+                <!-- Top-left: back button -->
+                <button id="backToListFromDetail" style="
+                    position: absolute;
+                    top: 16px; left: 16px;
+                    width: 40px; height: 40px;
+                    border-radius: 50%;
+                    background: rgba(255,255,255,0.12);
+                    border: 1px solid rgba(255,255,255,0.2);
+                    backdrop-filter: blur(8px);
+                    display: flex; align-items: center; justify-content: center;
+                    cursor: pointer; z-index: 2;
+                    transition: background 0.2s;
+                " onmouseover="this.style.background='rgba(255,255,255,0.22)'" onmouseout="this.style.background='rgba(255,255,255,0.12)'">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.9)" stroke-width="2.5">
                         <line x1="19" y1="12" x2="5" y2="12"></line>
                         <polyline points="12 19 5 12 12 5"></polyline>
                     </svg>
                 </button>
-                
-                <div style="display: flex; align-items: start; justify-content: space-between; gap: 1rem;">
-                    <div>
-                        <h2 style="margin: 0 0 0.5rem 0;">${trip.tripName || trip.name}</h2>
-                        <p style="margin: 0; color: var(--color-text-secondary); font-size: 1rem;">
-                            📍 ${trip.destination}
-                        </p>
-                        <p style="margin: 0.5rem 0 0 0; color: var(--color-text-secondary); font-size: 0.875rem;">
-                            ${UIComponents.formatDate(trip.startDate)} - ${UIComponents.formatDate(trip.endDate)}
-                        </p>
-                    </div>
-                    </div>
-                    <div style="display: flex; gap: 0.5rem;">
-                        <button id="shareTripBtn" class="btn btn-secondary" style="color: var(--color-primary); border-color: rgba(99,102,241,0.3);">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <circle cx="18" cy="5" r="3"></circle>
-                                <circle cx="6" cy="12" r="3"></circle>
-                                <circle cx="18" cy="19" r="3"></circle>
-                                <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
-                                <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
-                            </svg>
+
+                <!-- Top-right: ⋯ more menu -->
+                <div style="position:absolute;top:16px;right:16px;z-index:10;">
+                    <button id="tripMoreMenuBtn" style="
+                        width: 40px; height: 40px;
+                        border-radius: 50%;
+                        background: rgba(255,255,255,0.12);
+                        border: 1px solid rgba(255,255,255,0.2);
+                        backdrop-filter: blur(8px);
+                        display: flex; align-items: center; justify-content: center;
+                        cursor: pointer;
+                        font-size: 20px; color: rgba(255,255,255,0.9);
+                        transition: background 0.2s;
+                    " onmouseover="this.style.background='rgba(255,255,255,0.22)'" onmouseout="this.style.background='rgba(255,255,255,0.12)'">⋯</button>
+                    <div id="tripMoreMenuDropdown" style="
+                        display: none;
+                        position: absolute;
+                        top: 48px; right: 0;
+                        background: rgba(13,33,55,0.96);
+                        backdrop-filter: blur(20px);
+                        border: 1px solid rgba(255,255,255,0.14);
+                        border-radius: 14px;
+                        min-width: 160px;
+                        padding: 6px;
+                        box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+                        z-index: 20;
+                        animation: dropdownIn 0.15s ease-out both;
+                    ">
+                        <button id="shareTripBtn" style="display:flex;align-items:center;gap:10px;width:100%;padding:10px 14px;border-radius:10px;background:none;border:none;color:rgba(255,255,255,0.88);font-family:'Outfit',sans-serif;font-size:14px;cursor:pointer;transition:background 0.15s;" onmouseover="this.style.background='rgba(255,255,255,0.08)'" onmouseout="this.style.background='none'">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
                             Share
                         </button>
-                        <button id="deleteTripDetailBtn" class="btn btn-secondary" style="color: var(--color-error); border-color: rgba(239, 68, 68, 0.2);">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <polyline points="3 6 5 6 21 6"></polyline>
-                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                            </svg>
-                            Delete
-                        </button>
-                        <button id="editTripBtn" class="btn btn-secondary">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                            </svg>
+                        <button id="editTripBtn" style="display:flex;align-items:center;gap:10px;width:100%;padding:10px 14px;border-radius:10px;background:none;border:none;color:rgba(255,255,255,0.88);font-family:'Outfit',sans-serif;font-size:14px;cursor:pointer;transition:background 0.15s;" onmouseover="this.style.background='rgba(255,255,255,0.08)'" onmouseout="this.style.background='none'">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                             Edit
+                        </button>
+                        <div style="height:1px;background:rgba(255,255,255,0.08);margin:4px 10px;"></div>
+                        <button id="deleteTripDetailBtn" style="display:flex;align-items:center;gap:10px;width:100%;padding:10px 14px;border-radius:10px;background:none;border:none;color:#FF6B6B;font-family:'Outfit',sans-serif;font-size:14px;cursor:pointer;transition:background 0.15s;" onmouseover="this.style.background='rgba(255,107,107,0.1)'" onmouseout="this.style.background='none'">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                            Delete
                         </button>
                     </div>
                 </div>
+
+                <!-- Center: trip info -->
+                <div style="text-align:center;padding:56px 24px 40px;position:relative;z-index:1;">
+                    <p style="margin:0 0 6px;font-family:'Outfit',sans-serif;font-size:12px;font-weight:400;color:rgba(255,255,255,0.6);letter-spacing:0.5px;">📍 ${trip.destination || ''}</p>
+                    <h2 style="margin:0 0 6px;font-family:'Playfair Display',serif;font-size:30px;font-weight:700;color:#F7C948;line-height:1.2;">${trip.tripName || trip.name}</h2>
+                    <p style="margin:0 0 12px;font-family:'Outfit',sans-serif;font-size:13px;font-weight:300;color:rgba(255,255,255,0.55);">
+                        ${UIComponents.formatDate(trip.startDate)} — ${UIComponents.formatDate(trip.endDate)}
+                    </p>
+                    <span style="display:inline-block;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.15);border-radius:20px;padding:5px 14px;font-family:'Outfit',sans-serif;font-size:12px;font-weight:500;color:rgba(255,255,255,0.85);">
+                        ${((new Date(trip.endDate) - new Date(trip.startDate)) / 86400000 + 1) || 0} Days · ${trip.adults || 2} Adults
+                    </span>
+                </div>
+
+                <!-- Bottom fade -->
+                <div style="position:absolute;bottom:0;left:0;right:0;height:50px;background:linear-gradient(to bottom,transparent,#0A1628);pointer-events:none;"></div>
             </div>
             
             <!-- Budget Summary -->
@@ -1390,33 +1435,40 @@ const App = {
                 const activeCats = Object.entries(catSpend).filter(([, v]) => v > 0).sort((a, b) => b[1] - a[1]);
                 const biggestCat = activeCats[0];
 
-                // SVG donut helpers
-                const CX = 65, CY = 65, R = 47;
-                function polarXY(cx, cy, r, deg) {
-                    const a = (deg - 90) * Math.PI / 180;
-                    return [cx + r * Math.cos(a), cy + r * Math.sin(a)];
-                }
-                function arcPath(cx, cy, r, s, e) {
-                    const large = (e - s) > 180 ? 1 : 0;
-                    const [x1, y1] = polarXY(cx, cy, r, s);
-                    const [x2, y2] = polarXY(cx, cy, r, e);
-                    return 'M ' + x1.toFixed(3) + ' ' + y1.toFixed(3) + ' A ' + r + ' ' + r + ' 0 ' + large + ' 1 ' + x2.toFixed(3) + ' ' + y2.toFixed(3);
-                }
-                const GAP = activeCats.length > 1 ? 3 : 0;
-                let donutSvg = '', legendHtml = '', startAngle = 0;
-                const circ = +(2 * Math.PI * R).toFixed(1);
+                // SVG donut using strokeDasharray circles — robust cross-browser approach
+                const SIZE = 150, SW = 22;
+                const R = (SIZE - SW) / 2;
+                const CX = SIZE / 2, CY = SIZE / 2;
+                const circ = +(2 * Math.PI * R).toFixed(2);
+
+                let donutCircles = '', legendHtml = '';
+                let cumulativePct = 0;
+
                 activeCats.forEach(([cat, amt], i) => {
-                    const sweep = (amt / catTotal) * 360;
-                    const endAngle = startAngle + sweep - (i < activeCats.length - 1 ? GAP : 0);
-                    const delay = (i * 0.15).toFixed(2);
-                    const dpth = arcPath(CX, CY, R, startAngle, endAngle);
-                    donutSvg += '<path d="' + dpth + '" fill="none" stroke="' + catColors[cat] + '" stroke-width="18" stroke-linecap="butt" style="stroke-dasharray:' + circ + ';stroke-dashoffset:' + circ + ';animation:donutDraw 0.9s ease-out ' + delay + 's forwards;"/>';
-                    legendHtml += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:7px;">' +
-                        '<span style="width:10px;height:10px;border-radius:50%;background:' + catColors[cat] + ';flex-shrink:0;display:inline-block;"></span>' +
-                        '<span style="font-family:\'Outfit\',sans-serif;font-size:12px;color:rgba(255,255,255,0.7);flex:1;">' + cat + '</span>' +
-                        '<span style="font-family:\'Outfit\',sans-serif;font-size:12px;font-weight:600;color:rgba(255,255,255,0.9);">' + UIComponents.formatCurrency(amt) + '</span>' +
-                        '</div>';
-                    startAngle += sweep;
+                    const pct = amt / catTotal;
+                    const dashArray = (pct * circ).toFixed(2);
+                    // offset: circumference * (1 - cumulative %) to rotate start point
+                    const dashOffset = (circ * (1 - cumulativePct)).toFixed(2);
+                    const delay = (i * 150);
+                    const color = catColors[cat];
+
+                    donutCircles +=
+                        `<circle cx="${CX}" cy="${CY}" r="${R}"` +
+                        ` fill="none" stroke="${color}" stroke-width="${SW}"` +
+                        ` stroke-dasharray="${dashArray} ${circ}"` +
+                        ` stroke-dashoffset="${dashOffset}"` +
+                        ` stroke-linecap="round"` +
+                        ` transform="rotate(-90 ${CX} ${CY})"` +
+                        ` style="transition:stroke-dasharray 900ms ease-out ${delay}ms;"/>`;
+
+                    legendHtml +=
+                        `<div style="display:flex;align-items:center;gap:8px;margin-bottom:7px;">` +
+                        `<span style="width:10px;height:10px;border-radius:50%;background:${color};flex-shrink:0;display:inline-block;"></span>` +
+                        `<span style="font-family:'Outfit',sans-serif;font-size:12px;color:rgba(255,255,255,0.7);flex:1;">${cat}</span>` +
+                        `<span style="font-family:'Outfit',sans-serif;font-size:12px;font-weight:600;color:rgba(255,255,255,0.9);">${UIComponents.formatCurrency(amt)}</span>` +
+                        `</div>`;
+
+                    cumulativePct += pct;
                 });
 
                 // Bar color based on percentage
@@ -1471,13 +1523,15 @@ const App = {
                     ${catTotal > 0 ? `
                         <div style="margin-top:1.5rem;">
                             <div style="font-family:'Outfit',sans-serif;font-size:14px;font-weight:500;color:rgba(255,255,255,0.6);margin-bottom:1rem;">Spend Breakdown</div>
-                            <div style="display:flex;align-items:center;gap:1.5rem;">
-                                <svg width="130" height="130" viewBox="0 0 130 130" style="flex-shrink:0;">
-                                    <circle cx="${CX}" cy="${CY}" r="${R}" fill="none" stroke="rgba(255,255,255,0.07)" stroke-width="18"/>
-                                    ${donutSvg}
-                                    ${biggestCat ? `<text x="${CX}" y="${CY}" text-anchor="middle" dominant-baseline="central" font-size="28" fill="rgba(255,255,255,0.7)">${catIcons[biggestCat[0]]}</text>` : ''}
+                            <div style="display:flex;align-items:center;gap:1.5rem;flex-wrap:wrap;">
+                                <svg id="spendDonut" width="${SIZE}" height="${SIZE}" viewBox="0 0 ${SIZE} ${SIZE}" style="flex-shrink:0;">
+                                    <!-- Background ring -->
+                                    <circle cx="${CX}" cy="${CY}" r="${R}" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="${SW}"/>
+                                    ${donutCircles}
+                                    <!-- Center emoji: dominant category -->
+                                    ${biggestCat ? `<text x="${CX}" y="${CY}" text-anchor="middle" dominant-baseline="central" font-size="28" fill="rgba(255,255,255,0.8)">${catIcons[biggestCat[0]]}</text>` : ''}
                                 </svg>
-                                <div style="flex:1;">${legendHtml}</div>
+                                <div style="flex:1;min-width:130px;">${legendHtml}</div>
                             </div>
                         </div>
                     ` : ''}
@@ -1617,16 +1671,32 @@ const App = {
 
         // Set up event listeners
         document.getElementById('backToListFromDetail').onclick = () => this.showTripList();
-        document.getElementById('editTripBtn').onclick = () => this.showTripForm(trip.id);
+        document.getElementById('editTripBtn').onclick = () => { document.getElementById('tripMoreMenuDropdown').style.display = 'none'; this.showTripForm(trip.id); };
+
+        // ⋯ More menu toggle
+        const moreBtn = document.getElementById('tripMoreMenuBtn');
+        const moreMenu = document.getElementById('tripMoreMenuDropdown');
+        if (moreBtn && moreMenu) {
+            moreBtn.onclick = (e) => {
+                e.stopPropagation();
+                const isOpen = moreMenu.style.display === 'block';
+                moreMenu.style.display = isOpen ? 'none' : 'block';
+            };
+            document.addEventListener('click', function closeMM(e) {
+                if (!moreMenu.contains(e.target) && e.target !== moreBtn) {
+                    moreMenu.style.display = 'none';
+                }
+            }, { once: false });
+        }
 
         const shareBtn = document.getElementById('shareTripBtn');
         if (shareBtn) {
-            shareBtn.onclick = () => this.showShareTripDialog();
+            shareBtn.onclick = () => { if (moreMenu) moreMenu.style.display = 'none'; this.showShareTripDialog(); };
         }
 
         const deleteBtn = document.getElementById('deleteTripDetailBtn');
         if (deleteBtn) {
-            deleteBtn.onclick = () => this.confirmDeleteTrip(trip.id);
+            deleteBtn.onclick = () => { if (moreMenu) moreMenu.style.display = 'none'; this.confirmDeleteTrip(trip.id); };
         }
 
         // Export buttons
