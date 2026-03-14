@@ -4160,3 +4160,59 @@ body>[id="app"] {
         transform-origin: top right;
     }
 }
+
+/* ---------------------------------------------------------------
+   FEEDBACK OVERLAY SYSTEM — feedback.js companion styles
+   --------------------------------------------------------------- */
+
+/* -- Toggle button pulse animation -- */
+@keyframes fbPulse {
+    0%, 100% { box-shadow: 0 0 0 4px rgba(78,205,196,0.15); }
+    50%       { box-shadow: 0 0 0 8px rgba(78,205,196,0.05); }
+}
+
+/* -- Textarea shake on empty save -- */
+@keyframes fbShake {
+    0%   { transform: translateX(0); }
+    20%  { transform: translateX(-6px); }
+    50%  { transform: translateX(6px); }
+    75%  { transform: translateX(-6px); }
+    100% { transform: translateX(0); }
+}
+
+/* -- Skeleton card pulse -- */
+@keyframes fbSkeletonPulse {
+    0%, 100% { opacity: 0.5; }
+    50%       { opacity: 1; }
+}
+
+/* -- Trigger "+" buttons (injected per zone) -- */
+.fb-trigger-btn {
+    position: absolute !important;
+    top: 8px !important;
+    right: 8px !important;
+    width: 22px !important;
+    height: 22px !important;
+    border-radius: 50% !important;
+    background: rgba(78,205,196,0.15) !important;
+    border: 1px solid rgba(78,205,196,0.45) !important;
+    color: var(--accent-seafoam, #4ECDC4) !important;
+    font-size: 13px !important;
+    font-family: 'Outfit', sans-serif !important;
+    font-weight: 600 !important;
+    line-height: 22px !important;
+    text-align: center !important;
+    cursor: pointer !important;
+    z-index: 10 !important;
+    display: none !important;   /* shown via JS when mode is ON */
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 0 !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.25) !important;
+    transition: transform 0.15s ease !important;
+}
+
+.fb-trigger-btn:hover {
+    transform: scale(1.15) !important;
+    background: rgba(78,205,196,0.25) !important;
+}
