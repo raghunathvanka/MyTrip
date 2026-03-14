@@ -3790,42 +3790,55 @@ div:has(> #exportJSONBtn) {
     -webkit-backdrop-filter: blur(20px) !important;
 }
 
-/* ─── AI SCAN BORDER — contained pulse only ─────────────────────────── */
+/* ─── AI SCAN CARD — NUCLEAR CONTAINMENT ─────────────────────────── */
 
-/* Scan card container: strictly contained, no bleed possible */
-.trip-form>div:first-child {
-    overflow: hidden !important;
-    isolation: isolate !important;
+/* The scan card element itself: hard walls — nothing escapes */
+#ai-scan-card {
     position: relative !important;
+    overflow: hidden !important;
+    contain: layout style !important;
+    isolation: isolate !important;
+    z-index: 0 !important;
 }
 
-/* Scanning state: seafoam box-shadow glow pulse only — no pseudo-elements */
-.trip-form>div:first-child.scanning {
-    border: 2px solid rgba(78, 205, 196, 0.5) !important;
-    box-shadow: 0 0 0 3px rgba(78, 205, 196, 0.2) !important;
+/* Glow lives inside via ::before — position:absolute + inset:0 = impossible to escape */
+#ai-scan-card::before {
+    content: '' !important;
+    position: absolute !important;
+    inset: 0 !important;
+    border-radius: inherit !important;
+    pointer-events: none !important;
+    z-index: 0 !important;
+    opacity: 0;
+    transition: opacity 500ms ease;
+    box-shadow: inset 0 0 0 2px rgba(78, 205, 196, 0.5);
+}
+
+/* Scanning active: fade in inner glow + pulse */
+#ai-scan-card.scanning::before {
+    opacity: 1 !important;
     animation: scanPulse 1.5s ease-in-out infinite !important;
-    transition: border-color 300ms ease, box-shadow 300ms ease !important;
 }
 
-/* Not-scanning: restore plain dashed border, no glow */
-.trip-form>div:first-child:not(.scanning) {
-    border: 2px dashed rgba(78, 205, 196, 0.4) !important;
-    box-shadow: none !important;
-    animation: none !important;
-    transition: border-color 500ms ease, box-shadow 500ms ease, opacity 500ms ease !important;
+/* Safety: kill any accidental form-level pseudo-elements that could bleed */
+.trip-form::before, .trip-form::after,
+#tripForm::before, #tripForm::after {
+    display: none !important;
+    content: none !important;
+}
+
+/* Safety global override for any scan/upload classes */
+[class*="scan"], [class*="upload"] {
+    overflow: hidden !important;
+    contain: layout !important;
 }
 
 @keyframes scanPulse {
-
-    0%,
-    100% {
-        box-shadow: 0 0 0 3px rgba(78, 205, 196, 0.2);
-        border-color: rgba(78, 205, 196, 0.5);
+    0%, 100% {
+        box-shadow: inset 0 0 0 2px rgba(78, 205, 196, 0.4), inset 0 0 10px rgba(78, 205, 196, 0.05);
     }
-
     50% {
-        box-shadow: 0 0 0 6px rgba(78, 205, 196, 0.08);
-        border-color: rgba(78, 205, 196, 0.8);
+        box-shadow: inset 0 0 0 2px rgba(78, 205, 196, 0.8), inset 0 0 20px rgba(78, 205, 196, 0.12);
     }
 }
 

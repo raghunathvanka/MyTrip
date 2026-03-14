@@ -1,4 +1,4 @@
-﻿/* ========================================
+/* ========================================
 }
             <!--  Scan document to pre-fill trip details -->
             <div style="background:rgba(99,102,241,0.07);border:1.5px dashed rgba(99,102,241,0.35);border-radius:10px;padding:0.85rem 1rem;margin-bottom:1.5rem;text-align:center;">
@@ -380,7 +380,7 @@ const App = {
 
         form.innerHTML = `
             <!-- Scan document to pre-fill trip details -->
-            <div style="background:rgba(99,102,241,0.07);border:1.5px dashed rgba(99,102,241,0.35);border-radius:10px;padding:0.85rem 1rem;margin-bottom:1.5rem;">
+            <div id="ai-scan-card" style="background:rgba(99,102,241,0.07);border:1.5px dashed rgba(99,102,241,0.35);border-radius:10px;padding:0.85rem 1rem;margin-bottom:1.5rem;position:relative;overflow:hidden;contain:layout;">
                 <!-- Scanned documents list (shown when at least one doc is scanned) -->
                 <div id="trip_scanned_list" style="display:none;margin-bottom:0.75rem;"></div>
 
@@ -2074,12 +2074,18 @@ const App = {
                 setCheck('isSelfDriveTrip', true, 'vehicleSection');
                 if (data.vehicleName) {
                     const vnEl = document.getElementById('vehicleName');
+                    // vehicleName is now a datalist input — set value directly
                     if (vnEl) {
-                        const match = Array.from(vnEl.options).find(o =>
-                            o.value.toLowerCase().includes(data.vehicleName.toLowerCase()) ||
-                            data.vehicleName.toLowerCase().includes(o.text.toLowerCase().trim())
-                        );
-                        if (match) vnEl.value = match.value;
+                        // Try to find a matching model in INDIAN_CAR_MODELS for clean brand+model format
+                        let matched = null;
+                        for (const [brand, models] of Object.entries(INDIAN_CAR_MODELS)) {
+                            const m = models.find(model =>
+                                `${brand} ${model}`.toLowerCase().includes(data.vehicleName.toLowerCase()) ||
+                                data.vehicleName.toLowerCase().includes(model.toLowerCase())
+                            );
+                            if (m) { matched = `${brand} ${m}`; break; }
+                        }
+                        vnEl.value = matched || data.vehicleName;
                     }
                 }
                 // Fill rental fields whenever there is a rentalCompany OR isRentalVehicle flag
