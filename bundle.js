@@ -1641,7 +1641,7 @@ const App = {
             <!-- Pre-bookings -->
             <div class="card" style="margin-bottom: 2rem; padding: 1.5rem;">
                 <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:1rem;">
-                    <h3 style="margin:0; font-size:1.1rem; font-weight:600;">🎫 Pre-bookings</h3>
+                    <h3 style="margin:0;font-family:'Playfair Display',serif;font-size:20px;font-weight:600;color:var(--text-primary,#fff);white-space:nowrap;">🎫 Pre-Bookings</h3>
                     <button id="addPrebookingBtn" class="btn btn-secondary" style="padding:0.5rem 1rem; font-size:0.85rem;">
                         + Add
                     </button>
@@ -1775,8 +1775,23 @@ const App = {
 
             const catEmoji = { 'Hotel': '🏨', 'Train': '🚂', 'Flight': '✈️', 'Bus': '🚌', 'Activity': '🎯', 'Other': '📌' }[pb.category] || '📌';
 
+            const isPaid = pb.paid || remaining <= 0;
+            const leftBorderColor = isPaid ? '#4ECDC4' : '#FF6B6B';
+            const paidPct = pb.totalAmount > 0
+                ? Math.min(Math.round(((pb.advancePaid || 0) / pb.totalAmount) * 100), 100)
+                : 0;
+
             return `
-                <div class="prebooking-card" style="border-left:3px solid ${accentColor};" data-pb-id="${pb.id}">
+                <div class="prebooking-card" style="
+                    background: rgba(255,255,255,0.07);
+                    backdrop-filter: blur(20px);
+                    -webkit-backdrop-filter: blur(20px);
+                    border: 1px solid rgba(255,255,255,0.12);
+                    border-left: 4px solid ${leftBorderColor};
+                    border-radius: 16px;
+                    padding: 16px;
+                    margin-bottom: 12px;
+                " data-pb-id="${pb.id}">
                     <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:0.5rem;">
                         <div style="flex:1;min-width:0;">
                             <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;margin-bottom:0.35rem;">
@@ -1787,7 +1802,18 @@ const App = {
                             </div>
                             <div style="font-size:0.8rem;color:var(--color-text-secondary);display:flex;gap:1rem;flex-wrap:wrap;margin-top:0.25rem;">
                                 <span>Total: <strong style="color:var(--color-text);">${fmt(pb.totalAmount)}</strong></span>
-                                <span>Paid: <strong style="color:#4caf50;">${fmt(pb.advancePaid)}</strong></span>
+                                <span>Paid: <strong style="color:#4ECDC4;">${fmt(pb.advancePaid)}</strong></span>
+                            </div>
+                            <!-- Payment progress bar -->
+                            <div style="margin-top:10px;margin-bottom:${remaining > 0 ? '4px' : '0'};">
+                                <div style="font-family:'Outfit',sans-serif;font-size:11px;color:rgba(255,255,255,0.45);margin-bottom:5px;">
+                                    ${fmt(pb.advancePaid)} paid of ${fmt(pb.totalAmount)}
+                                </div>
+                                <div style="height:5px;border-radius:3px;background:rgba(255,255,255,0.08);overflow:hidden;">
+                                    <div style="height:100%;width:${paidPct}%;background:#4ECDC4;border-radius:3px;transition:width 700ms ease-out;"></div>
+                                </div>
+                            </div>
+                            <div style="font-size:0.8rem;color:var(--color-text-secondary);display:flex;gap:1rem;flex-wrap:wrap;margin-top:4px;">
                                 ${remaining > 0 ? `<span>Balance: <strong style="color:${accentColor};">${fmt(remaining)}</strong></span>` : ''}
                                 ${pb.bookingRef ? `<span style="font-family:monospace;opacity:0.7;">${pb.bookingRef}</span>` : ''}
                             </div>
