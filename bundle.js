@@ -3001,7 +3001,7 @@ const App = {
                         <div style="margin-bottom: 1rem; position:relative;">
                             <button class="fb-trigger-btn" onclick="event.stopPropagation();if(window.fbTrigger)fbTrigger('Day ${day.dayNumber} - Stay section')">＋</button>
                             <div class="cat-chip stay">🛏 STAY</div>
-                            <div class="item-card stay" style="position:relative;">
+                            <div class="item-card stay" style="position:relative; background: rgba(255,255,255,0.07); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.12); border-left: 4px solid var(--accent-gold); border-radius: 16px;">
                             <button class="fb-trigger-btn" onclick="event.stopPropagation();if(window.fbTrigger)fbTrigger('Item: ${day.accommodation?.name}')">＋</button>
                             <div style="display: flex; justify-content: space-between; align-items: start;">
                                 <div style="flex: 1;">
@@ -3009,7 +3009,16 @@ const App = {
                                     <div style="font-size: 0.875rem; color: var(--color-text-secondary);">
                                         ${day.accommodation.type || 'Hotel'}
                                     </div>
-                                    ${day.accommodation.notes ? `<div style="font-size: 0.875rem; color: var(--color-text-secondary); margin-top: 0.25rem;">${day.accommodation.notes}</div>` : ''}
+                                    ${(() => {
+                                        const from = day.accommodation.preBookedFrom;
+                                        const to = day.accommodation.preBookedTo;
+                                        const fmt = d => new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+                                        if (from && to) return `<div style="font-size: 0.875rem; color: var(--accent-gold); margin-top: 0.25rem; font-weight: 500;">Pre-booked: ${fmt(from)} \u2013 ${fmt(to)}</div>`;
+                                        if (from) return `<div style="font-size: 0.875rem; color: var(--accent-gold); margin-top: 0.25rem; font-weight: 500;">Pre-booked from ${fmt(from)}</div>`;
+                                        if (to) return `<div style="font-size: 0.875rem; color: var(--accent-gold); margin-top: 0.25rem; font-weight: 500;">Pre-booked until ${fmt(to)}</div>`;
+                                        return '';
+                                    })()}
+                                    ${day.accommodation.notes && day.accommodation.notes !== 'Pre-booked (undefined to undefined)' ? `<div style="font-size: 0.875rem; color: var(--color-text-secondary); margin-top: 0.25rem;">${day.accommodation.notes}</div>` : ''}
                                     
                                     <div style="display:none">
                                         <button id="editAcc_${day.id}"></button>
@@ -3874,6 +3883,16 @@ const App = {
                 </div>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                     <div class="form-group">
+                        <label class="form-label" for="accPreBookedFrom">Check-in date (optional)</label>
+                        <input type="date" id="accPreBookedFrom" class="form-input" value="${currentAccommodation.preBookedFrom || ''}">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="accPreBookedTo">Check-out date (optional)</label>
+                        <input type="date" id="accPreBookedTo" class="form-input" value="${currentAccommodation.preBookedTo || ''}">
+                    </div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div class="form-group">
                         <label class="form-label" for="accCheckIn">Check-in Time (optional)</label>
                         <input type="time" id="accCheckIn" class="form-input" value="${currentAccommodation.startTime || ''}">
                     </div>
@@ -3917,6 +3936,8 @@ const App = {
                 id: currentAccommodation.id || this.generateId(),
                 name: document.getElementById('accommodationName').value.trim(),
                 type: document.getElementById('accommodationType').value,
+                preBookedFrom: document.getElementById('accPreBookedFrom').value || null,
+                preBookedTo: document.getElementById('accPreBookedTo').value || null,
                 startTime: document.getElementById('accCheckIn').value  || null,
                 endTime:   document.getElementById('accCheckOut').value || null,
                 expectedCost: parseFloat(document.getElementById('accExpectedCost').value) || 0,
