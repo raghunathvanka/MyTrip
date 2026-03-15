@@ -2691,6 +2691,121 @@ const App = {
     /**
      * Create day card HTML
      */
+    /**
+     * Build the vertical timeline HTML for a day card.
+     * Only renders items that have startTime set, sorted ascending.
+     */
+    buildDayTimeline(day) {
+        const CONF = {
+            meal:     { badge: '🍽 MEAL',     cls: 'meal'    },
+            activity: { badge: '⭐ ACTIVITY', cls: 'activity'},
+            travel:   { badge: '✈ TRAVEL',   cls: 'travel'  },
+            stay:     { badge: '🛏 STAY',     cls: 'stay'    },
+        };
+        const getLabel = (kind, item) => {
+            if (kind === 'meal')     return `${item.type.charAt(0).toUpperCase()+item.type.slice(1)}${item.restaurantName ? ' · ' + item.restaurantName : ''}`;
+            if (kind === 'activity') return item.name || '';
+            if (kind === 'travel')   return `${item.type}: ${item.from || ''} → ${item.to || ''}`;
+            if (kind === 'stay')     return item.name || '';
+            return '';
+        };
+        let rows = [];
+        (day.meals       || []).filter(m => m.startTime).forEach(m => rows.push({ kind:'meal',     item:m }));
+        (day.activities  || []).filter(a => a.startTime).forEach(a => rows.push({ kind:'activity', item:a }));
+        (day.travel      || []).filter(t => t.startTime).forEach(t => rows.push({ kind:'travel',   item:t }));
+        if (day.accommodation && day.accommodation.startTime) rows.push({ kind:'stay', item:day.accommodation });
+        if (rows.length === 0) return '';
+
+        rows.sort((a,b) => (a.item.startTime||'').localeCompare(b.item.startTime||''));
+
+        const rowsHTML = rows.map((r, i) => {
+            const cfg   = CONF[r.kind];
+            const label = getLabel(r.kind, r.item);
+            const timePill = r.item.endTime
+                ? `${r.item.startTime} – ${r.item.endTime}`
+                : r.item.startTime;
+            const noteStr  = r.item.notes || '';
+            const cost     = (r.item.actualCost || r.item.expectedCost) > 0
+                ? UIComponents.formatCurrency(r.item.actualCost || r.item.expectedCost) : '';
+            const isLast   = i === rows.length - 1;
+            const itemId   = r.item.id || '';
+
+            return `
+            <div class="tl-row">
+                <div class="tl-left">
+                    <span class="tl-time-label">${r.item.startTime}</span>
+                    ${!isLast ? '<div class="tl-connector"></div>' : ''}
+                </div>
+                <div class="tl-dot tl-dot-${r.kind}"></div>
+                <div class="tl-body">
+                    <div class="tl-row-header">
+                        <span class="tl-badge tl-badge-${r.kind}">${cfg.badge}</span>
+                        ${cost ? `<span class="tl-cost">${cost}</span>` : ''}
+                    </div>
+                    <div class="tl-title">${label}</div>
+                    ${r.item.endTime ? `<div class="tl-duration">Until ${r.item.endTime}</div>` : ''}
+                    ${noteStr ? `<div class="tl-note">${noteStr}</div>` : ''}
+                </div>
+                <button class="tl-edit-btn" title="Edit time"
+                    onclick="event.stopPropagation();App.showTimeEditPopover(this,'${day.id}','${r.kind}','${itemId}')">✏</button>
+            </div>`;
+        }).join('');
+
+        return `
+        <div class="tl-container">
+            <div class="tl-header-row">⏱ <span class="tl-header-label">Timeline</span></div>
+            ${rowsHTML}
+        </div>`;
+    },
+
+    /**
+     * Show a tiny inline time-edit popover near the pencil button.
+     * Saves startTime/endTime directly to localStorage on click.
+     */
+    showTimeEditPopover(triggerEl, dayId, kind, itemId) {
+        document.querySelectorAll('.tl-popover').forEach(p => p.remove());
+        const day = this.currentTrip.days.find(d => d.id === dayId);
+        if (!day) return;
+        let item;
+        if      (kind === 'meal')     item = (day.meals||[]).find(m => m.id === itemId);
+        else if (kind === 'activity') item = (day.activities||[]).find(a => a.id === itemId);
+        else if (kind === 'travel')   item = (day.travel||[]).find(t => t.id === itemId);
+        else if (kind === 'stay')     item = day.accommodation && day.accommodation.id === itemId ? day.accommodation : null;
+        if (!item) return;
+
+        const pop = document.createElement('div');
+        pop.className = 'tl-popover';
+        pop.innerHTML = `
+            <div style="font-size:11px;font-weight:600;color:rgba(255,255,255,0.38);margin-bottom:4px;text-transform:uppercase;letter-spacing:1px;">Edit Time</div>
+            <label>Start<input type="time" id="tlEditStart" value="${item.startTime||''}"></label>
+            <label>End<input type="time" id="tlEditEnd" value="${item.endTime||''}"></label>
+            <div class="tl-popover-btns">
+                <button id="tlSaveBtn">Save</button>
+                <button id="tlCancelBtn">✕</button>
+            </div>`;
+        document.body.appendChild(pop);
+
+        // Position popover near the pencil
+        const rect = triggerEl.getBoundingClientRect();
+        const left = Math.max(8, Math.min(rect.left + window.scrollX - 80, window.innerWidth - 230));
+        pop.style.top  = (rect.bottom + window.scrollY + 6) + 'px';
+        pop.style.left = left + 'px';
+
+        pop.querySelector('#tlCancelBtn').addEventListener('click', () => pop.remove());
+        pop.querySelector('#tlSaveBtn').addEventListener('click', () => {
+            item.startTime = pop.querySelector('#tlEditStart').value || null;
+            item.endTime   = pop.querySelector('#tlEditEnd').value   || null;
+            Storage.saveTrip(this.currentTrip);
+            this.renderDays();
+            pop.remove();
+        });
+        setTimeout(() => {
+            document.addEventListener('click', function closeP(e) {
+                if (!pop.contains(e.target)) { pop.remove(); document.removeEventListener('click', closeP); }
+            });
+        }, 50);
+    },
+
     createDayCard(day) {
         const date = day.date ? new Date(day.date) : null;
         const dayName = date && !isNaN(date) ? date.toLocaleDateString('en-IN', { weekday: 'long' }) : 'Unknown';
@@ -2719,17 +2834,20 @@ const App = {
                 ? `<span style="font-size:11px;font-family:Outfit,sans-serif;color:${accentColor};">✓ All confirmed</span>`
                 : `<span style="font-size:11px;font-family:Outfit,sans-serif;color:rgba(255,255,255,0.5);">${confirmedItems}/${totalItems} confirmed</span>`;
 
+        const timelineHTML = this.buildDayTimeline(day);
+
+        // Filter out items that have times (they are shown in the timeline)
+        const untimedMeals      = (day.meals||[]).filter(m => !m.startTime);
+        const untimedActivities = (day.activities||[]).filter(a => !a.startTime);
+        const untimedTravel     = (day.travel||[]).filter(t => !t.startTime);
+        const renderStay        = day.accommodation && day.accommodation.name && !day.accommodation.startTime;
+
         return `
             <div class="card" style="margin-bottom: 1rem; cursor: default; border-left: 4px solid ${accentColor}; position:relative;">
                 <button class="fb-trigger-btn" onclick="event.stopPropagation();if(window.fbTrigger)fbTrigger('Day ${day.dayNumber} card')">＋</button>
                 <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
                     <div style="display: flex; align-items: center; gap: 0.5rem;">
                         <div>
-                            <h4 style="margin: 0; font-size: 1.125rem;">Day ${day.dayNumber} - ${dayName}</h4>
-                            <p style="margin: 0.25rem 0 0 0; color: var(--color-text-secondary); font-size: 0.875rem;">
-                                ${UIComponents.formatDate(day.date)}
-                            </p>
-                        </div>
                         ${isIncomplete ? `<span id="incompleteIndicator_${day.id}" title="Some expenses are incomplete" style="display:inline-flex;align-items:center;gap:0.25rem;padding:0.25rem 0.5rem;background:rgba(251,146,60,0.1);border:1px solid rgba(251,146,60,0.3);border-radius:12px;font-size:0.7rem;color:rgb(234,88,12);font-weight:500;cursor:pointer;"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10" opacity="0.9"/></svg>Incomplete</span>` : ''}
                         
                         <button id="deleteDay_${day.id}" title="Delete Day" style="background: none; border: none; cursor: pointer; opacity: 0.5; padding: 4px; display: flex; align-items: center; margin-left: 0.25rem; color: var(--color-text-secondary); transition: opacity 0.2s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.5">
@@ -2769,11 +2887,14 @@ const App = {
                     ${progressLabel}
                 </div>` : ''}
 
-                ${day.meals && day.meals.length > 0 ? `
+                ${timelineHTML}
+
+                <!-- Untimed Meals -->
+                ${untimedMeals.length > 0 ? `
                     <div style="margin-bottom: 1rem; position:relative;">
                         <button class="fb-trigger-btn" onclick="event.stopPropagation();if(window.fbTrigger)fbTrigger('Day ${day.dayNumber} - Meal section')">＋</button>
                         <div class="cat-chip meal">🍽 MEAL</div>
-                        ${day.meals.map(meal => `
+                        ${untimedMeals.map(meal => `
                             <div class="item-card meal" style="position:relative;">
                                 <button class="fb-trigger-btn" onclick="event.stopPropagation();if(window.fbTrigger)fbTrigger('Item: ${meal.type} meal')">＋</button>
                                 <div style="display: flex; justify-content: space-between; align-items: start;">
@@ -2806,12 +2927,12 @@ const App = {
                     </div>
                 ` : ''}
                 
-                ${day.activities && day.activities.length > 0 ? `
-                    <div style="margin-bottom: 1rem; position:relative;">
-                        <button class="fb-trigger-btn" onclick="event.stopPropagation();if(window.fbTrigger)fbTrigger('Day ${day.dayNumber} - Activity section')">＋</button>
-                        <div class="cat-chip activity">⭐ ACTIVITY</div>
-                        ${day.activities.map(activity => `
-                            <div class="item-card activity" style="position:relative;">
+                    ${untimedActivities.length > 0 ? `
+                        <div style="margin-bottom: 1rem; position:relative;">
+                            <button class="fb-trigger-btn" onclick="event.stopPropagation();if(window.fbTrigger)fbTrigger('Day ${day.dayNumber} - Activity section')">＋</button>
+                            <div class="cat-chip activity">⭐ ACTIVITY</div>
+                            ${untimedActivities.map(activity => `
+                                <div class="item-card activity" style="position:relative;">
                                 <button class="fb-trigger-btn" onclick="event.stopPropagation();if(window.fbTrigger)fbTrigger('Item: ${activity.name}')">＋</button>
                                 <div style="display: flex; justify-content: space-between; align-items: start;">
                                     <div style="flex: 1;">
@@ -2838,12 +2959,12 @@ const App = {
                     </div>
                 ` : ''}
                 
-                ${day.travel && day.travel.length > 0 ? `
-                    <div style="margin-bottom: 1rem; position:relative;">
-                        <button class="fb-trigger-btn" onclick="event.stopPropagation();if(window.fbTrigger)fbTrigger('Day ${day.dayNumber} - Travel section')">＋</button>
-                        <div class="cat-chip travel">✈ TRAVEL</div>
-                        ${day.travel.map(travel => `
-                            <div class="item-card travel" style="position:relative;">
+                    ${untimedTravel.length > 0 ? `
+                        <div style="margin-bottom: 1rem; position:relative;">
+                            <button class="fb-trigger-btn" onclick="event.stopPropagation();if(window.fbTrigger)fbTrigger('Day ${day.dayNumber} - Travel section')">＋</button>
+                            <div class="cat-chip travel">✈ TRAVEL</div>
+                            ${untimedTravel.map(travel => `
+                                <div class="item-card travel" style="position:relative;">
                                 <button class="fb-trigger-btn" onclick="event.stopPropagation();if(window.fbTrigger)fbTrigger('Item: ${travel.type} (${travel.from}→${travel.to})')">＋</button>
                                 <div style="display: flex; justify-content: space-between; align-items: start;">
                                     <div style="flex: 1;">
@@ -2874,13 +2995,13 @@ const App = {
                     </div>
                 ` : ''}
                 
-                ${this.currentTrip.isSelfDriveTrip ? this.renderSelfDriveDay(day) : ''}
+                    ${this.currentTrip.isSelfDriveTrip ? this.renderSelfDriveDay(day) : ''}
 
-                ${day.accommodation && day.accommodation.name ? `
-                    <div style="margin-bottom: 1rem; position:relative;">
-                        <button class="fb-trigger-btn" onclick="event.stopPropagation();if(window.fbTrigger)fbTrigger('Day ${day.dayNumber} - Stay section')">＋</button>
-                        <div class="cat-chip stay">🛏 STAY</div>
-                        <div class="item-card stay" style="position:relative;">
+                    ${renderStay ? `
+                        <div style="margin-bottom: 1rem; position:relative;">
+                            <button class="fb-trigger-btn" onclick="event.stopPropagation();if(window.fbTrigger)fbTrigger('Day ${day.dayNumber} - Stay section')">＋</button>
+                            <div class="cat-chip stay">🛏 STAY</div>
+                            <div class="item-card stay" style="position:relative;">
                             <button class="fb-trigger-btn" onclick="event.stopPropagation();if(window.fbTrigger)fbTrigger('Item: ${day.accommodation?.name}')">＋</button>
                             <div style="display: flex; justify-content: space-between; align-items: start;">
                                 <div style="flex: 1;">
@@ -2908,10 +3029,11 @@ const App = {
                                 </div>
                             </div>
                         </div>
-                    </div>
-                ` : ''}
-                
-                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 0.5rem; position:relative;">
+                        </div>
+                    ` : ''}
+
+                    <!-- Add Buttons container -->
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 0.5rem; position:relative;">
                     <button class="fb-trigger-btn" onclick="event.stopPropagation();if(window.fbTrigger)fbTrigger('Day ${day.dayNumber} - Add item buttons')">＋</button>
                     <button id="addMeal_${day.id}" class="cat-pill-btn meal">🍽 Meal</button>
                     <button id="addActivity_${day.id}" class="cat-pill-btn activity">⭐ Activity</button>
@@ -3246,6 +3368,16 @@ const App = {
                 </div>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                     <div class="form-group">
+                        <label class="form-label" for="activityStartTime">Start Time (optional)</label>
+                        <input type="time" id="activityStartTime" class="form-input" value="${existingActivity ? existingActivity.startTime || '' : ''}">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="activityEndTime">End Time (optional)</label>
+                        <input type="time" id="activityEndTime" class="form-input" value="${existingActivity ? existingActivity.endTime || '' : ''}">
+                    </div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div class="form-group">
                         <label class="form-label" for="activityExpectedCost">Expected Cost (₹)</label>
                         <input type="number" id="activityExpectedCost" class="form-input" placeholder="0" min="0" step="1" value="${existingActivity ? existingActivity.expectedCost || '' : ''}">
                     </div>
@@ -3278,8 +3410,9 @@ const App = {
                 id: existingActivity ? existingActivity.id : this.generateId(),
                 name: document.getElementById('activityName').value.trim(),
                 type: document.getElementById('activityType').value,
+                startTime: document.getElementById('activityStartTime').value || null,
+                endTime:   document.getElementById('activityEndTime').value   || null,
                 expectedCost: parseFloat(document.getElementById('activityExpectedCost').value) || 0,
-                // THIS FIXES THE ISSUE:
                 actualCost: parseFloat(document.getElementById('activityActualCost').value) || 0,
                 notes: document.getElementById('activityNotes').value.trim()
             };
@@ -3400,6 +3533,16 @@ const App = {
                     <label class="form-label" for="restaurantName">Restaurant/Place Name (optional)</label>
                     <input type="text" id="restaurantName" class="form-input" placeholder="e.g., Taj Restaurant" value="${existingMeal ? existingMeal.restaurantName || '' : ''}">
                 </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div class="form-group">
+                        <label class="form-label" for="mealStartTime">Start Time (optional)</label>
+                        <input type="time" id="mealStartTime" class="form-input" value="${existingMeal ? existingMeal.startTime || '' : ''}">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="mealEndTime">End Time (optional)</label>
+                        <input type="time" id="mealEndTime" class="form-input" value="${existingMeal ? existingMeal.endTime || '' : ''}">
+                    </div>
+                </div>
                 <div class="form-group">
                     <label class="form-label" for="mealSplitCount">Split between how many people?</label>
                     <input type="number" id="mealSplitCount" class="form-input" placeholder="Number of people" min="1" step="1" value="${existingMeal ? existingMeal.splitCount || this.currentTrip.numberOfTravelers || 1 : defaultSplitCount}" required>
@@ -3439,6 +3582,8 @@ const App = {
                 type: document.getElementById('mealType').value,
                 venue: document.getElementById('mealVenue').value,
                 restaurantName: document.getElementById('restaurantName').value.trim(),
+                startTime: document.getElementById('mealStartTime').value || null,
+                endTime:   document.getElementById('mealEndTime').value   || null,
                 splitCount: parseInt(document.getElementById('mealSplitCount').value) || 1,
                 expectedCost: parseFloat(document.getElementById('mealExpectedCost').value) || 0,
                 actualCost: parseFloat(document.getElementById('mealActualCost').value) || 0,
@@ -3549,9 +3694,15 @@ const App = {
                     <input type="text" id="travelTo" class="form-input" value="${existingTravel ? existingTravel.to : ''}" required placeholder="Destination">
                 </div>
 
-                <div class="form-group">
-                    <label class="form-label" for="travelTime">Time (optional)</label>
-                    <input type="time" id="travelTime" class="form-input" value="${existingTravel ? existingTravel.time || '' : ''}">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div class="form-group">
+                        <label class="form-label" for="travelStartTime">Departure Time</label>
+                        <input type="time" id="travelStartTime" class="form-input" value="${existingTravel ? existingTravel.startTime || existingTravel.time || '' : ''}">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="travelEndTime">Arrival Time</label>
+                        <input type="time" id="travelEndTime" class="form-input" value="${existingTravel ? existingTravel.endTime || '' : ''}">
+                    </div>
                 </div>
 
                 <div class="form-group">
@@ -3593,7 +3744,8 @@ const App = {
                 type: document.getElementById('travelType').value,
                 from: document.getElementById('travelFrom').value.trim(),
                 to: document.getElementById('travelTo').value.trim(),
-                time: document.getElementById('travelTime').value || null,
+                startTime: document.getElementById('travelStartTime').value || null,
+                endTime:   document.getElementById('travelEndTime').value   || null,
                 expectedCost: parseFloat(document.getElementById('travelExpectedCost').value) || 0,
                 actualCost: parseFloat(document.getElementById('travelActualCost').value) || 0,
                 splitBetween: parseInt(document.getElementById('travelSplit').value) || 1,
@@ -3720,6 +3872,16 @@ const App = {
                     <label class="form-label" for="accNotes">Notes (optional)</label>
                     <textarea id="accNotes" class="form-textarea" placeholder="Booking details, address...">${currentAccommodation.notes || ''}</textarea>
                 </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div class="form-group">
+                        <label class="form-label" for="accCheckIn">Check-in Time (optional)</label>
+                        <input type="time" id="accCheckIn" class="form-input" value="${currentAccommodation.startTime || ''}">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="accCheckOut">Check-out Time (optional)</label>
+                        <input type="time" id="accCheckOut" class="form-input" value="${currentAccommodation.endTime || ''}">
+                    </div>
+                </div>
                 <div style="display: flex; gap: 0.75rem; justify-content: flex-end; margin-top: 1.5rem;">
                     <button type="button" id="cancelAccBtn" class="btn btn-secondary">Cancel</button>
                     <button type="submit" class="btn btn-primary">Save Details</button>
@@ -3755,6 +3917,8 @@ const App = {
                 id: currentAccommodation.id || this.generateId(),
                 name: document.getElementById('accommodationName').value.trim(),
                 type: document.getElementById('accommodationType').value,
+                startTime: document.getElementById('accCheckIn').value  || null,
+                endTime:   document.getElementById('accCheckOut').value || null,
                 expectedCost: parseFloat(document.getElementById('accExpectedCost').value) || 0,
                 actualCost: parseFloat(document.getElementById('accActualCost').value) || 0,
                 notes: document.getElementById('accNotes').value.trim()
