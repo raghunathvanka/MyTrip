@@ -2685,6 +2685,8 @@ button[id="saveBasicBtn"] {
 /* ---- Trip detail page header: slide down on entry ---- */
 #tripDetailContent>div:first-child {
     animation: itinHeaderIn 400ms ease-out both;
+    display: flex !important;
+    flex-direction: column !important;
 }
 
 @keyframes itinHeaderIn {
@@ -4162,7 +4164,7 @@ body>[id="app"] {
 }
 
 /* ---------------------------------------------------------------
-   FEEDBACK OVERLAY SYSTEM — feedback.js companion styles
+   FEEDBACK OVERLAY SYSTEM ï¿½ feedback.js companion styles
    --------------------------------------------------------------- */
 
 /* -- Toggle button pulse animation -- */
