@@ -2705,7 +2705,7 @@ const App = {
         const getLabel = (kind, item) => {
             if (kind === 'meal')     return `${item.type.charAt(0).toUpperCase()+item.type.slice(1)}${item.restaurantName ? ' · ' + item.restaurantName : ''}`;
             if (kind === 'activity') return item.name || '';
-            if (kind === 'travel')   return `${item.type}: ${item.from || ''} → ${item.to || ''}`;
+            if (kind === 'travel')   return `${item.type}`;
             if (kind === 'stay')     return item.name || '';
             return '';
         };
@@ -2743,6 +2743,7 @@ const App = {
                         ${cost ? `<span class="tl-cost">${cost}</span>` : ''}
                     </div>
                     <div class="tl-title">${label}</div>
+                    ${this.renderRoutePill(r.item)}
                     ${r.item.endTime ? `<div class="tl-duration">Until ${r.item.endTime}</div>` : ''}
                     ${noteStr ? `<div class="tl-note">${noteStr}</div>` : ''}
                 </div>
@@ -2804,6 +2805,31 @@ const App = {
                 if (!pop.contains(e.target)) { pop.remove(); document.removeEventListener('click', closeP); }
             });
         }, 50);
+    },
+
+    renderRoutePill(item) {
+        if (!item || (!item.from && !item.to)) return '';
+        const origin = item.from || '';
+        const dest = item.to || '';
+        const dist = item.distanceKm ? ` · ${item.distanceKm} km` : '';
+        const time = item.driveTimeMin ? ` · ${item.driveTimeMin} min` : '';
+
+        let mapsUrl = '';
+        if (origin && dest) {
+            mapsUrl = `https://maps.google.com/?saddr=${encodeURIComponent(origin)}&daddr=${encodeURIComponent(dest)}`;
+        } else if (origin || dest) {
+            mapsUrl = `https://maps.google.com/?q=${encodeURIComponent(origin || dest)}`;
+        }
+
+        const mapIcon = `<svg style="width:12px;height:12px;vertical-align:middle;margin-bottom:2px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>`;
+
+        return `
+        <div style="margin-top: 6px; margin-bottom: 2px; display: inline-flex; align-items: center; gap: 4px; padding: 4px 8px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; font-size: 0.75rem; color: rgba(255,255,255,0.7);">
+            <span>📍 ${origin}${dest && origin ? ' → ' : ''}${dest}</span>
+            ${dist ? `<span>${dist}</span>` : ''}
+            ${time ? `<span>${time}</span>` : ''}
+            ${mapsUrl ? `<a href="${mapsUrl}" target="_blank" style="color: var(--accent-coral); margin-left: 4px; text-decoration: none;" title="Open in Google Maps">${mapIcon}</a>` : ''}
+        </div>`;
     },
 
     createDayCard(day) {
@@ -2936,8 +2962,10 @@ const App = {
                                 <button class="fb-trigger-btn" onclick="event.stopPropagation();if(window.fbTrigger)fbTrigger('Item: ${activity.name}')">＋</button>
                                 <div style="display: flex; justify-content: space-between; align-items: start;">
                                     <div style="flex: 1;">
-                                        <div style="font-weight: 600; margin-bottom: 0.25rem;">${activity.name}</div>
-                                        ${activity.notes ? `<div style="font-size: 0.875rem; color: var(--color-text-secondary);">${activity.notes}</div>` : ''}
+                                        <div style="font-weight: 600; margin-bottom: 0.25rem;">📍 ${activity.name}</div>
+                                        <div style="font-size: 0.875rem; color: var(--color-text-secondary);">${activity.type}</div>
+                                        ${this.renderRoutePill(activity)}
+                                        ${activity.notes ? `<div style="font-size: 0.875rem; color: var(--color-text-secondary); margin-top: 0.25rem;">${activity.notes}</div>` : ''}
                                         
                                         <div style="display:none">
                                             <button id="editActivity_${day.id}_${activity.id}"></button>
@@ -2969,9 +2997,7 @@ const App = {
                                 <div style="display: flex; justify-content: space-between; align-items: start;">
                                     <div style="flex: 1;">
                                         <div style="font-weight: 600; margin-bottom: 0.25rem;">🚗 ${travel.type}${travel.time ? ` • ${travel.time}` : ''}</div>
-                                        <div style="font-size: 0.875rem; color: var(--color-text-secondary); margin-bottom: 0.25rem;">
-                                            ${travel.from} → ${travel.to}
-                                        </div>
+                                        ${this.renderRoutePill(travel)}
                                         ${travel.splitBetween > 1 ? `<div style="font-size: 0.75rem; color: var(--color-text-tertiary);">Split: ${travel.splitBetween} people</div>` : ''}
                                         ${travel.notes ? `<div style="font-size: 0.875rem; color: var(--color-text-secondary); margin-top: 0.25rem;">${travel.notes}</div>` : ''}
                                         
@@ -3399,6 +3425,25 @@ const App = {
                     <label class="form-label" for="activityNotes">Notes (optional)</label>
                     <textarea id="activityNotes" class="form-textarea" placeholder="Any special details...">${existingActivity ? existingActivity.notes || '' : ''}</textarea>
                 </div>
+                <div style="font-size: 0.75rem; color: rgba(255,255,255,0.5); font-weight: 600; text-transform: uppercase; margin: 1rem 0 0.5rem 0;">Route Details (optional)</div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label class="form-label" for="activityFrom">From (Origin)</label>
+                        <input type="text" id="activityFrom" class="form-input" placeholder="e.g. Hotel" value="${existingActivity ? existingActivity.from || '' : ''}">
+                    </div>
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label class="form-label" for="activityTo">To (Destination)</label>
+                        <input type="text" id="activityTo" class="form-input" placeholder="e.g. Beach" value="${existingActivity ? existingActivity.to || '' : ''}">
+                    </div>
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label class="form-label" for="activityDistance">Distance (km)</label>
+                        <input type="number" id="activityDistance" class="form-input" placeholder="0" min="0" step="0.1" value="${existingActivity ? existingActivity.distanceKm || '' : ''}">
+                    </div>
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label class="form-label" for="activityDriveTime">Drive Time (min)</label>
+                        <input type="number" id="activityDriveTime" class="form-input" placeholder="0" min="0" step="1" value="${existingActivity ? existingActivity.driveTimeMin || '' : ''}">
+                    </div>
+                </div>
                 <div style="display: flex; gap: 0.75rem; justify-content: flex-end; margin-top: 1.5rem;">
                     <button type="button" id="cancelActivityBtn" class="btn btn-secondary">Cancel</button>
                     <button type="submit" class="btn btn-primary">${existingActivity ? 'Update' : 'Add'} Activity</button>
@@ -3421,6 +3466,10 @@ const App = {
                 type: document.getElementById('activityType').value,
                 startTime: document.getElementById('activityStartTime').value || null,
                 endTime:   document.getElementById('activityEndTime').value   || null,
+                from: document.getElementById('activityFrom').value.trim() || null,
+                to: document.getElementById('activityTo').value.trim() || null,
+                distanceKm: parseFloat(document.getElementById('activityDistance').value) || null,
+                driveTimeMin: parseInt(document.getElementById('activityDriveTime').value) || null,
                 expectedCost: parseFloat(document.getElementById('activityExpectedCost').value) || 0,
                 actualCost: parseFloat(document.getElementById('activityActualCost').value) || 0,
                 notes: document.getElementById('activityNotes').value.trim()
@@ -3702,6 +3751,16 @@ const App = {
                     <label class="form-label" for="travelTo">To</label>
                     <input type="text" id="travelTo" class="form-input" value="${existingTravel ? existingTravel.to : ''}" required placeholder="Destination">
                 </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div class="form-group">
+                        <label class="form-label" for="travelDistance">Distance (km) (optional)</label>
+                        <input type="number" id="travelDistance" class="form-input" placeholder="0" min="0" step="0.1" value="${existingTravel ? existingTravel.distanceKm || '' : ''}">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="travelDriveTime">Drive Time (min) (optional)</label>
+                        <input type="number" id="travelDriveTime" class="form-input" placeholder="0" min="0" step="1" value="${existingTravel ? existingTravel.driveTimeMin || '' : ''}">
+                    </div>
+                </div>
 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                     <div class="form-group">
@@ -3753,6 +3812,8 @@ const App = {
                 type: document.getElementById('travelType').value,
                 from: document.getElementById('travelFrom').value.trim(),
                 to: document.getElementById('travelTo').value.trim(),
+                distanceKm: parseFloat(document.getElementById('travelDistance').value) || null,
+                driveTimeMin: parseInt(document.getElementById('travelDriveTime').value) || null,
                 startTime: document.getElementById('travelStartTime').value || null,
                 endTime:   document.getElementById('travelEndTime').value   || null,
                 expectedCost: parseFloat(document.getElementById('travelExpectedCost').value) || 0,
