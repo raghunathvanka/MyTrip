@@ -38,28 +38,36 @@ const FeedbackSystem = (() => {
         const s = document.createElement('style');
         s.id = 'fb-system-styles';
         s.textContent = `
-            /* Feedback trigger "＋" button — baked into every component */
+            /*
+             * Feedback trigger \"\uff0b\" button.
+             * Hidden by default; shown via body.fb-mode class (no !important wars).
+             */
             .fb-trigger-btn {
-                position: absolute !important;
-                top: 8px !important; right: 8px !important;
-                width: 22px !important; height: 22px !important;
-                border-radius: 50% !important;
-                background: rgba(78,205,196,0.18) !important;
-                border: 1px solid rgba(78,205,196,0.5) !important;
-                color: #4ECDC4 !important;
-                font-size: 14px !important; font-weight: 700 !important;
-                line-height: 22px !important; font-family: 'Outfit', sans-serif !important;
-                display: none !important;         /* JS toggles to flex when mode ON */
-                align-items: center !important;
-                justify-content: center !important;
-                cursor: pointer !important;
-                z-index: 50 !important; padding: 0 !important;
-                box-shadow: 0 2px 8px rgba(0,0,0,0.3) !important;
-                transition: transform 0.15s, background 0.15s !important;
+                position: absolute;
+                top: 8px; right: 8px;
+                width: 22px; height: 22px;
+                border-radius: 50%;
+                background: rgba(78,205,196,0.22);
+                border: 1.5px solid rgba(78,205,196,0.6);
+                color: #4ECDC4;
+                font-size: 15px; font-weight: 700;
+                line-height: 22px; font-family: 'Outfit', sans-serif;
+                display: none;          /* hidden until fb-mode class added to body */
+                align-items: center;
+                justify-content: center;
+                cursor: pointer;
+                z-index: 9999;
+                padding: 0;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.4);
+                transition: transform 0.15s, background 0.15s;
+            }
+            /* body.fb-mode shows ALL trigger buttons (including dynamically rendered ones) */
+            body.fb-mode .fb-trigger-btn {
+                display: flex;
             }
             .fb-trigger-btn:hover {
-                transform: scale(1.18) !important;
-                background: rgba(78,205,196,0.32) !important;
+                transform: scale(1.2);
+                background: rgba(78,205,196,0.38);
             }
             /* Toggle pulse ring */
             @keyframes fbPulse {
@@ -74,7 +82,7 @@ const FeedbackSystem = (() => {
                 75%  { transform: translateX(-6px);}
                 100% { transform: translateX(0);  }
             }
-            /* Notes panel skeleton cards */
+            /* Notes panel skeleton */
             @keyframes fbSkeleton {
                 0%,100% { opacity:.45; } 50% { opacity:.9; }
             }
@@ -152,10 +160,8 @@ const FeedbackSystem = (() => {
         const banner = document.getElementById('feedbackBanner');
         if (btn)    styleToggle(btn, feedbackModeOn);
         if (banner) banner.style.display = feedbackModeOn ? 'block' : 'none';
-        // Show/hide every trigger button baked into HTML templates
-        document.querySelectorAll('.fb-trigger-btn').forEach(b => {
-            b.style.display = feedbackModeOn ? 'flex' : 'none';
-        });
+        // Use a body class so CSS handles ALL triggers — including dynamically rendered ones
+        document.body.classList.toggle('fb-mode', feedbackModeOn);
     }
 
     // ════════════════════════════════════════════════════════════════════
@@ -259,21 +265,36 @@ const FeedbackSystem = (() => {
                 return;
             }
             const db = getDb();
-            if (!db) { showToast('Firebase unavailable', '#FF6B6B'); return; }
+            if (!db) { showToast('Firebase not loaded — try refreshing', '#FF6B6B'); return; }
+            const u = me();
+            if (!u)  { showToast('Sign in to save feedback', '#FF6B6B'); return; }
+
+            // Safe serverTimestamp — fall back to JS Date if FieldValue unavailable
+            let ts;
+            try { ts = firebase.firestore.FieldValue.serverTimestamp(); }
+            catch (_) { ts = new Date(); }
+
             try {
-                const u = me();
                 await db.collection(COLLECTION).add({
-                    id: Date.now().toString(), zone, note, priority,
-                    userId:    u.uid,
-                    userName:  u.displayName || u.email || 'Anonymous',
-                    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-                    implemented: false, implementedAt: null, version: null,
+                    id:          Date.now().toString(),
+                    zone,
+                    note,
+                    priority,
+                    userId:      u.uid,
+                    userName:    u.displayName || u.email || 'Anonymous',
+                    timestamp:   ts,
+                    implemented: false,
+                    implementedAt: null,
+                    version:     null,
                 });
                 closePopup();
                 showToast('Feedback saved ✓');
             } catch (e) {
-                console.error('[Feedback] Save error:', e);
-                showToast('Could not save — check connection', '#FF6B6B');
+                console.error('[Feedback] Save error:', e.code, e.message);
+                const msg = e.code === 'permission-denied'
+                    ? 'Permission denied — apply Firestore rules'
+                    : 'Could not save — check connection';
+                showToast(msg, '#FF6B6B');
             }
         });
     }
