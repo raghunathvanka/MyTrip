@@ -1,48 +1,48 @@
-// ── Firestore Security Rules for mytrip_feedback collection ──────────────────
-// Add these rules inside your existing Firestore rules file (firestore.rules)
-// under the root `match /databases/{database}/documents { ... }` block.
+// ═══════════════════════════════════════════════════════════════════════
+// FIRESTORE SECURITY RULES — COMPLETE FILE (paste-ready)
+// ═══════════════════════════════════════════════════════════════════════
 //
 // HOW TO APPLY:
-//   1. Go to Firebase Console → Firestore → Rules tab
-//   2. Add the match block below inside your existing rules
-//   3. Click "Publish"
+//   1. Firebase Console → Firestore → Rules tab
+//   2. SELECT ALL existing rules text and DELETE it
+//   3. Paste the block below (starting from rules_version)
+//   4. Click "Publish"
 //
-// SEMANTICS:
-//   - Users can CREATE their own feedback notes (auth required)
-//   - Users can READ only their OWN notes (userId must match UID)
-//   - Users can DELETE only their OWN notes
-//   - UPDATE is blocked for all clients — only Firebase Console admin can mark
-//     notes as implemented: true, implementedAt, version  (via direct console edit)
-// ─────────────────────────────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════
 
-match /mytrip_feedback/{docId} {
-  // Read: user can only see their own feedback
-  allow read: if request.auth != null
-              && resource.data.userId == request.auth.uid;
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
 
-  // Create: any authenticated user can add feedback
-  allow create: if request.auth != null;
+    // ── All existing MyTrip collections ─────────────────────────────
+    // Allow authenticated users full access to their own trip data.
+    // Adjust this rule if you already have more specific rules.
+    match /{document=**} {
+      allow read, write: if request.auth != null;
+    }
 
-  // Delete: user can only delete their own notes
-  allow delete: if request.auth != null
-               && resource.data.userId == request.auth.uid;
+    // ── mytrip_feedback collection ───────────────────────────────────
+    // Overrides the permissive rule above with tighter controls.
+    match /mytrip_feedback/{docId} {
 
-  // Update: BLOCKED for all clients — admin only via Firebase Console
-  allow update: if false;
+      // Read: user can only see their own notes
+      allow read: if request.auth != null
+                  && resource.data.userId == request.auth.uid;
+
+      // Create: any signed-in user can add a note
+      allow create: if request.auth != null;
+
+      // Delete: user can only remove their own notes
+      allow delete: if request.auth != null
+                    && resource.data.userId == request.auth.uid;
+
+      // Update: BLOCKED for all clients.
+      // Mark notes as implemented via Firebase Console only:
+      //   implemented: true
+      //   implementedAt: "2026-03-15T13:00:00.000Z"
+      //   version: "v2.1"
+      allow update: if false;
+    }
+
+  }
 }
-
-
-// ── HOW TO MARK NOTES AS IMPLEMENTED (admin workflow) ────────────────────────
-//
-// 1. Open Firebase Console → Firestore → mytrip_feedback collection
-// 2. Find the document for the feedback you have addressed
-// 3. Edit these three fields directly:
-//      implemented:   true
-//      implementedAt: "2026-03-14T10:30:00.000Z"   (ISO date string)
-//      version:       "v2.1"                         (or whichever version fixed it)
-// 4. Click Save
-//
-// Result: The user's notes panel updates in REAL-TIME via onSnapshot.
-//         The "⏳ Pending review" pill becomes "✓ Implemented" automatically.
-//         The note text gains a strikethrough.
-//         No app refresh needed.

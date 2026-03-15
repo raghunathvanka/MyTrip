@@ -261,3 +261,46 @@
         min-width: 260px;
     }
 }
+
+/* ========== Break Stop Activity Type ========== */
+/* Category chip (section header) */
+.cat-chip.break-stop {
+    background: rgba(180, 140, 100, 0.15);
+    color: #c8a97e;
+    border: 1px solid rgba(180, 140, 100, 0.3);
+}
+
+/* Untimed item card */
+.item-card.break-stop {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(180, 140, 100, 0.2);
+    border-left: 3px solid #c8a97e;
+    border-radius: 12px;
+    padding: 0.75rem;
+    margin-bottom: 0.5rem;
+    opacity: 0.92;
+}
+
+/* Action bar pill button */
+.cat-pill-btn.break-stop {
+    background: rgba(180, 140, 100, 0.12);
+    color: #c8a97e;
+    border: 1px solid rgba(180, 140, 100, 0.3);
+}
+
+.cat-pill-btn.break-stop:hover {
+    background: rgba(180, 140, 100, 0.25);
+}
+
+/* Timeline badge */
+.tl-badge-break-stop {
+    background: rgba(180, 140, 100, 0.15) !important;
+    color: #c8a97e !important;
+    border: 1px solid rgba(180, 140, 100, 0.3) !important;
+}
+
+/* Timeline dot */
+.tl-dot-break-stop {
+    background: #c8a97e !important;
+    opacity: 0.75;
+}
