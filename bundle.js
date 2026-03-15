@@ -3331,8 +3331,8 @@ const App = {
                         </div>
                     ` : ''}
 
-                    <!-- Add Buttons container -->
-                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr 1fr; gap: 0.5rem; position:relative;">
+                <!-- Add Buttons container -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr 1fr; gap: 0.5rem; position:relative; margin-top: 0.5rem;">
                     <button class="fb-trigger-btn" onclick="event.stopPropagation();if(window.fbTrigger)fbTrigger('Day ${day.dayNumber} - Add item buttons')">＋</button>
                     <button id="addMeal_${day.id}" class="cat-pill-btn meal">🍽 Meal</button>
                     <button id="addActivity_${day.id}" class="cat-pill-btn activity">⭐ Activity</button>
