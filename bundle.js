@@ -577,6 +577,55 @@ const App = {
                 </div>
                 <p class="form-hint">We'll track fuel and calculate actual efficiency</p>
                 
+                <!-- KM Tracker System -->
+                <div class="form-group" style="margin-top: 1.5rem; margin-bottom: 1.5rem; padding: 1rem; background: rgba(0,0,0,0.1); border-radius: 8px;">
+                    <label class="form-label" for="rentalLimitKm" style="color: var(--accent-gold);">Rental KM Limit (Optional)</label>
+                    <input type="number" id="rentalLimitKm" class="form-input" placeholder="e.g., 1000" value="${trip.rentalLimitKm || ''}" min="0">
+                    <p class="form-hint" style="margin-bottom: 0.75rem;">Set a limit to track usage and avoid extra charges.</p>
+                    
+                    ${trip && trip.days && trip.days.length > 0 ? `
+                    <label class="form-label" style="font-size: 0.75rem; color: rgba(255,255,255,0.7); font-weight: 500; text-transform: uppercase;">Per-day Driven KM Tracker</label>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-top: 0.5rem;">
+                    ${trip.days.map((d, i) => {
+                        const autoSum = [...(d.activities || []), ...(d.travel || [])].reduce((s, item) => s + (parseFloat(item.distanceKm) || 0), 0);
+                        const savedVal = trip.dailyKm && trip.dailyKm[d.id] !== undefined ? trip.dailyKm[d.id] : '';
+                        return \`
+                            <div style="display: flex; flex-direction: column;">
+                                <span style="font-size: 0.75rem; color: rgba(255,255,255,0.7); margin-bottom: 4px;">Day \${i+1} \${autoSum > 0 ? \`(Auto: \${autoSum} km)\` : ''}</span>
+                                <input type="number" id="dailyKm_\${d.id}" data-dayid="\${d.id}" class="form-input daily-km-input" placeholder="\${autoSum || 0}" value="\${savedVal}" min="0" step="0.1">
+                            </div>
+                        \`;
+                    }).join('')}
+                    </div>
+                    ` : ''}
+                </div>
+
+                <!-- Fuel Cost Calculator -->
+                <div class="form-group" style="margin-top: 1.5rem; padding: 1rem; background: rgba(0,0,0,0.12); border-radius: 8px; border: 1px solid rgba(255,200,100,0.15);">
+                    <label class="form-label" style="color: var(--accent-gold); margin-bottom: 0.75rem; display: block;">⛽ Fuel Cost Calculator</label>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.75rem;">
+                        <div>
+                            <label class="form-label" for="fuelDistanceKm" style="font-size: 0.75rem;">Trip Distance (km)</label>
+                            <input type="number" id="fuelDistanceKm" class="form-input fuel-calc-input" placeholder="Auto" min="0" step="0.1"
+                                value="${(() => { const totalKm = (trip.days||[]).reduce((sum,d) => { const auto = [...(d.activities||[]),...(d.travel||[])].reduce((s,i) => s+(parseFloat(i.distanceKm)||0),0); const ov = trip.dailyKm && trip.dailyKm[d.id]; return sum + (ov!==undefined && ov!=='' && !isNaN(ov) ? parseFloat(ov) : auto); }, 0); return totalKm > 0 ? totalKm.toFixed(1) : ''; })()}">
+                        </div>
+                        <div>
+                            <label class="form-label" for="fuelEfficiencyKmL" style="font-size: 0.75rem;">Efficiency (km/litre)</label>
+                            <input type="number" id="fuelEfficiencyKmL" class="form-input fuel-calc-input" placeholder="e.g. 15" min="0.1" step="0.1" value="${trip.fuelEfficiencyKmL || ''}">
+                        </div>
+                        <div>
+                            <label class="form-label" for="fuelPricePerLitre" style="font-size: 0.75rem;">Fuel Price (₹/litre)</label>
+                            <input type="number" id="fuelPricePerLitre" class="form-input fuel-calc-input" placeholder="e.g. 105" min="0.1" step="0.1" value="${trip.fuelPricePerLitre || ''}">
+                        </div>
+                    </div>
+                    <div id="fuelCalcResult" style="margin-top: 0.75rem; padding: 0.6rem 1rem; background: rgba(255,200,100,0.08); border: 1px solid rgba(255,200,100,0.2); border-radius: 8px; display: none;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span style="font-size: 0.8rem; color: rgba(255,255,255,0.7);">Estimated litres needed: <strong id="fuelLitresOut">—</strong></span>
+                            <span style="font-size: 1rem; font-weight: 700; color: var(--accent-gold);">Est. ⛽ <strong id="fuelCostOut">—</strong></span>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Rental Vehicle Toggle (shown only for self-drive) -->
                 <div class="form-group" style="margin-top: 1.5rem;">
                     <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
@@ -823,6 +872,26 @@ const App = {
                 rentalInspectionSection.style.display = isRentalCheckbox.checked ? 'block' : 'none';
             };
         }
+
+        // Live fuel cost recalculation
+        const recalcFuel = () => {
+            const dist  = parseFloat(document.getElementById('fuelDistanceKm')?.value);
+            const eff   = parseFloat(document.getElementById('fuelEfficiencyKmL')?.value);
+            const price = parseFloat(document.getElementById('fuelPricePerLitre')?.value);
+            const resultDiv = document.getElementById('fuelCalcResult');
+            if (!resultDiv) return;
+            if (dist > 0 && eff > 0 && price > 0) {
+                const litres = (dist / eff).toFixed(1);
+                const cost   = Math.round((dist / eff) * price);
+                document.getElementById('fuelLitresOut').textContent = litres + ' L';
+                document.getElementById('fuelCostOut').textContent   = '\u20b9' + cost.toLocaleString('en-IN');
+                resultDiv.style.display = 'block';
+            } else {
+                resultDiv.style.display = 'none';
+            }
+        };
+        document.querySelectorAll('.fuel-calc-input').forEach(el => el.addEventListener('input', recalcFuel));
+        recalcFuel(); // Populate on load if values already exist
 
         // Cancel
         document.getElementById('cancelBtn').onclick = () => {
@@ -1082,6 +1151,22 @@ const App = {
                 const mileage = document.getElementById('mileage').value;
                 this.currentTrip.startingOdometer = startingOdometer ? parseFloat(startingOdometer) : null;
                 this.currentTrip.mileage = mileage ? parseFloat(mileage) : null;
+                
+                const limitKm = document.getElementById('rentalLimitKm').value;
+                this.currentTrip.rentalLimitKm = limitKm ? parseFloat(limitKm) : null;
+                
+                this.currentTrip.dailyKm = {};
+                document.querySelectorAll('.daily-km-input').forEach(input => {
+                    if (input.value.trim() !== '') {
+                        this.currentTrip.dailyKm[input.dataset.dayid] = parseFloat(input.value);
+                    }
+                });
+
+                // Fuel cost calculator fields
+                const fuelEff = document.getElementById('fuelEfficiencyKmL')?.value;
+                const fuelPrice = document.getElementById('fuelPricePerLitre')?.value;
+                this.currentTrip.fuelEfficiencyKmL = fuelEff ? parseFloat(fuelEff) : null;
+                this.currentTrip.fuelPricePerLitre = fuelPrice ? parseFloat(fuelPrice) : null;
 
                 // Capture rental vehicle data
                 this.currentTrip.isRentalVehicle = document.getElementById('isRentalVehicle').checked;
@@ -1408,7 +1493,48 @@ const App = {
                     <span style="display:inline-block;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.15);border-radius:20px;padding:5px 14px;font-family:'Outfit',sans-serif;font-size:12px;font-weight:500;color:rgba(255,255,255,0.85);">
                         ${((new Date(trip.endDate) - new Date(trip.startDate)) / 86400000 + 1) || 0} Days · ${trip.adults || 2} Adults
                     </span>
+                    ${trip.isSelfDriveTrip && trip.rentalLimitKm ? (() => {
+                        let usedKm = 0;
+                        (trip.days || []).forEach(d => {
+                            const autoSum = [...(d.activities || []), ...(d.travel || [])].reduce((s, item) => s + (parseFloat(item.distanceKm) || 0), 0);
+                            const override = trip.dailyKm && trip.dailyKm[d.id];
+                            usedKm += override !== undefined && override !== '' && !isNaN(override) ? parseFloat(override) : autoSum;
+                        });
+                        const pct = Math.min((usedKm / trip.rentalLimitKm) * 100, 100);
+                        const progressColor = pct > 95 ? 'var(--accent-coral)' : pct >= 80 ? 'var(--accent-gold)' : 'var(--color-primary)';
+                        return `
+                        <div style="margin-top: 1.5rem; background: rgba(255,255,255,0.05); padding: 12px 16px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(10px); max-width: 300px; margin-left: auto; margin-right: auto;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                                <span style="font-size: 0.75rem; color: rgba(255,255,255,0.7); font-weight: 500;">KM Tracker</span>
+                                <span style="font-size: 0.825rem; font-weight: 600; color: rgba(255,255,255,0.9);">${usedKm} / ${trip.rentalLimitKm} km</span>
+                            </div>
+                            <div style="height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; overflow: hidden; position: relative;">
+                                <div style="position: absolute; left: 0; top: 0; bottom: 0; width: ${pct}%; background: ${progressColor}; transition: width 0.3s ease;"></div>
+                            </div>
+                        </div>
+                        `;
+                    })() : ''}
                 </div>
+                    ${trip.isSelfDriveTrip && trip.fuelEfficiencyKmL && trip.fuelPricePerLitre ? (() => {
+                        let totalKm = 0;
+                        (trip.days || []).forEach(d => {
+                            const autoSum = [...(d.activities||[]),...(d.travel||[])].reduce((s,i) => s+(parseFloat(i.distanceKm)||0),0);
+                            const ov = trip.dailyKm && trip.dailyKm[d.id];
+                            totalKm += (ov !== undefined && ov !== '' && !isNaN(ov)) ? parseFloat(ov) : autoSum;
+                        });
+                        const litres = (totalKm / trip.fuelEfficiencyKmL);
+                        const cost = litres * trip.fuelPricePerLitre;
+                        if (!totalKm || !isFinite(cost)) return '';
+                        const fmt = n => '\u20b9' + Math.round(n).toLocaleString('en-IN');
+                        return `
+                        <div style="margin-top: 0.75rem; background: rgba(255,200,100,0.08); padding: 10px 16px; border-radius: 12px; border: 1px solid rgba(255,200,100,0.2); max-width: 300px; margin-left: auto; margin-right: auto;">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span style="font-size: 0.75rem; color: rgba(255,255,255,0.65); font-weight: 500;">⛽ Est. Fuel Cost</span>
+                                <span style="font-size: 1rem; font-weight: 700; color: #F7C948;">${fmt(cost)}</span>
+                            </div>
+                            <div style="font-size: 0.7rem; color: rgba(255,255,255,0.45); margin-top: 3px;">${totalKm.toFixed(1)} km ÷ ${trip.fuelEfficiencyKmL} km/l × ₹${trip.fuelPricePerLitre}/l = ${litres.toFixed(1)} litres</div>
+                        </div>`;
+                    })() : ''}
 
                 <!-- Bottom fade -->
                 <div style="position:absolute;bottom:0;left:0;right:0;height:50px;background:linear-gradient(to bottom,transparent,#0A1628);pointer-events:none;"></div>
@@ -1650,6 +1776,20 @@ const App = {
                     </button>
                 </div>
                 <div id="prebookingsList"></div>
+            </div>
+
+            <!-- Packing List -->
+            <div class="card" style="margin-bottom: 2rem; cursor: default; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(20px); border-radius: 20px; padding: 1.5rem;">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem;">
+                    <h3 style="margin: 0; font-size: 1.125rem; display: flex; align-items: center; gap: 0.5rem;">🧳 Packing List</h3>
+                    <span id="packingProgress" style="font-size: 0.8rem; color: var(--color-text-secondary);"></span>
+                </div>
+                <div id="packingListContent">${this.renderPackingList(trip)}</div>
+                <!-- Add custom item -->
+                <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
+                    <input type="text" id="packingCustomInput" class="form-input" placeholder="Add an item..." maxlength="80" style="flex: 1; height: 38px; font-size: 0.875rem;" onkeydown="if(event.key==='Enter'){App.addPackingItem(document.getElementById('packingCustomInput').value,'manual');document.getElementById('packingCustomInput').value='';}">
+                    <button onclick="App.addPackingItem(document.getElementById('packingCustomInput').value,'manual');document.getElementById('packingCustomInput').value='';" class="btn btn-primary" style="padding: 0 1rem; height: 38px; font-size: 0.875rem; white-space: nowrap;">+ Add</button>
+                </div>
             </div>
 
             <!-- Days -->
@@ -2650,6 +2790,26 @@ const App = {
                     deleteAccBtn.onclick = () => this.deleteAccommodation(day.id);
                 }
             }
+
+            // Break Add button listener
+            const addBreakBtn = document.getElementById(`addBreak_${day.id}`);
+            if (addBreakBtn) {
+                addBreakBtn.onclick = () => this.showAddBreakDialog(day.id);
+            }
+
+            // Break Edit/Delete Listeners
+            if (day.breaks) {
+                day.breaks.forEach(brk => {
+                    const editBtn = document.getElementById(`editBreak_${day.id}_${brk.id}`);
+                    if (editBtn) {
+                        editBtn.onclick = () => this.showAddBreakDialog(day.id, brk.id);
+                    }
+                    const deleteBtn = document.getElementById(`deleteBreak_${day.id}_${brk.id}`);
+                    if (deleteBtn) {
+                        deleteBtn.onclick = () => this.deleteBreak(day.id, brk.id);
+                    }
+                });
+            }
         });
 
         // Set up fuel button if vehicle tracking is enabled
@@ -2697,22 +2857,25 @@ const App = {
      */
     buildDayTimeline(day) {
         const CONF = {
-            meal:     { badge: '🍽 MEAL',     cls: 'meal'    },
-            activity: { badge: '⭐ ACTIVITY', cls: 'activity'},
-            travel:   { badge: '✈ TRAVEL',   cls: 'travel'  },
-            stay:     { badge: '🛏 STAY',     cls: 'stay'    },
+            meal:     { badge: '🍽 MEAL',     cls: 'meal'       },
+            activity: { badge: '⭐ ACTIVITY', cls: 'activity'   },
+            travel:   { badge: '✈ TRAVEL',   cls: 'travel'     },
+            stay:     { badge: '🛏 STAY',     cls: 'stay'       },
+            break:    { badge: '☕ BREAK',    cls: 'break-stop' },
         };
         const getLabel = (kind, item) => {
             if (kind === 'meal')     return `${item.type.charAt(0).toUpperCase()+item.type.slice(1)}${item.restaurantName ? ' · ' + item.restaurantName : ''}`;
             if (kind === 'activity') return item.name || '';
             if (kind === 'travel')   return `${item.type}`;
             if (kind === 'stay')     return item.name || '';
+            if (kind === 'break')    return item.name || 'Break stop';
             return '';
         };
         let rows = [];
         (day.meals       || []).filter(m => m.startTime).forEach(m => rows.push({ kind:'meal',     item:m }));
         (day.activities  || []).filter(a => a.startTime).forEach(a => rows.push({ kind:'activity', item:a }));
         (day.travel      || []).filter(t => t.startTime).forEach(t => rows.push({ kind:'travel',   item:t }));
+        (day.breaks      || []).filter(b => b.startTime).forEach(b => rows.push({ kind:'break',    item:b }));
         if (day.accommodation && day.accommodation.startTime) rows.push({ kind:'stay', item:day.accommodation });
         if (rows.length === 0) return '';
 
@@ -2745,7 +2908,14 @@ const App = {
                     <div class="tl-title">${label}</div>
                     ${this.renderRoutePill(r.item)}
                     ${r.item.endTime ? `<div class="tl-duration">Until ${r.item.endTime}</div>` : ''}
-                    ${noteStr ? `<div class="tl-note">${noteStr}</div>` : ''}
+                    ${noteStr ? `<div class="tl-note" style="font-style: italic; display: flex; align-items: flex-start; gap: 4px;"><span style="font-style:normal;opacity:0.6;flex-shrink:0;">ℹ️</span><span>${noteStr}</span></div>` : ''}
+                    <!-- Edit full item -->
+                    <button class="tl-item-edit-btn"
+                        onclick="event.stopPropagation();App.editTimelineItem('${day.id}','${r.kind}','${itemId}')"
+                        style="margin-top:6px;font-size:0.72rem;color:rgba(255,255,255,0.5);background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:2px 8px;cursor:pointer;display:inline-flex;align-items:center;gap:4px;"
+                        onmouseover="this.style.color='rgba(255,255,255,0.9)'" onmouseout="this.style.color='rgba(255,255,255,0.5)'">
+                        ✏ Edit / Add actual cost
+                    </button>
                 </div>
                 <button class="tl-edit-btn" title="Edit time"
                     onclick="event.stopPropagation();App.showTimeEditPopover(this,'${day.id}','${r.kind}','${itemId}')">✏</button>
@@ -2805,6 +2975,32 @@ const App = {
                 if (!pop.contains(e.target)) { pop.remove(); document.removeEventListener('click', closeP); }
             });
         }, 50);
+    },
+
+    /**
+     * Open the full edit dialog for a timeline item (pre-booked or timed).
+     * Called from the "✏ Edit / Add actual cost" button in each timeline row.
+     */
+    editTimelineItem(dayId, kind, itemId) {
+        const day = (this.currentTrip.days || []).find(d => d.id === dayId);
+        if (!day) return;
+        switch (kind) {
+            case 'travel':
+                this.showAddTravelDialog(dayId, itemId);
+                break;
+            case 'meal':
+                this.showAddMealDialog(dayId, itemId);
+                break;
+            case 'activity':
+                this.showAddActivityDialog(dayId, itemId);
+                break;
+            case 'stay':
+                this.showAddAccommodationDialog(dayId);
+                break;
+            case 'break':
+                this.showAddBreakDialog(dayId, itemId);
+                break;
+        }
     },
 
     renderRoutePill(item) {
@@ -2869,48 +3065,82 @@ const App = {
         const renderStay        = day.accommodation && day.accommodation.name && !day.accommodation.startTime;
 
         return `
-            <div class="card" style="margin-bottom: 1rem; cursor: default; border-left: 4px solid ${accentColor}; position:relative;">
+            <div class="card" style="margin-bottom: 1rem; cursor: default; border-left: 4px solid ${accentColor}; position:relative; flex-direction: column;">
                 <button class="fb-trigger-btn" onclick="event.stopPropagation();if(window.fbTrigger)fbTrigger('Day ${day.dayNumber} card')">＋</button>
-                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
-                    <div style="display: flex; align-items: center; gap: 0.5rem;">
-                        <div>
-                        ${isIncomplete ? `<span id="incompleteIndicator_${day.id}" title="Some expenses are incomplete" style="display:inline-flex;align-items:center;gap:0.25rem;padding:0.25rem 0.5rem;background:rgba(251,146,60,0.1);border:1px solid rgba(251,146,60,0.3);border-radius:12px;font-size:0.7rem;color:rgb(234,88,12);font-weight:500;cursor:pointer;"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10" opacity="0.9"/></svg>Incomplete</span>` : ''}
-                        
-                        <button id="deleteDay_${day.id}" title="Delete Day" style="background: none; border: none; cursor: pointer; opacity: 0.5; padding: 4px; display: flex; align-items: center; margin-left: 0.25rem; color: var(--color-text-secondary); transition: opacity 0.2s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.5">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <polyline points="3 6 5 6 21 6"></polyline>
-                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                            </svg>
-                        </button>
-                    </div>
-                    <div style="text-align: right;">
-                        <span style="font-size: 0.75rem; color: var(--color-text-secondary); display: block;">Total Actual</span>
-                        <div style="display: flex; flex-direction: column; align-items: flex-end;">
-                            <span style="font-weight: 700; color: var(--color-secondary); font-size: 1rem;">
-                                ${UIComponents.formatCurrency(this.calculateDayTotal(day).actual)}
-                            </span>
-                            ${(() => {
-                const { variance, actual } = this.calculateDayTotal(day);
-                if (variance && variance !== 0 && actual > 0) {
-                    const isPositive = variance > 0; // Positive = Over budget
-                    return `
-                                        <span style="font-size: 0.75rem; font-weight: 600; color: ${isPositive ? 'var(--color-error)' : 'var(--color-success)'};">
-                                            ${isPositive ? '+' : ''}${UIComponents.formatCurrency(Math.abs(variance))}
-                                        </span>
-                                    `;
-                }
-                return '';
-            })()}
+
+                <!-- Day header: name/date left, total actual right -->
+                <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 0.5rem; margin-bottom: 0.75rem; padding-right: 1.5rem;">
+                    <div style="flex: 1; min-width: 0;">
+                        <h4 style="margin: 0; font-size: 1.05rem; color: var(--color-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                            Day ${day.dayNumber} — ${dayName}
+                        </h4>
+                        <p style="margin: 0.2rem 0 0.4rem; font-size: 0.8rem; color: var(--color-text-secondary);">
+                            ${date && !isNaN(date) ? UIComponents.formatDate(date) : 'Pending Date'}
+                        </p>
+                        <div style="display: flex; flex-wrap: wrap; gap: 0.35rem; align-items: center;">
+                            ${this.currentTrip.isSelfDriveTrip ? (() => {
+                                const autoSum = [...(day.activities || []), ...(day.travel || [])].reduce((s, item) => s + (parseFloat(item.distanceKm) || 0), 0);
+                                const override = this.currentTrip.dailyKm && this.currentTrip.dailyKm[day.id];
+                                const usedKm = override !== undefined && override !== '' && !isNaN(override) ? parseFloat(override) : autoSum;
+                                return usedKm > 0 ? `<span style="display:inline-flex;align-items:center;gap:3px;background:rgba(255,183,77,0.1);border:1px solid rgba(255,183,77,0.2);border-radius:6px;padding:2px 7px;font-size:0.72rem;color:var(--accent-gold);font-weight:500;">🚗 ~${usedKm} km</span>` : '';
+                            })() : ''}
+                            ${isIncomplete ? `<span style="display:inline-flex;align-items:center;gap:0.25rem;padding:2px 7px;background:rgba(251,146,60,0.1);border:1px solid rgba(251,146,60,0.3);border-radius:12px;font-size:0.7rem;color:rgb(234,88,12);font-weight:500;">⚠ Incomplete</span>` : ''}
                         </div>
                     </div>
-                </div>
-                
-                ${totalItems > 0 ? `
-                <div class="day-progress-row">
-                    <div class="day-progress-track">
-                        <div class="day-progress-fill" style="width:${pct}%;background:${accentColor};"></div>
+                    <div style="text-align: right; flex-shrink: 0;">
+                        <span style="font-size: 0.7rem; color: var(--color-text-secondary); display: block;">Total Actual</span>
+                        <span style="font-weight: 700; color: var(--color-secondary); font-size: 1rem;">
+                            ${UIComponents.formatCurrency(this.calculateDayTotal(day).actual)}
+                        </span>
+                        ${(() => {
+                            const { variance, actual } = this.calculateDayTotal(day);
+                            if (variance && variance !== 0 && actual > 0) {
+                                const isPositive = variance > 0;
+                                return `<span style="font-size:0.72rem;font-weight:600;color:${isPositive ? 'var(--color-error)' : 'var(--color-success)'};">${isPositive ? '+' : ''}${UIComponents.formatCurrency(Math.abs(variance))}</span>`;
+                            }
+                            return '';
+                        })()}
                     </div>
-                    ${progressLabel}
+                </div>
+                <!-- Delete day button — absolutely positioned top-right -->
+                <button id="deleteDay_${day.id}" title="Delete Day" style="position:absolute;top:0.6rem;right:0.6rem;background:none;border:none;cursor:pointer;opacity:0.4;padding:4px;color:var(--color-text-secondary);transition:opacity 0.2s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.4">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="3 6 5 6 21 6"></polyline>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                    </svg>
+                </button>
+                
+                ${totalItems > 0 || this.currentTrip.rentalLimitKm ? `
+                <div style="display: flex; flex-direction: column; gap: 4px; margin-bottom: 0.75rem;">
+                    ${totalItems > 0 ? `
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <div style="flex:1; height:4px; background:rgba(255,255,255,0.08); border-radius:2px; overflow:hidden;">
+                            <div style="height:100%; width:${pct}%; background:${accentColor}; border-radius:2px; transition:width 0.4s ease;"></div>
+                        </div>
+                        ${progressLabel}
+                    </div>` : ''}
+                    ${(() => {
+                        if (!this.currentTrip.rentalLimitKm) return '';
+                        const numDays = (this.currentTrip.days || []).length || 1;
+                        const perDayBudget = Math.round(this.currentTrip.rentalLimitKm / numDays);
+                        const autoSumKm = [...(day.activities || []), ...(day.travel || [])].reduce((s, it) => s + (parseFloat(it.distanceKm) || 0), 0);
+                        const overrideKm = this.currentTrip.dailyKm && this.currentTrip.dailyKm[day.id];
+                        const dayKm = (overrideKm !== undefined && overrideKm !== '' && !isNaN(overrideKm)) ? parseFloat(overrideKm) : autoSumKm;
+                        if (dayKm === 0 && perDayBudget === 0) return '';
+                        const kmPct = Math.min(Math.round((dayKm / perDayBudget) * 100), 100);
+                        const overLimit = dayKm > perDayBudget;
+                        const barColor = overLimit ? '#ef4444' : '#f59e0b';
+                        const kmLabel = overLimit
+                            ? `<span style="font-size:11px;font-family:Outfit,sans-serif;color:#ef4444;white-space:nowrap;">⚠️ ${dayKm} km</span>`
+                            : `<span style="font-size:11px;font-family:Outfit,sans-serif;color:rgba(255,183,77,0.8);white-space:nowrap;">${dayKm > 0 ? dayKm + ' km' : '0 km'} / ${perDayBudget} avg</span>`;
+                        return `
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <div style="flex:1; height:4px; background:rgba(255,255,255,0.08); border-radius:2px; overflow:hidden;">
+                                <div style="height:100%; width:${kmPct}%; background:${barColor}; border-radius:2px; transition:width 0.4s ease;"></div>
+                            </div>
+                            ${kmLabel}
+                        </div>`;
+                    })()}
                 </div>` : ''}
 
                 ${timelineHTML}
@@ -2929,12 +3159,13 @@ const App = {
                                         <div style="font-size: 0.875rem; color: var(--color-text-secondary);">
                                             ${meal.venue} ${meal.restaurantName ? `• ${meal.restaurantName}` : ''}
                                         </div>
-                                        ${meal.notes ? `<div style="font-size: 0.875rem; color: var(--color-text-secondary); margin-top: 0.25rem;">${meal.notes}</div>` : ''}
+                                        ${meal.notes ? `<div style="font-size: 0.8rem; color: var(--color-text-secondary); margin-top: 0.35rem; font-style: italic; display: flex; align-items: flex-start; gap: 4px;"><span style="font-style:normal;opacity:0.7;flex-shrink:0;">ℹ️</span><span>${meal.notes}</span></div>` : ''}
                                         
                                         <div style="display:none">
                                             <button id="editMeal_${day.id}_${meal.id}"></button>
                                             <button id="deleteMeal_${day.id}_${meal.id}"></button>
                                         </div>
+                                        ${meal.restaurantName ? `<a href="https://maps.google.com/?q=${encodeURIComponent(meal.restaurantName)}" target="_blank" onclick="event.stopPropagation()" title="Open in Google Maps" style="position:absolute;top:0.65rem;right:2.4rem;font-size:1rem;opacity:0.55;text-decoration:none;transition:opacity 0.15s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.55">🗺</a>` : ''}
                                         <button class="item-menu-btn" title="Options" onclick="event.stopPropagation();App.showItemMenu(this,'editMeal_${day.id}_${meal.id}','deleteMeal_${day.id}_${meal.id}')">&#8942;</button>
                                     </div>
                                     <div style="text-align: right;">
@@ -2965,12 +3196,13 @@ const App = {
                                         <div style="font-weight: 600; margin-bottom: 0.25rem;">📍 ${activity.name}</div>
                                         <div style="font-size: 0.875rem; color: var(--color-text-secondary);">${activity.type}</div>
                                         ${this.renderRoutePill(activity)}
-                                        ${activity.notes ? `<div style="font-size: 0.875rem; color: var(--color-text-secondary); margin-top: 0.25rem;">${activity.notes}</div>` : ''}
+                                        ${activity.notes ? `<div style="font-size: 0.8rem; color: var(--color-text-secondary); margin-top: 0.35rem; font-style: italic; display: flex; align-items: flex-start; gap: 4px;"><span style="font-style:normal;opacity:0.7;flex-shrink:0;">ℹ️</span><span>${activity.notes}</span></div>` : ''}
                                         
                                         <div style="display:none">
                                             <button id="editActivity_${day.id}_${activity.id}"></button>
                                             <button id="deleteActivity_${day.id}_${activity.id}"></button>
                                         </div>
+                                        ${activity.name ? `<a href="${activity.from && activity.to ? `https://maps.google.com/?saddr=${encodeURIComponent(activity.from)}&daddr=${encodeURIComponent(activity.to)}` : `https://maps.google.com/?q=${encodeURIComponent(activity.name)}`}" target="_blank" onclick="event.stopPropagation()" title="Open in Google Maps" style="position:absolute;top:0.65rem;right:2.4rem;font-size:1rem;opacity:0.55;text-decoration:none;transition:opacity 0.15s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.55">🗺</a>` : ''}
                                         <button class="item-menu-btn" title="Options" onclick="event.stopPropagation();App.showItemMenu(this,'editActivity_${day.id}_${activity.id}','deleteActivity_${day.id}_${activity.id}')">&#8942;</button>
                                     </div>
                                     <div style="text-align: right;">
@@ -2999,12 +3231,13 @@ const App = {
                                         <div style="font-weight: 600; margin-bottom: 0.25rem;">🚗 ${travel.type}${travel.time ? ` • ${travel.time}` : ''}</div>
                                         ${this.renderRoutePill(travel)}
                                         ${travel.splitBetween > 1 ? `<div style="font-size: 0.75rem; color: var(--color-text-tertiary);">Split: ${travel.splitBetween} people</div>` : ''}
-                                        ${travel.notes ? `<div style="font-size: 0.875rem; color: var(--color-text-secondary); margin-top: 0.25rem;">${travel.notes}</div>` : ''}
+                                        ${travel.notes ? `<div style="font-size: 0.8rem; color: var(--color-text-secondary); margin-top: 0.35rem; font-style: italic; display: flex; align-items: flex-start; gap: 4px;"><span style="font-style:normal;opacity:0.7;flex-shrink:0;">ℹ️</span><span>${travel.notes}</span></div>` : ''}
                                         
                                         <div style="display:none">
                                             <button id="editTravel_${day.id}_${travel.id}"></button>
                                             <button id="deleteTravel_${day.id}_${travel.id}"></button>
                                         </div>
+                                        ${(travel.from || travel.to) ? `<a href="${travel.from && travel.to ? `https://maps.google.com/?saddr=${encodeURIComponent(travel.from)}&daddr=${encodeURIComponent(travel.to)}` : `https://maps.google.com/?q=${encodeURIComponent(travel.to || travel.from)}`}" target="_blank" onclick="event.stopPropagation()" title="Open directions in Google Maps" style="position:absolute;top:0.65rem;right:2.4rem;font-size:1rem;opacity:0.55;text-decoration:none;transition:opacity 0.15s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.55">🗺</a>` : ''}
                                         <button class="item-menu-btn" title="Options" onclick="event.stopPropagation();App.showItemMenu(this,'editTravel_${day.id}_${travel.id}','deleteTravel_${day.id}_${travel.id}')">&#8942;</button>
                                     </div>
                                     <div style="text-align: right;">
@@ -3022,6 +3255,36 @@ const App = {
                 ` : ''}
                 
                     ${this.currentTrip.isSelfDriveTrip ? this.renderSelfDriveDay(day) : ''}
+
+                    ${(() => {
+                        const untimedBreaks = (day.breaks || []).filter(b => !b.startTime);
+                        if (!untimedBreaks.length) return '';
+                        return `
+                        <div style="margin-bottom: 1rem; position:relative;">
+                            <button class="fb-trigger-btn" onclick="event.stopPropagation();if(window.fbTrigger)fbTrigger('Day ${day.dayNumber} - Break section')">＋</button>
+                            <div class="cat-chip break-stop">☕ BREAK</div>
+                            ${untimedBreaks.map(brk => `
+                                <div class="item-card break-stop" style="position:relative;">
+                                <button class="fb-trigger-btn" onclick="event.stopPropagation();if(window.fbTrigger)fbTrigger('Item: ${brk.name}')">＋</button>
+                                <div style="display: flex; justify-content: space-between; align-items: start;">
+                                    <div style="flex: 1;">
+                                        <div style="font-weight: 600; margin-bottom: 0.25rem;">☕ ${brk.name || 'Break stop'}</div>
+                                        ${brk.location ? `<div style="font-size: 0.875rem; color: var(--color-text-secondary);">
+                                            📍 ${brk.location}
+                                            ${brk.location ? `<a href="https://maps.google.com/?q=${encodeURIComponent(brk.location)}" target="_blank" style="margin-left:6px;color:var(--accent-coral);text-decoration:none;" title="Open in Google Maps">🗺</a>` : ''}
+                                        </div>` : ''}
+                                        ${brk.notes ? `<div style="font-size: 0.8rem; color: var(--color-text-secondary); margin-top: 0.35rem; font-style: italic; display: flex; align-items: flex-start; gap: 4px;"><span style="font-style:normal;opacity:0.7;flex-shrink:0;">ℹ️</span><span>${brk.notes}</span></div>` : ''}
+                                        <div style="display:none">
+                                            <button id="editBreak_${day.id}_${brk.id}"></button>
+                                            <button id="deleteBreak_${day.id}_${brk.id}"></button>
+                                        </div>
+                                        <button class="item-menu-btn" title="Options" onclick="event.stopPropagation();App.showItemMenu(this,'editBreak_${day.id}_${brk.id}','deleteBreak_${day.id}_${brk.id}')">&#8942;</button>
+                                    </div>
+                                </div>
+                                </div>
+                            `).join('')}
+                        </div>`;
+                    })()}
 
                     ${renderStay ? `
                         <div style="margin-bottom: 1rem; position:relative;">
@@ -3044,12 +3307,13 @@ const App = {
                                         if (to) return `<div style="font-size: 0.875rem; color: var(--accent-gold); margin-top: 0.25rem; font-weight: 500;">Pre-booked until ${fmt(to)}</div>`;
                                         return '';
                                     })()}
-                                    ${day.accommodation.notes && day.accommodation.notes !== 'Pre-booked (undefined to undefined)' ? `<div style="font-size: 0.875rem; color: var(--color-text-secondary); margin-top: 0.25rem;">${day.accommodation.notes}</div>` : ''}
+                                    ${day.accommodation.notes && day.accommodation.notes !== 'Pre-booked (undefined to undefined)' ? `<div style="font-size: 0.8rem; color: var(--color-text-secondary); margin-top: 0.35rem; font-style: italic; display: flex; align-items: flex-start; gap: 4px;"><span style="font-style:normal;opacity:0.7;flex-shrink:0;">ℹ️</span><span>${day.accommodation.notes}</span></div>` : ''}
                                     
                                     <div style="display:none">
                                         <button id="editAcc_${day.id}"></button>
                                         <button id="deleteAcc_${day.id}"></button>
                                     </div>
+                                    ${day.accommodation.name ? `<a href="https://maps.google.com/?q=${encodeURIComponent(day.accommodation.name)}" target="_blank" onclick="event.stopPropagation()" title="Open in Google Maps" style="position:absolute;top:0.65rem;right:2.4rem;font-size:1rem;opacity:0.55;text-decoration:none;transition:opacity 0.15s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.55">🗺</a>` : ''}
                                     <button class="item-menu-btn" title="Options" onclick="event.stopPropagation();App.showItemMenu(this,'editAcc_${day.id}','deleteAcc_${day.id}')">&#8942;</button>
                                 </div>
                                 <div style="text-align: right;">
@@ -3068,11 +3332,12 @@ const App = {
                     ` : ''}
 
                     <!-- Add Buttons container -->
-                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 0.5rem; position:relative;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr 1fr; gap: 0.5rem; position:relative;">
                     <button class="fb-trigger-btn" onclick="event.stopPropagation();if(window.fbTrigger)fbTrigger('Day ${day.dayNumber} - Add item buttons')">＋</button>
                     <button id="addMeal_${day.id}" class="cat-pill-btn meal">🍽 Meal</button>
                     <button id="addActivity_${day.id}" class="cat-pill-btn activity">⭐ Activity</button>
                     <button id="addTravel_${day.id}" class="cat-pill-btn travel">✈ Travel</button>
+                    <button id="addBreak_${day.id}" class="cat-pill-btn break-stop">☕ Break</button>
                     <button id="addAccommodation_${day.id}" class="cat-pill-btn stay">🛏 Stay</button>
                 </div>
             </div>
@@ -3422,8 +3687,9 @@ const App = {
                     </div>
                 </div>
                 <div class="form-group">
-                    <label class="form-label" for="activityNotes">Notes (optional)</label>
-                    <textarea id="activityNotes" class="form-textarea" placeholder="Any special details...">${existingActivity ? existingActivity.notes || '' : ''}</textarea>
+                    <label class="form-label" for="activityNotes">Notes or tips (optional)</label>
+                    <textarea id="activityNotes" class="form-textarea" placeholder="e.g. Avoid slippery steps, Feed babies before start" maxlength="200" rows="2">${existingActivity ? existingActivity.notes || '' : ''}</textarea>
+                    <p class="form-hint" style="margin-top: 0.25rem;">Up to 200 characters</p>
                 </div>
                 <div style="font-size: 0.75rem; color: rgba(255,255,255,0.5); font-weight: 600; text-transform: uppercase; margin: 1rem 0 0.5rem 0;">Route Details (optional)</div>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
@@ -3616,8 +3882,9 @@ const App = {
                     </div>
                 </div>
                 <div class="form-group">
-                    <label class="form-label" for="mealNotes">Notes (optional)</label>
-                    <textarea id="mealNotes" class="form-textarea" placeholder="Any special details...">${existingMeal ? existingMeal.notes || '' : ''}</textarea>
+                    <label class="form-label" for="mealNotes">Notes or tips (optional)</label>
+                    <textarea id="mealNotes" class="form-textarea" placeholder="e.g. Stroller friendly, Windy — carry jackets" maxlength="200" rows="2">${existingMeal ? existingMeal.notes || '' : ''}</textarea>
+                    <p class="form-hint" style="margin-top: 0.25rem;">Up to 200 characters</p>
                 </div>
                 <div style="display: flex; gap: 0.75rem; justify-content: flex-end; margin-top: 1.5rem;">
                     <button type="button" id="cancelMealBtn" class="btn btn-secondary">Cancel</button>
@@ -3789,8 +4056,9 @@ const App = {
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label" for="travelNotes">Notes (optional)</label>
-                    <textarea id="travelNotes" class="form-input" rows="3" placeholder="Additional notes...">${existingTravel ? existingTravel.notes || '' : ''}</textarea>
+                    <label class="form-label" for="travelNotes">Notes or tips (optional)</label>
+                    <textarea id="travelNotes" class="form-input" rows="2" maxlength="200" placeholder="e.g. Book tickets early, Platform 3">${existingTravel ? existingTravel.notes || '' : ''}</textarea>
+                    <p class="form-hint" style="margin-top: 0.25rem;">Up to 200 characters</p>
                 </div>
 
                 <div class="form-actions">
@@ -3939,8 +4207,9 @@ const App = {
                     </div>
                 </div>
                 <div class="form-group">
-                    <label class="form-label" for="accNotes">Notes (optional)</label>
-                    <textarea id="accNotes" class="form-textarea" placeholder="Booking details, address...">${currentAccommodation.notes || ''}</textarea>
+                    <label class="form-label" for="accNotes">Notes or tips (optional)</label>
+                    <textarea id="accNotes" class="form-textarea" rows="2" maxlength="200" placeholder="e.g. Ground floor room, Breakfast included">${currentAccommodation.notes || ''}</textarea>
+                    <p class="form-hint" style="margin-top: 0.25rem;">Up to 200 characters</p>
                 </div>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                     <div class="form-group">
@@ -4047,6 +4316,100 @@ const App = {
             this.updateTripStats();
 
             UIComponents.showToast('Stay removed', 'info');
+        }
+    },
+
+    /**
+     * Show add/edit break stop dialog
+     */
+    showAddBreakDialog(dayId, breakId = null) {
+        const day = this.currentTrip.days.find(d => d.id === dayId);
+        if (!day) return;
+
+        let existingBreak = null;
+        if (breakId && day.breaks) {
+            existingBreak = day.breaks.find(b => b.id === breakId);
+        }
+
+        const content = `
+            <h3 style="margin-bottom: 1rem;">${existingBreak ? 'Edit Break' : 'Add Break Stop'}</h3>
+            <form id="breakForm">
+                <div class="form-group">
+                    <label class="form-label" for="breakName">Break Name</label>
+                    <input type="text" id="breakName" class="form-input" placeholder="e.g. Breakfast stop, Fuel stop, Baby feeding break" value="${existingBreak ? existingBreak.name || '' : ''}" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="breakLocation">Location (optional)</label>
+                    <input type="text" id="breakLocation" class="form-input" placeholder="e.g. McDonald's Pune, HP Petrol Pump" value="${existingBreak ? existingBreak.location || '' : ''}">
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div class="form-group">
+                        <label class="form-label" for="breakStartTime">Start Time (optional)</label>
+                        <input type="time" id="breakStartTime" class="form-input" value="${existingBreak ? existingBreak.startTime || '' : ''}">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="breakEndTime">End Time (optional)</label>
+                        <input type="time" id="breakEndTime" class="form-input" value="${existingBreak ? existingBreak.endTime || '' : ''}">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="breakNotes">Notes or tips (optional)</label>
+                    <textarea id="breakNotes" class="form-textarea" rows="2" maxlength="200" placeholder="e.g. Clean restrooms, Good chai stop">${existingBreak ? existingBreak.notes || '' : ''}</textarea>
+                    <p class="form-hint" style="margin-top: 0.25rem;">Up to 200 characters</p>
+                </div>
+                <div style="display: flex; gap: 0.75rem; justify-content: flex-end; margin-top: 1.5rem;">
+                    <button type="button" id="cancelBreakBtn" class="btn btn-secondary">Cancel</button>
+                    <button type="submit" class="btn btn-primary">${existingBreak ? 'Update' : 'Add'} Break</button>
+                </div>
+            </form>
+        `;
+
+        UIComponents.showModal(content);
+
+        document.getElementById('cancelBreakBtn').onclick = () => UIComponents.closeModal();
+
+        document.getElementById('breakForm').onsubmit = (e) => {
+            e.preventDefault();
+
+            const breakData = {
+                id: existingBreak ? existingBreak.id : this.generateId(),
+                activityType: 'break',
+                name: document.getElementById('breakName').value.trim(),
+                location: document.getElementById('breakLocation').value.trim() || null,
+                startTime: document.getElementById('breakStartTime').value || null,
+                endTime: document.getElementById('breakEndTime').value || null,
+                notes: document.getElementById('breakNotes').value.trim() || null,
+            };
+
+            if (!day.breaks) day.breaks = [];
+
+            if (existingBreak) {
+                const idx = day.breaks.findIndex(b => b.id === existingBreak.id);
+                if (idx !== -1) day.breaks[idx] = breakData;
+            } else {
+                day.breaks.push(breakData);
+            }
+
+            Storage.saveTrip(this.currentTrip);
+            this.renderDays();
+            this.updateTripStats();
+            UIComponents.closeModal();
+            UIComponents.showToast(`Break ${existingBreak ? 'updated' : 'added'}!`, 'success');
+        };
+    },
+
+    /**
+     * Delete break stop
+     */
+    deleteBreak(dayId, breakId) {
+        if (!confirm('Delete this break stop?')) return;
+        const day = this.currentTrip.days.find(d => d.id === dayId);
+        if (day && day.breaks) {
+            day.breaks = day.breaks.filter(b => b.id !== breakId);
+            Storage.saveTrip(this.currentTrip);
+            this.renderDays();
+            this.updateTripStats();
+            UIComponents.showToast('Break removed', 'info');
         }
     },
 
@@ -5056,6 +5419,111 @@ const App = {
                 this.showTripList();
             }
         }
+    },
+
+    /**
+     * Compute auto-suggested packing items from activity/meal/break notes across all days
+     */
+    computePackingSuggestions(trip) {
+        const KEYWORD_MAP = [
+            { keywords: ['stroller'],                  suggestion: 'Stroller' },
+            { keywords: ['jacket', 'jackets', 'cold'], suggestion: 'Jackets / warm clothes' },
+            { keywords: ['baby', 'babies'],            suggestion: 'Baby essentials (milk, diapers, wipes)' },
+            { keywords: ['slippery', 'slip'],          suggestion: 'Non-slip footwear' },
+            { keywords: ['sunscreen', 'sun'],          suggestion: 'Sunscreen / sun protection' },
+            { keywords: ['rain', 'rainy', 'umbrella'], suggestion: 'Umbrella / raincoat' },
+            { keywords: ['swim', 'pool', 'beach'],     suggestion: 'Swimwear / towel' },
+            { keywords: ['camera', 'photo'],           suggestion: 'Camera / extra batteries' },
+            { keywords: ['medicine', 'medical'],       suggestion: 'First aid / medications' },
+            { keywords: ['hiking', 'trek', 'trail'],   suggestion: 'Hiking shoes / backpack' },
+        ];
+        const allNotes = [];
+        (trip.days || []).forEach(d => {
+            (d.meals      || []).forEach(m => m.notes && allNotes.push(m.notes));
+            (d.activities || []).forEach(a => a.notes && allNotes.push(a.notes));
+            (d.travel     || []).forEach(t => t.notes && allNotes.push(t.notes));
+            (d.breaks     || []).forEach(b => b.notes && allNotes.push(b.notes));
+            if (d.accommodation && d.accommodation.notes) allNotes.push(d.accommodation.notes);
+        });
+        const combined = allNotes.join(' ').toLowerCase();
+        const suggestions = [];
+        KEYWORD_MAP.forEach(({ keywords, suggestion }) => {
+            if (keywords.some(k => combined.includes(k))) suggestions.push(suggestion);
+        });
+        return suggestions;
+    },
+
+    /**
+     * Render the packing list section HTML
+     */
+    renderPackingList(trip) {
+        const suggestions = this.computePackingSuggestions(trip);
+        const myList = (trip.packingList || []);
+        const addedSuggestions = new Set(myList.map(i => i.item));
+        const pendingSuggestions = suggestions.filter(s => !addedSuggestions.has(s));
+        let html = '';
+        if (pendingSuggestions.length > 0) {
+            html += `<div style="margin-bottom: 1rem;">
+                <div style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--accent-gold); margin-bottom: 0.5rem;">✨ Suggested for your trip</div>
+                ${pendingSuggestions.map(s => `
+                <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.55rem 0.75rem; margin-bottom: 0.35rem; background: rgba(247,201,72,0.06); border: 1px solid rgba(247,201,72,0.18); border-radius: 10px;">
+                    <span style="font-size: 0.875rem; color: rgba(255,255,255,0.75);">${s}</span>
+                    <button onclick="App.addPackingItem(${JSON.stringify(s)},'suggested')" style="font-size: 0.75rem; font-weight: 600; color: var(--accent-gold); background: rgba(247,201,72,0.12); border: 1px solid rgba(247,201,72,0.3); border-radius: 6px; padding: 3px 10px; cursor: pointer; white-space: nowrap;">+ Add</button>
+                </div>`).join('')}
+            </div>`;
+        }
+        if (myList.length > 0) {
+            html += `<div>
+                <div style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--color-text-secondary); margin-bottom: 0.5rem;">📋 My list</div>
+                ${myList.map(item => `
+                <div style="display: flex; align-items: center; gap: 0.6rem; padding: 0.5rem 0.5rem; margin-bottom: 0.3rem; border-radius: 8px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07);">
+                    <input type="checkbox" ${item.packed ? 'checked' : ''}
+                        onchange="App.togglePackedItem('${item.id}')"
+                        style="width:18px;height:18px;cursor:pointer;accent-color:var(--color-primary);flex-shrink:0;">
+                    <span style="flex:1; font-size:0.875rem; ${item.packed ? 'text-decoration:line-through; color: rgba(255,255,255,0.35);' : 'color: rgba(255,255,255,0.85);'}">${item.item}</span>
+                    ${item.source === 'suggested' ? '<span style="font-size:0.65rem;color:var(--accent-gold);opacity:0.7;">✨</span>' : ''}
+                    <button onclick="App.removePackingItem('${item.id}')" title="Remove" style="background:none;border:none;cursor:pointer;opacity:0.4;padding:2px 4px;font-size:0.9rem;color:var(--color-text-secondary);" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.4">✕</button>
+                </div>`).join('')}
+            </div>`;
+        }
+        if (!pendingSuggestions.length && !myList.length) {
+            html = `<div style="text-align:center; padding: 1.5rem 0; color: var(--color-text-secondary); font-size: 0.875rem;">🧳 No items yet — add your first item below.</div>`;
+        }
+        return html;
+    },
+
+    addPackingItem(itemName, source = 'manual') {
+        itemName = (itemName || '').trim();
+        if (!itemName || !this.currentTrip) return;
+        if (!this.currentTrip.packingList) this.currentTrip.packingList = [];
+        if (this.currentTrip.packingList.some(i => i.item.toLowerCase() === itemName.toLowerCase())) {
+            UIComponents.showToast('Item already in list', 'info');
+            return;
+        }
+        this.currentTrip.packingList.push({ id: this.generateId(), item: itemName, packed: false, source });
+        Storage.saveTrip(this.currentTrip);
+        this.refreshPackingList();
+    },
+
+    togglePackedItem(itemId) {
+        if (!this.currentTrip || !this.currentTrip.packingList) return;
+        const item = this.currentTrip.packingList.find(i => i.id === itemId);
+        if (item) { item.packed = !item.packed; Storage.saveTrip(this.currentTrip); this.refreshPackingList(); }
+    },
+
+    removePackingItem(itemId) {
+        if (!this.currentTrip || !this.currentTrip.packingList) return;
+        this.currentTrip.packingList = this.currentTrip.packingList.filter(i => i.id !== itemId);
+        Storage.saveTrip(this.currentTrip);
+        this.refreshPackingList();
+    },
+
+    refreshPackingList() {
+        const container = document.getElementById('packingListContent');
+        if (container && this.currentTrip) container.innerHTML = this.renderPackingList(this.currentTrip);
+        const myList = this.currentTrip.packingList || [];
+        const badge = document.getElementById('packingProgress');
+        if (badge) badge.textContent = myList.length > 0 ? `${myList.filter(i => i.packed).length} / ${myList.length} packed` : '';
     },
 
     /**
