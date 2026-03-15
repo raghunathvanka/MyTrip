@@ -1333,6 +1333,8 @@ const App = {
             ">
                 <!-- Dot texture overlay -->
                 <div style="position:absolute;inset:0;background-image:radial-gradient(circle,rgba(255,255,255,0.06) 1px,transparent 1px);background-size:20px 20px;pointer-events:none;"></div>
+                <!-- Feedback trigger -->
+                <button class="fb-trigger-btn" style="top:60px;right:8px;z-index:5;" onclick="event.stopPropagation();if(window.fbTrigger)fbTrigger('Trip hero header')">＋</button>
 
                 <!-- Top-left: back button -->
                 <button id="backToListFromDetail" style="
@@ -1477,7 +1479,8 @@ const App = {
 
                 return `
                     <!-- Section 1: Primary Budget Summary -->
-                    <div class="budget-primary-summary">
+                    <div class="budget-primary-summary" style="position:relative;">
+                        <button class="fb-trigger-btn" onclick="event.stopPropagation();if(window.fbTrigger)fbTrigger('Budget overview card')">＋</button>
                         <div class="budget-expected-primary">
                             <div class="budget-label-primary">Total Budget</div>
                             <div class="budget-value-primary" style="color: #fbbf24; font-size: 2.25rem; font-weight: 700; margin-top: 0.5rem;">
@@ -1780,6 +1783,7 @@ const App = {
             const paidPct = pb.totalAmount > 0
                 ? Math.min(Math.round(((pb.advancePaid || 0) / pb.totalAmount) * 100), 100)
                 : 0;
+            const safeName = (pb.title || 'Booking').substring(0, 30).replace(/'/g, '');
 
             return `
                 <div class="prebooking-card" style="
@@ -1791,7 +1795,9 @@ const App = {
                     border-radius: 16px;
                     padding: 16px;
                     margin-bottom: 12px;
+                    position: relative;
                 " data-pb-id="${pb.id}">
+                    <button class="fb-trigger-btn" onclick="event.stopPropagation();if(window.fbTrigger)fbTrigger('Pre-booking: ${safeName}')">＋</button>
                     <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:0.5rem;">
                         <div style="flex:1;min-width:0;">
                             <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;margin-bottom:0.35rem;">
@@ -2714,7 +2720,8 @@ const App = {
                 : `<span style="font-size:11px;font-family:Outfit,sans-serif;color:rgba(255,255,255,0.5);">${confirmedItems}/${totalItems} confirmed</span>`;
 
         return `
-            <div class="card" style="margin-bottom: 1rem; cursor: default; border-left: 4px solid ${accentColor};">
+            <div class="card" style="margin-bottom: 1rem; cursor: default; border-left: 4px solid ${accentColor}; position:relative;">
+                <button class="fb-trigger-btn" onclick="event.stopPropagation();if(window.fbTrigger)fbTrigger('Day ${day.dayNumber} card')">＋</button>
                 <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
                     <div style="display: flex; align-items: center; gap: 0.5rem;">
                         <div>
@@ -2763,10 +2770,12 @@ const App = {
                 </div>` : ''}
 
                 ${day.meals && day.meals.length > 0 ? `
-                    <div style="margin-bottom: 1rem;">
+                    <div style="margin-bottom: 1rem; position:relative;">
+                        <button class="fb-trigger-btn" onclick="event.stopPropagation();if(window.fbTrigger)fbTrigger('Day ${day.dayNumber} - Meal section')">＋</button>
                         <div class="cat-chip meal">🍽 MEAL</div>
                         ${day.meals.map(meal => `
-                            <div class="item-card meal">
+                            <div class="item-card meal" style="position:relative;">
+                                <button class="fb-trigger-btn" onclick="event.stopPropagation();if(window.fbTrigger)fbTrigger('Item: ${meal.type} meal')">＋</button>
                                 <div style="display: flex; justify-content: space-between; align-items: start;">
                                     <div style="flex: 1;">
                                         <div style="font-weight: 600; margin-bottom: 0.25rem;">${this.getMealIcon(meal.type)} ${meal.type.charAt(0).toUpperCase() + meal.type.slice(1)}</div>
@@ -2798,10 +2807,12 @@ const App = {
                 ` : ''}
                 
                 ${day.activities && day.activities.length > 0 ? `
-                    <div style="margin-bottom: 1rem;">
+                    <div style="margin-bottom: 1rem; position:relative;">
+                        <button class="fb-trigger-btn" onclick="event.stopPropagation();if(window.fbTrigger)fbTrigger('Day ${day.dayNumber} - Activity section')">＋</button>
                         <div class="cat-chip activity">⭐ ACTIVITY</div>
                         ${day.activities.map(activity => `
-                            <div class="item-card activity">
+                            <div class="item-card activity" style="position:relative;">
+                                <button class="fb-trigger-btn" onclick="event.stopPropagation();if(window.fbTrigger)fbTrigger('Item: ${activity.name}')">＋</button>
                                 <div style="display: flex; justify-content: space-between; align-items: start;">
                                     <div style="flex: 1;">
                                         <div style="font-weight: 600; margin-bottom: 0.25rem;">${activity.name}</div>
@@ -2828,10 +2839,12 @@ const App = {
                 ` : ''}
                 
                 ${day.travel && day.travel.length > 0 ? `
-                    <div style="margin-bottom: 1rem;">
+                    <div style="margin-bottom: 1rem; position:relative;">
+                        <button class="fb-trigger-btn" onclick="event.stopPropagation();if(window.fbTrigger)fbTrigger('Day ${day.dayNumber} - Travel section')">＋</button>
                         <div class="cat-chip travel">✈ TRAVEL</div>
                         ${day.travel.map(travel => `
-                            <div class="item-card travel">
+                            <div class="item-card travel" style="position:relative;">
+                                <button class="fb-trigger-btn" onclick="event.stopPropagation();if(window.fbTrigger)fbTrigger('Item: ${travel.type} (${travel.from}→${travel.to})')">＋</button>
                                 <div style="display: flex; justify-content: space-between; align-items: start;">
                                     <div style="flex: 1;">
                                         <div style="font-weight: 600; margin-bottom: 0.25rem;">🚗 ${travel.type}${travel.time ? ` • ${travel.time}` : ''}</div>
@@ -2864,9 +2877,11 @@ const App = {
                 ${this.currentTrip.isSelfDriveTrip ? this.renderSelfDriveDay(day) : ''}
 
                 ${day.accommodation && day.accommodation.name ? `
-                    <div style="margin-bottom: 1rem;">
+                    <div style="margin-bottom: 1rem; position:relative;">
+                        <button class="fb-trigger-btn" onclick="event.stopPropagation();if(window.fbTrigger)fbTrigger('Day ${day.dayNumber} - Stay section')">＋</button>
                         <div class="cat-chip stay">🛏 STAY</div>
-                        <div class="item-card stay">
+                        <div class="item-card stay" style="position:relative;">
+                            <button class="fb-trigger-btn" onclick="event.stopPropagation();if(window.fbTrigger)fbTrigger('Item: ${day.accommodation?.name}')">＋</button>
                             <div style="display: flex; justify-content: space-between; align-items: start;">
                                 <div style="flex: 1;">
                                     <div style="font-weight: 600; margin-bottom: 0.25rem;">🏨 ${day.accommodation.name}</div>
@@ -2896,7 +2911,8 @@ const App = {
                     </div>
                 ` : ''}
                 
-                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 0.5rem;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 0.5rem; position:relative;">
+                    <button class="fb-trigger-btn" onclick="event.stopPropagation();if(window.fbTrigger)fbTrigger('Day ${day.dayNumber} - Add item buttons')">＋</button>
                     <button id="addMeal_${day.id}" class="cat-pill-btn meal">🍽 Meal</button>
                     <button id="addActivity_${day.id}" class="cat-pill-btn activity">⭐ Activity</button>
                     <button id="addTravel_${day.id}" class="cat-pill-btn travel">✈ Travel</button>

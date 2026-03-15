@@ -80,7 +80,8 @@
 
 
         <!-- Header -->
-        <header class="app-header">
+        <header class="app-header" style="position:relative;">
+            <button class="fb-trigger-btn" onclick="event.stopPropagation();if(window.fbTrigger)fbTrigger('App header')">＋</button>
             <div class="header-content">
                 <h1 class="app-title">
                     <span>MyTrip</span>
@@ -131,7 +132,8 @@
         <main id="mainContent" class="main-content">
 
             <!-- Welcome Screen: Immersive Landing (shown when no trips) -->
-            <section id="welcomeScreen" class="landing-screen">
+            <section id="welcomeScreen" class="landing-screen" style="position:relative;">
+                <button class="fb-trigger-btn" onclick="event.stopPropagation();if(window.fbTrigger)fbTrigger('Landing page hero')">＋</button>
 
                 <!-- Layer 1+2: Mountain silhouettes -->
                 <div class="landing-bg" id="landingBg">
@@ -192,7 +194,8 @@
                 </div>
 
                 <!-- Buttons: pinned to bottom -->
-                <div class="landing-btns land-anim-btns">
+                <div class="landing-btns land-anim-btns" style="position:relative;">
+                    <button class="fb-trigger-btn" onclick="event.stopPropagation();if(window.fbTrigger)fbTrigger('Start Planning / Import Trip buttons')">＋</button>
                     <button id="createFirstTripBtn" class="landing-btn-primary">
                         Start Planning &rarr;
                     </button>

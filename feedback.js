@@ -1,255 +1,188 @@
 /* =====================================================
-   MyTrip Feedback Overlay System — feedback.js
-   Entirely additive. Does not modify existing features.
+   MyTrip Feedback Overlay System — feedback.js v2
+   Triggers are baked directly into HTML templates.
+   This file only manages:
+     • The toggle button + banner
+     • The popup (openFeedbackPopup / window.fbTrigger)
+     • The notes panel
+     • Toast notifications
    ===================================================== */
 
 const FeedbackSystem = (() => {
     'use strict';
 
-    // ── State ──────────────────────────────────────────────────────────
     let feedbackModeOn = false;
-    let unsubscribeSnapshot = null;        // onSnapshot listener handle
-    const COLLECTION = 'mytrip_feedback';
+    let unsubSnapshot  = null;
+    const COLLECTION   = 'mytrip_feedback';
 
-    // ── Firestore / Auth helpers ────────────────────────────────────────
-    function getDb()   { return window.firebase && firebase.firestore   ? firebase.firestore()   : null; }
-    function getAuth() { return window.firebase && firebase.auth        ? firebase.auth()        : null; }
-    function currentUser() { const a = getAuth(); return a ? a.currentUser : null; }
+    // ── Firebase helpers ──────────────────────────────────────────────
+    const getDb   = () => window.firebase?.firestore  ? firebase.firestore()  : null;
+    const getAuth = () => window.firebase?.auth       ? firebase.auth()       : null;
+    const me      = () => { const a = getAuth(); return a?.currentUser ?? null; };
 
-    // ── Initialise ──────────────────────────────────────────────────────
+    // ════════════════════════════════════════════════════════════════════
+    //  INIT
+    // ════════════════════════════════════════════════════════════════════
     function init() {
+        injectStyles();
         injectToggleButton();
         injectBanner();
-        injectTriggerButtons();
-        console.log('[Feedback] Initialized');
+        // Expose globally so inline onclick attributes in HTML can call it
+        window.fbTrigger = openFeedbackPopup;
+        console.log('[Feedback v2] Ready — window.fbTrigger exposed');
     }
 
-    // ═══════════════════════════════════════════════════════════════════
+    // ── Dynamic CSS injected once into <head> ─────────────────────────
+    function injectStyles() {
+        if (document.getElementById('fb-system-styles')) return;
+        const s = document.createElement('style');
+        s.id = 'fb-system-styles';
+        s.textContent = `
+            /* Feedback trigger "＋" button — baked into every component */
+            .fb-trigger-btn {
+                position: absolute !important;
+                top: 8px !important; right: 8px !important;
+                width: 22px !important; height: 22px !important;
+                border-radius: 50% !important;
+                background: rgba(78,205,196,0.18) !important;
+                border: 1px solid rgba(78,205,196,0.5) !important;
+                color: #4ECDC4 !important;
+                font-size: 14px !important; font-weight: 700 !important;
+                line-height: 22px !important; font-family: 'Outfit', sans-serif !important;
+                display: none !important;         /* JS toggles to flex when mode ON */
+                align-items: center !important;
+                justify-content: center !important;
+                cursor: pointer !important;
+                z-index: 50 !important; padding: 0 !important;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.3) !important;
+                transition: transform 0.15s, background 0.15s !important;
+            }
+            .fb-trigger-btn:hover {
+                transform: scale(1.18) !important;
+                background: rgba(78,205,196,0.32) !important;
+            }
+            /* Toggle pulse ring */
+            @keyframes fbPulse {
+                0%,100% { box-shadow: 0 0 0 4px rgba(78,205,196,0.15); }
+                50%      { box-shadow: 0 0 0 8px rgba(78,205,196,0.05); }
+            }
+            /* Textarea shake */
+            @keyframes fbShake {
+                0%   { transform: translateX(0);  }
+                20%  { transform: translateX(-6px);}
+                50%  { transform: translateX(6px); }
+                75%  { transform: translateX(-6px);}
+                100% { transform: translateX(0);  }
+            }
+            /* Notes panel skeleton cards */
+            @keyframes fbSkeleton {
+                0%,100% { opacity:.45; } 50% { opacity:.9; }
+            }
+        `;
+        document.head.appendChild(s);
+    }
+
+    // ════════════════════════════════════════════════════════════════════
     //  TOGGLE BUTTON
-    // ═══════════════════════════════════════════════════════════════════
+    // ════════════════════════════════════════════════════════════════════
     function injectToggleButton() {
+        if (document.getElementById('feedbackToggleBtn')) return;
         const btn = document.createElement('button');
         btn.id = 'feedbackToggleBtn';
-        btn.setAttribute('aria-label', 'Toggle Feedback Mode');
+        btn.title = 'Toggle Feedback Mode';
         btn.innerHTML = '✏';
-        btn.title = 'Feedback Mode';
-        applyToggleStyle(btn, false);
-        btn.addEventListener('click', toggleFeedbackMode);
+        styleToggle(btn, false);
+        btn.addEventListener('click', toggleMode);
         document.body.appendChild(btn);
     }
 
-    function applyToggleStyle(btn, on) {
+    function styleToggle(btn, on) {
         Object.assign(btn.style, {
-            position:      'fixed',
-            bottom:        '88px',
-            right:         '16px',
-            width:         '44px',
-            height:        '44px',
-            borderRadius:  '50%',
-            border:        on ? '1px solid rgba(78,205,196,0.4)' : '1px solid rgba(255,255,255,0.12)',
-            background:    on ? 'rgba(78,205,196,0.12)'          : 'rgba(255,255,255,0.06)',
-            color:         on ? 'var(--accent-seafoam, #4ECDC4)' : 'rgba(255,255,255,0.3)',
-            fontSize:      '18px',
-            cursor:        'pointer',
-            zIndex:        '200',
-            display:       'flex',
-            alignItems:    'center',
-            justifyContent:'center',
-            backdropFilter:'blur(8px)',
-            transition:    'all 0.2s ease',
-            animation:     on ? 'fbPulse 1.5s ease-in-out infinite' : 'none',
-            boxShadow:     on ? '0 0 0 4px rgba(78,205,196,0.15)' : 'none',
+            position:       'fixed',
+            bottom:         '88px', right: '16px',
+            width:          '44px', height: '44px',
+            borderRadius:   '50%',
+            border:         on ? '1px solid rgba(78,205,196,0.45)' : '1px solid rgba(255,255,255,0.14)',
+            background:     on ? 'rgba(78,205,196,0.14)'           : 'rgba(255,255,255,0.07)',
+            color:          on ? '#4ECDC4'                          : 'rgba(255,255,255,0.32)',
+            fontSize:       '18px',
+            cursor:         'pointer',
+            zIndex:         '200',
+            display:        'flex',
+            alignItems:     'center',
+            justifyContent: 'center',
+            backdropFilter: 'blur(8px)',
+            transition:     'all 0.2s',
+            animation:      on ? 'fbPulse 1.5s ease-in-out infinite' : 'none',
+            boxShadow:      on ? '0 0 0 4px rgba(78,205,196,0.15)' : 'none',
         });
     }
 
-    // ═══════════════════════════════════════════════════════════════════
-    //  BANNER
-    // ═══════════════════════════════════════════════════════════════════
+    // ════════════════════════════════════════════════════════════════════
+    //  FEEDBACK BANNER (below header)
+    // ════════════════════════════════════════════════════════════════════
     function injectBanner() {
-        const banner = document.createElement('div');
-        banner.id = 'feedbackBanner';
-        banner.textContent = 'Feedback Mode — tap any ＋ to add a note';
-        Object.assign(banner.style, {
-            display:        'none',
-            position:       'sticky',
-            top:            '0',
-            left:           '0',
-            right:          '0',
-            background:     'rgba(78,205,196,0.07)',
-            borderBottom:   '1px solid rgba(78,205,196,0.15)',
-            color:          'var(--accent-seafoam, #4ECDC4)',
-            fontFamily:     "'Outfit', sans-serif",
-            fontSize:       '12px',
-            textAlign:      'center',
-            padding:        '6px 16px',
-            zIndex:         '99',
+        if (document.getElementById('feedbackBanner')) return;
+        const b = document.createElement('div');
+        b.id = 'feedbackBanner';
+        b.textContent = 'Feedback Mode — tap any ＋ to add a note';
+        Object.assign(b.style, {
+            display:      'none',
+            position:     'sticky',
+            top:          '0',
+            background:   'rgba(78,205,196,0.07)',
+            borderBottom: '1px solid rgba(78,205,196,0.15)',
+            color:        '#4ECDC4',
+            fontFamily:   "'Outfit', sans-serif",
+            fontSize:     '12px',
+            textAlign:    'center',
+            padding:      '6px 16px',
+            zIndex:       '99',
         });
-
-        // Insert just inside #app, before the first child
         const app = document.getElementById('app');
-        if (app) app.insertBefore(banner, app.firstChild);
+        if (app) app.insertBefore(b, app.firstChild);
     }
 
-    // ═══════════════════════════════════════════════════════════════════
-    //  TRIGGER BUTTONS
-    // ═══════════════════════════════════════════════════════════════════
-
-    // Static zone definitions: selector → zone label
-    const STATIC_ZONES = [
-        { sel: '.app-header',                       zone: 'App header' },
-        { sel: '#landingScreen',                    zone: 'Landing page hero' },
-        { sel: '#ai-scan-card',                     zone: 'AI booking scan section' },
-        { sel: '#tripFormScreen',                   zone: 'Trip details form' },
-        { sel: '#vehicleSection',                   zone: 'Vehicle details section' },
-        { sel: '#rentalInspectionSection',          zone: 'Rental inspection section' },
-        { sel: '.trip-progress-bar',                zone: 'Trip progress bar' },
-        { sel: '.itinerary-header',                 zone: 'Trip progress bar' },
-        { sel: '.budget-overview-card',             zone: 'Budget overview card' },
-        { sel: '#prebookingsList',                  zone: 'Pre-bookings section' },
-        { sel: '.export-btns',                      zone: 'Export buttons' },
-        { sel: '.bottom-tab-bar',                   zone: 'Bottom tab bar' },
-    ];
-
-    function injectTriggerButtons() {
-        // Inject static triggers
-        STATIC_ZONES.forEach(({ sel, zone }) => {
-            const el = document.querySelector(sel);
-            if (el) attachTrigger(el, zone);
-        });
-
-        // Dynamic triggers are injected whenever renderDays / renderPrebookings runs
-        // We patch those via MutationObserver on #tripDetailContent and #prebookingsList
-        observeDynamic('#tripDetailContent', injectDynamicDayTriggers);
-        observeDynamic('#prebookingsList',   injectDynamicPrebookingTriggers);
-        observeDynamic('#daysList',          injectDynamicDayTriggers);
-    }
-
-    function observeDynamic(sel, cb) {
-        const target = document.querySelector(sel);
-        if (!target) {
-            // Watch for future creation via body observer
-            const bodyObs = new MutationObserver(() => {
-                const el = document.querySelector(sel);
-                if (el) { cb(el); bodyObs.disconnect(); observeDynamic(sel, cb); }
-            });
-            bodyObs.observe(document.body, { childList: true, subtree: true });
-            return;
-        }
-        cb(target);
-        new MutationObserver(() => cb(target))
-            .observe(target, { childList: true, subtree: false });
-    }
-
-    function injectDynamicDayTriggers(container) {
-        // Day cards: [data-day-number], or falling back to .day-card
-        container.querySelectorAll('[data-day-number]').forEach(card => {
-            const n = card.dataset.dayNumber;
-            if (!card.dataset.fbTrigger) {
-                attachTrigger(card, `Day card - Day ${n}`);
-                // Section triggers inside day card
-                const cats = [
-                    { sel: '.travel-section, [data-section="travel"]', label: `Day ${n} - TRAVEL section` },
-                    { sel: '.stay-section, [data-section="stay"]',     label: `Day ${n} - STAY section` },
-                    { sel: '.meal-section, [data-section="meal"]',     label: `Day ${n} - MEAL section` },
-                    { sel: '.activity-section, [data-section="activity"]', label: `Day ${n} - ACTIVITY section` },
-                    { sel: '.add-item-row, .add-items-row',            label: 'Add item buttons row' },
-                ];
-                cats.forEach(({ sel, label }) => {
-                    card.querySelectorAll(sel).forEach(sec => attachTrigger(sec, label));
-                });
-                // Item cards
-                card.querySelectorAll('.item-card, .expense-item, .day-item-card').forEach(item => {
-                    const name = item.querySelector('strong, .item-name')?.textContent?.trim() || 'Item';
-                    attachTrigger(item, `Item card - ${name.substring(0, 30)}`);
-                });
-            }
-        });
-    }
-
-    function injectDynamicPrebookingTriggers(container) {
-        container.querySelectorAll('.prebooking-card').forEach(card => {
-            if (!card.dataset.fbTrigger) {
-                const name = card.querySelector('strong')?.textContent?.trim() || 'Booking';
-                attachTrigger(card, `Pre-booking card - ${name.substring(0, 30)}`);
-            }
-        });
-    }
-
-    function attachTrigger(parent, zone) {
-        if (parent.dataset.fbTrigger) return; // already attached
-        parent.dataset.fbTrigger = zone;
-
-        // Ensure parent is positioned
-        const pos = getComputedStyle(parent).position;
-        if (!pos || pos === 'static') parent.style.position = 'relative';
-
-        const btn = document.createElement('button');
-        btn.className = 'fb-trigger-btn';
-        btn.dataset.zone = zone;
-        btn.textContent = '＋';
-        btn.title = `Add note: ${zone}`;
-        btn.style.display = feedbackModeOn ? 'flex' : 'none';
-        btn.addEventListener('click', e => {
-            e.stopPropagation();
-            openFeedbackPopup(zone);
-        });
-        parent.appendChild(btn);
-    }
-
-    // ═══════════════════════════════════════════════════════════════════
-    //  TOGGLE FEEDBACK MODE
-    // ═══════════════════════════════════════════════════════════════════
-    function toggleFeedbackMode() {
+    // ════════════════════════════════════════════════════════════════════
+    //  TOGGLE MODE
+    // ════════════════════════════════════════════════════════════════════
+    function toggleMode() {
         feedbackModeOn = !feedbackModeOn;
-
         const btn    = document.getElementById('feedbackToggleBtn');
         const banner = document.getElementById('feedbackBanner');
-
-        applyToggleStyle(btn, feedbackModeOn);
+        if (btn)    styleToggle(btn, feedbackModeOn);
         if (banner) banner.style.display = feedbackModeOn ? 'block' : 'none';
-
-        // Show/hide all trigger buttons
+        // Show/hide every trigger button baked into HTML templates
         document.querySelectorAll('.fb-trigger-btn').forEach(b => {
             b.style.display = feedbackModeOn ? 'flex' : 'none';
         });
     }
 
-    // ═══════════════════════════════════════════════════════════════════
-    //  FEEDBACK POPUP
-    // ═══════════════════════════════════════════════════════════════════
+    // ════════════════════════════════════════════════════════════════════
+    //  FEEDBACK POPUP  (called by window.fbTrigger(zone))
+    // ════════════════════════════════════════════════════════════════════
     function openFeedbackPopup(zone) {
-        // Remove any existing
         closePopup();
+        const user = me();
+        if (!user) { showToast('Sign in to add feedback', '#FF6B6B'); return; }
 
-        const user = currentUser();
-        if (!user) {
-            showToast('Sign in to leave feedback', '#FF6B6B');
-            return;
-        }
+        let priority = 'medium';
 
-        let selectedPriority = 'medium';
-
-        // Backdrop
-        const backdrop = document.createElement('div');
-        backdrop.id = 'fbBackdrop';
-        Object.assign(backdrop.style, {
+        const bd = document.createElement('div');
+        bd.id = 'fbBackdrop';
+        Object.assign(bd.style, {
             position: 'fixed', inset: '0',
-            background: 'rgba(0,0,0,0.55)',
-            zIndex: '300',
+            background: 'rgba(0,0,0,0.58)', zIndex: '300',
         });
-        backdrop.addEventListener('click', closePopup);
+        bd.addEventListener('click', closePopup);
 
-        // Popup card
-        const popup = document.createElement('div');
-        popup.id = 'fbPopup';
-        Object.assign(popup.style, {
-            position:     'fixed',
-            top:          '50%',
-            left:         '50%',
-            transform:    'translate(-50%, -50%) scale(0.92)',
+        const pp = document.createElement('div');
+        pp.id = 'fbPopup';
+        Object.assign(pp.style, {
+            position:     'fixed', top: '50%', left: '50%',
+            transform:    'translate(-50%,-50%) scale(0.92)',
             opacity:      '0',
-            width:        'calc(100% - 48px)',
-            maxWidth:     '360px',
+            width:        'calc(100% - 48px)', maxWidth: '360px',
             background:   '#0D2137',
             border:       '1px solid rgba(255,255,255,0.12)',
             borderRadius: '20px',
@@ -259,166 +192,114 @@ const FeedbackSystem = (() => {
             fontFamily:   "'Outfit', sans-serif",
         });
 
-        popup.innerHTML = `
-            <h3 style="margin:0;font-family:'Playfair Display',serif;font-size:18px;font-weight:600;color:#fff;">Add Feedback</h3>
-            <p style="margin:4px 0 16px;font-size:11px;color:rgba(255,255,255,0.4);">Section: ${zone}</p>
-
-            <textarea id="fbNoteInput" placeholder="What would you like to change or improve here?"
+        pp.innerHTML = `
+            <h3 style="margin:0 0 4px;font-family:'Playfair Display',serif;font-size:18px;font-weight:600;color:#fff;">Add Feedback</h3>
+            <p style="margin:0 0 16px;font-size:11px;color:rgba(255,255,255,0.38);">Section: ${esc(zone)}</p>
+            <textarea id="fbNoteTA" placeholder="What would you like to change or improve here?"
                 style="width:100%;box-sizing:border-box;min-height:100px;
                        background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);
-                       border-radius:12px;padding:12px;font-family:'Outfit',sans-serif;
-                       font-size:14px;color:#fff;resize:vertical;outline:none;
+                       border-radius:12px;padding:12px;
+                       font-family:'Outfit',sans-serif;font-size:14px;color:#fff;
+                       resize:vertical;outline:none;
                        transition:border-color 200ms,box-shadow 200ms;"></textarea>
-
             <div style="margin-top:12px;">
-                <div style="font-size:12px;color:rgba(255,255,255,0.4);">Priority</div>
-                <div id="fbPriorityRow" style="display:flex;gap:8px;margin-top:6px;">
-                    <button class="fb-priority-pill" data-p="low">Low</button>
-                    <button class="fb-priority-pill fb-priority-active-medium" data-p="medium">Medium</button>
-                    <button class="fb-priority-pill" data-p="high">High</button>
+                <div style="font-size:12px;color:rgba(255,255,255,0.38);">Priority</div>
+                <div id="fbPills" style="display:flex;gap:8px;margin-top:6px;flex-wrap:wrap;">
+                    <button class="fp" data-p="low"    style="border-radius:20px;padding:5px 16px;font:500 12px 'Outfit',sans-serif;cursor:pointer;">Low</button>
+                    <button class="fp" data-p="medium" style="border-radius:20px;padding:5px 16px;font:500 12px 'Outfit',sans-serif;cursor:pointer;">Medium</button>
+                    <button class="fp" data-p="high"   style="border-radius:20px;padding:5px 16px;font:500 12px 'Outfit',sans-serif;cursor:pointer;">High</button>
                 </div>
             </div>
-
             <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:18px;">
-                <button id="fbCancelBtn"
+                <button id="fbCancel"
                     style="background:transparent;border:1px solid rgba(255,255,255,0.15);
                            color:rgba(255,255,255,0.55);border-radius:12px;padding:9px 18px;
-                           font-family:'Outfit',sans-serif;font-size:14px;font-weight:500;cursor:pointer;">
-                    Cancel
-                </button>
-                <button id="fbSaveBtn"
+                           font:500 14px 'Outfit',sans-serif;cursor:pointer;">Cancel</button>
+                <button id="fbSave"
                     style="background:rgba(78,205,196,0.15);border:1px solid rgba(78,205,196,0.45);
-                           color:var(--accent-seafoam,#4ECDC4);border-radius:12px;padding:9px 18px;
-                           font-family:'Outfit',sans-serif;font-size:14px;font-weight:500;cursor:pointer;">
-                    Save Note
-                </button>
+                           color:#4ECDC4;border-radius:12px;padding:9px 18px;
+                           font:500 14px 'Outfit',sans-serif;cursor:pointer;">Save Note</button>
             </div>
         `;
 
-        document.body.appendChild(backdrop);
-        document.body.appendChild(popup);
-
-        // Animate in
+        document.body.appendChild(bd);
+        document.body.appendChild(pp);
         requestAnimationFrame(() => {
-            popup.style.transform = 'translate(-50%, -50%) scale(1)';
-            popup.style.opacity   = '1';
+            pp.style.transform = 'translate(-50%,-50%) scale(1)';
+            pp.style.opacity   = '1';
         });
 
-        // Textarea focus styles
-        const ta = popup.querySelector('#fbNoteInput');
-        ta.addEventListener('focus', () => {
-            ta.style.borderColor = 'var(--accent-seafoam, #4ECDC4)';
-            ta.style.boxShadow   = '0 0 0 3px rgba(78,205,196,0.1)';
-        });
-        ta.addEventListener('blur', () => {
-            ta.style.borderColor = 'rgba(255,255,255,0.12)';
-            ta.style.boxShadow   = 'none';
-        });
+        const ta = pp.querySelector('#fbNoteTA');
+        ta.addEventListener('focus', () => { ta.style.borderColor='#4ECDC4'; ta.style.boxShadow='0 0 0 3px rgba(78,205,196,0.1)'; });
+        ta.addEventListener('blur',  () => { ta.style.borderColor='rgba(255,255,255,0.12)'; ta.style.boxShadow='none'; });
         ta.focus();
 
         // Priority pills
-        const pillStyles = {
+        const pillStyle = {
             base:   { background: 'transparent', border: '1px solid rgba(255,255,255,0.15)', color: 'rgba(255,255,255,0.4)' },
-            low:    { background: 'rgba(78,205,196,0.15)',  border: '1px solid rgba(78,205,196,0.45)',  color: 'var(--accent-seafoam,#4ECDC4)' },
-            medium: { background: 'rgba(247,201,72,0.15)',  border: '1px solid rgba(247,201,72,0.45)',  color: 'var(--accent-gold,#F7C948)' },
-            high:   { background: 'rgba(255,107,107,0.15)', border: '1px solid rgba(255,107,107,0.45)', color: 'var(--accent-coral,#FF6B6B)' },
+            low:    { background: 'rgba(78,205,196,0.15)',  border: '1px solid rgba(78,205,196,0.45)',  color: '#4ECDC4' },
+            medium: { background: 'rgba(247,201,72,0.15)',  border: '1px solid rgba(247,201,72,0.45)',  color: '#F7C948' },
+            high:   { background: 'rgba(255,107,107,0.15)', border: '1px solid rgba(255,107,107,0.45)', color: '#FF6B6B' },
         };
-
-        function refreshPills(active) {
-            popup.querySelectorAll('.fb-priority-pill').forEach(p => {
-                const pv = p.dataset.p;
-                Object.assign(p.style, pv === active ? pillStyles[pv] : pillStyles.base);
-            });
-        }
-
-        popup.querySelectorAll('.fb-priority-pill').forEach(pill => {
-            // Base styles
-            Object.assign(pill.style, {
-                borderRadius: '20px', padding: '5px 16px', cursor: 'pointer',
-                font: '12px/1.5 "Outfit", sans-serif', fontWeight: '500',
-            });
-            Object.assign(pill.style, pillStyles.base);
-            pill.addEventListener('click', () => {
-                selectedPriority = pill.dataset.p;
-                refreshPills(selectedPriority);
-            });
+        const refreshPills = (active) => {
+            pp.querySelectorAll('.fp').forEach(p => Object.assign(p.style, p.dataset.p === active ? pillStyle[p.dataset.p] : pillStyle.base));
+        };
+        pp.querySelectorAll('.fp').forEach(p => {
+            p.addEventListener('click', () => { priority = p.dataset.p; refreshPills(priority); });
         });
         refreshPills('medium');
 
-        // Cancel
-        popup.querySelector('#fbCancelBtn').addEventListener('click', closePopup);
-
-        // Save
-        popup.querySelector('#fbSaveBtn').addEventListener('click', async () => {
+        pp.querySelector('#fbCancel').addEventListener('click', closePopup);
+        pp.querySelector('#fbSave').addEventListener('click', async () => {
             const note = ta.value.trim();
             if (!note) {
-                // Shake textarea
-                ta.style.animation = 'none';
-                ta.offsetHeight; // reflow
+                ta.style.animation = 'none'; ta.offsetHeight;
                 ta.style.animation = 'fbShake 300ms ease';
                 setTimeout(() => ta.style.animation = '', 300);
                 return;
             }
-
             const db = getDb();
-            if (!db) { showToast('Firebase not available', '#FF6B6B'); return; }
-
+            if (!db) { showToast('Firebase unavailable', '#FF6B6B'); return; }
             try {
+                const u = me();
                 await db.collection(COLLECTION).add({
-                    id:            Date.now().toString(),
-                    zone,
-                    note,
-                    priority:      selectedPriority,
-                    userId:        user.uid,
-                    userName:      user.displayName || user.email || 'Anonymous',
-                    timestamp:     firebase.firestore.FieldValue.serverTimestamp(),
-                    implemented:   false,
-                    implementedAt: null,
-                    version:       null,
+                    id: Date.now().toString(), zone, note, priority,
+                    userId:    u.uid,
+                    userName:  u.displayName || u.email || 'Anonymous',
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                    implemented: false, implementedAt: null, version: null,
                 });
                 closePopup();
                 showToast('Feedback saved ✓');
-            } catch (err) {
-                console.error('[Feedback] Save error:', err);
+            } catch (e) {
+                console.error('[Feedback] Save error:', e);
                 showToast('Could not save — check connection', '#FF6B6B');
             }
         });
     }
 
     function closePopup() {
-        const bd = document.getElementById('fbBackdrop');
-        const pp = document.getElementById('fbPopup');
-        if (bd) bd.remove();
-        if (pp) pp.remove();
+        document.getElementById('fbBackdrop')?.remove();
+        document.getElementById('fbPopup')?.remove();
     }
 
-    // ═══════════════════════════════════════════════════════════════════
+    // ════════════════════════════════════════════════════════════════════
     //  TOAST
-    // ═══════════════════════════════════════════════════════════════════
+    // ════════════════════════════════════════════════════════════════════
     function showToast(msg, color) {
         const t = document.createElement('div');
         t.textContent = msg;
+        const isErr = !!color;
         Object.assign(t.style, {
-            position:     'fixed',
-            bottom:       '96px',
-            left:         '50%',
-            transform:    'translateX(-50%)',
-            background:   'rgba(78,205,196,0.12)',
-            border:       `1px solid ${color ? 'rgba(255,107,107,0.35)' : 'rgba(78,205,196,0.35)'}`,
-            color:        color || 'var(--accent-seafoam, #4ECDC4)',
-            borderRadius: '20px',
-            padding:      '8px 22px',
-            fontFamily:   "'Outfit', sans-serif",
-            fontSize:     '13px',
-            fontWeight:   '500',
-            whiteSpace:   'nowrap',
-            zIndex:       '500',
-            opacity:      '0',
-            transition:   'opacity 200ms',
+            position: 'fixed', bottom: '96px', left: '50%',
+            transform: 'translateX(-50%)',
+            background:   isErr ? 'rgba(255,107,107,0.12)' : 'rgba(78,205,196,0.12)',
+            border:       `1px solid ${isErr ? 'rgba(255,107,107,0.38)' : 'rgba(78,205,196,0.38)'}`,
+            color:        color || '#4ECDC4',
+            borderRadius: '20px', padding: '8px 22px',
+            fontFamily:   "'Outfit', sans-serif", fontSize: '13px', fontWeight: '500',
+            whiteSpace:   'nowrap', zIndex: '500', opacity: '0', transition: 'opacity 200ms',
         });
-        if (color) {
-            t.style.background = 'rgba(255,107,107,0.12)';
-        }
         document.body.appendChild(t);
         requestAnimationFrame(() => {
             t.style.opacity = '1';
@@ -430,327 +311,237 @@ const FeedbackSystem = (() => {
         });
     }
 
-    // ═══════════════════════════════════════════════════════════════════
+    // ════════════════════════════════════════════════════════════════════
     //  NOTES PANEL  (bottom sheet)
-    // ═══════════════════════════════════════════════════════════════════
+    // ════════════════════════════════════════════════════════════════════
     function openNotesPanel() {
         closePanelIfOpen();
+        const user = me();
+        if (!user) { showToast('Sign in to view feedback', '#FF6B6B'); return; }
 
-        const user = currentUser();
-        if (!user) { showToast('Sign in to view feedback notes', '#FF6B6B'); return; }
+        if (typeof AccountUI !== 'undefined') AccountUI.closeDropdown?.();
 
-        AccountUI.closeDropdown && AccountUI.closeDropdown();
-
-        // Backdrop
         const bd = document.createElement('div');
-        bd.id = 'fbPanelBackdrop';
-        Object.assign(bd.style, {
-            position: 'fixed', inset: '0',
-            background: 'rgba(0,0,0,0.5)', zIndex: '399',
-        });
+        bd.id = 'fbPanelBd';
+        Object.assign(bd.style, { position:'fixed', inset:'0', background:'rgba(0,0,0,0.52)', zIndex:'399' });
         bd.addEventListener('click', closePanelIfOpen);
 
-        // Sheet
-        const sheet = document.createElement('div');
-        sheet.id = 'fbNotesPanel';
-        Object.assign(sheet.style, {
-            position:     'fixed',
-            bottom:       '0', left: '0', right: '0',
-            maxHeight:    '78vh',
-            background:   '#0D2137',
-            borderTop:    '1px solid rgba(255,255,255,0.1)',
+        const sh = document.createElement('div');
+        sh.id = 'fbNotesSheet';
+        Object.assign(sh.style, {
+            position: 'fixed', bottom:'0', left:'0', right:'0',
+            maxHeight: '78vh',
+            background: '#0D2137',
+            borderTop: '1px solid rgba(255,255,255,0.1)',
             borderRadius: '20px 20px 0 0',
-            padding:      '20px 20px 100px',
-            overflowY:    'auto',
-            zIndex:       '400',
-            transform:    'translateY(100%)',
-            transition:   'transform 350ms ease-out',
-            fontFamily:   "'Outfit', sans-serif",
+            padding: '20px 20px 100px',
+            overflowY: 'auto', zIndex: '400',
+            transform: 'translateY(100%)',
+            transition: 'transform 350ms ease-out',
+            fontFamily: "'Outfit', sans-serif",
         });
 
-        sheet.innerHTML = `
+        sh.innerHTML = `
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
                 <h3 style="margin:0;font-family:'Playfair Display',serif;font-size:18px;font-weight:600;color:#fff;">My Feedback Notes</h3>
-                <button id="fbPanelClose"
+                <button id="fbSheetClose"
                     style="width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,0.08);
                            border:1px solid rgba(255,255,255,0.12);color:#fff;font-size:16px;
                            cursor:pointer;display:flex;align-items:center;justify-content:center;">✕</button>
             </div>
-            <div id="fbStatRow" style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;"></div>
+            <div id="fbStatBadges" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;"></div>
             <div id="fbFilterRow" style="display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap;">
-                <button class="fb-filter-pill fb-filter-active" data-f="all">All</button>
-                <button class="fb-filter-pill" data-f="pending">Pending</button>
-                <button class="fb-filter-pill" data-f="implemented">Implemented</button>
+                <button class="fb-fpill fb-fpill-active" data-f="all">All</button>
+                <button class="fb-fpill" data-f="pending">Pending</button>
+                <button class="fb-fpill" data-f="implemented">Implemented</button>
             </div>
-            <div id="fbNotesList">
-                ${skeletonLoader()}
-            </div>
+            <div id="fbNotesList">${skeleton()}</div>
             <button id="fbExportBtn"
                 style="width:100%;height:44px;background:rgba(255,255,255,0.05);
                        border:1px solid rgba(255,255,255,0.1);border-radius:12px;
-                       font-family:'Outfit',sans-serif;font-size:13px;font-weight:500;
-                       color:rgba(255,255,255,0.45);cursor:pointer;margin-top:20px;">
-                ↓ Export Notes as JSON
-            </button>
+                       font:500 13px 'Outfit',sans-serif;color:rgba(255,255,255,0.45);
+                       cursor:pointer;margin-top:20px;">↓ Export Notes as JSON</button>
         `;
 
         document.body.appendChild(bd);
-        document.body.appendChild(sheet);
+        document.body.appendChild(sh);
+        requestAnimationFrame(() => sh.style.transform = 'translateY(0)');
 
-        requestAnimationFrame(() => { sheet.style.transform = 'translateY(0)'; });
+        sh.querySelector('#fbSheetClose').addEventListener('click', closePanelIfOpen);
 
-        sheet.querySelector('#fbPanelClose').addEventListener('click', closePanelIfOpen);
+        let activeFilter = 'all', allNotes = [];
 
-        // Filter pills
-        let activeFilter = 'all';
-        let allNotes = [];
-
-        const filterBtnBase = {
-            borderRadius: '20px', padding: '6px 16px', fontSize: '12px',
-            fontWeight: '500', cursor: 'pointer', border: 'none',
-        };
-        sheet.querySelectorAll('.fb-filter-pill').forEach(pill => {
-            Object.assign(pill.style, filterBtnBase);
-            refreshFilterStyle(pill, pill.dataset.f === 'all');
-            pill.addEventListener('click', () => {
-                activeFilter = pill.dataset.f;
-                sheet.querySelectorAll('.fb-filter-pill').forEach(p =>
-                    refreshFilterStyle(p, p.dataset.f === activeFilter));
+        // Filter pill style
+        const fpBase   = { borderRadius:'20px', padding:'6px 16px', fontSize:'12px', fontWeight:'500', cursor:'pointer', border:'1px solid transparent', background:'transparent', color:'rgba(255,255,255,0.38)' };
+        const fpActive = { ...fpBase, background:'rgba(255,255,255,0.1)', border:'1px solid rgba(255,255,255,0.2)', color:'#fff' };
+        sh.querySelectorAll('.fb-fpill').forEach(p => {
+            Object.assign(p.style, p.classList.contains('fb-fpill-active') ? fpActive : fpBase);
+            p.addEventListener('click', () => {
+                activeFilter = p.dataset.f;
+                sh.querySelectorAll('.fb-fpill').forEach(x => Object.assign(x.style, x === p ? fpActive : fpBase));
                 renderNotes(allNotes, activeFilter);
             });
         });
 
-        // Export
-        sheet.querySelector('#fbExportBtn').addEventListener('click', () => {
-            const json = JSON.stringify(allNotes, null, 2);
-            navigator.clipboard.writeText(json)
+        sh.querySelector('#fbExportBtn').addEventListener('click', () => {
+            navigator.clipboard.writeText(JSON.stringify(allNotes, null, 2))
                 .then(() => showToast('Copied to clipboard ✓'))
                 .catch(() => showToast('Copy failed', '#FF6B6B'));
         });
 
-        // Live subscription
         const db = getDb();
-        if (!db) {
-            document.getElementById('fbNotesList').innerHTML = emptyState();
-            return;
-        }
+        if (!db) { document.getElementById('fbNotesList').innerHTML = emptyState(); return; }
 
-        unsubscribeSnapshot = db.collection(COLLECTION)
+        unsubSnapshot = db.collection(COLLECTION)
             .where('userId', '==', user.uid)
             .orderBy('timestamp', 'desc')
-            .onSnapshot(snapshot => {
-                allNotes = snapshot.docs.map(d => ({ _docId: d.id, ...d.data() }));
-                updateStatBadges(allNotes, sheet);
+            .onSnapshot(snap => {
+                allNotes = snap.docs.map(d => ({ _docId: d.id, ...d.data() }));
+                updateBadges(allNotes, sh);
                 renderNotes(allNotes, activeFilter);
             }, err => {
-                console.error('[Feedback] onSnapshot error:', err);
+                console.error('[Feedback] onSnapshot:', err);
                 document.getElementById('fbNotesList').innerHTML =
-                    '<p style="color:rgba(255,107,107,0.7);font-size:13px;padding:20px 0;text-align:center;">Could not load notes</p>';
+                    '<p style="text-align:center;color:rgba(255,107,107,0.7);padding:20px;">Could not load notes</p>';
             });
     }
 
-    function refreshFilterStyle(pill, active) {
-        Object.assign(pill.style, active
-            ? { background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff' }
-            : { background: 'transparent', border: '1px solid transparent', color: 'rgba(255,255,255,0.35)' }
-        );
+    function skeleton() {
+        return Array(3).fill('')
+            .map(() => `<div style="background:rgba(255,255,255,0.04);border-radius:14px;height:90px;margin-bottom:10px;animation:fbSkeleton 1.5s ease-in-out infinite;"></div>`)
+            .join('');
     }
 
-    function skeletonLoader() {
-        return Array(3).fill(0).map(() => `
-            <div style="background:rgba(255,255,255,0.04);border-radius:14px;height:90px;
-                        margin-bottom:10px;animation:fbSkeletonPulse 1.5s ease-in-out infinite;"></div>
-        `).join('');
-    }
-
-    function updateStatBadges(notes, sheet) {
-        const pending     = notes.filter(n => !n.implemented).length;
-        const implemented = notes.filter(n =>  n.implemented).length;
-        const row = sheet.querySelector('#fbStatRow');
-        if (!row) return;
-        row.innerHTML = `
-            <span style="background:rgba(247,201,72,0.1);border:1px solid rgba(247,201,72,0.25);
-                         color:var(--accent-gold,#F7C948);border-radius:20px;padding:4px 12px;
-                         font-size:11px;font-weight:500;">⏳ ${pending} Pending</span>
-            <span style="background:rgba(78,205,196,0.1);border:1px solid rgba(78,205,196,0.25);
-                         color:var(--accent-seafoam,#4ECDC4);border-radius:20px;padding:4px 12px;
-                         font-size:11px;font-weight:500;">✓ ${implemented} Implemented</span>
+    function updateBadges(notes, sh) {
+        const bd = sh.querySelector('#fbStatBadges');
+        if (!bd) return;
+        const p = notes.filter(n => !n.implemented).length;
+        const i = notes.filter(n =>  n.implemented).length;
+        bd.innerHTML = `
+            <span style="background:rgba(247,201,72,0.1);border:1px solid rgba(247,201,72,0.25);color:#F7C948;border-radius:20px;padding:4px 12px;font-size:11px;font-weight:500;">⏳ ${p} Pending</span>
+            <span style="background:rgba(78,205,196,0.1);border:1px solid rgba(78,205,196,0.25);color:#4ECDC4;border-radius:20px;padding:4px 12px;font-size:11px;font-weight:500;">✓ ${i} Implemented</span>
         `;
     }
 
     function renderNotes(notes, filter) {
-        const container = document.getElementById('fbNotesList');
-        if (!container) return;
-
-        let filtered = [...notes];
-        if (filter === 'pending')     filtered = notes.filter(n => !n.implemented);
-        if (filter === 'implemented') filtered = notes.filter(n =>  n.implemented);
-
-        // Sort: pending first, then implemented; newest first within each group
-        filtered.sort((a, b) => {
+        const el = document.getElementById('fbNotesList');
+        if (!el) return;
+        let list = [...notes];
+        if (filter === 'pending')     list = notes.filter(n => !n.implemented);
+        if (filter === 'implemented') list = notes.filter(n =>  n.implemented);
+        // Pending first, then implemented; newest first in each group
+        list.sort((a, b) => {
             if (a.implemented !== b.implemented) return a.implemented ? 1 : -1;
-            const tA = a.timestamp?.toMillis ? a.timestamp.toMillis() : 0;
-            const tB = b.timestamp?.toMillis ? b.timestamp.toMillis() : 0;
-            return tB - tA;
+            const ta = a.timestamp?.toMillis?.() ?? 0;
+            const tb = b.timestamp?.toMillis?.() ?? 0;
+            return tb - ta;
         });
-
-        if (filtered.length === 0) {
-            container.innerHTML = emptyState(filter);
-            return;
-        }
-
-        container.innerHTML = filtered.map(n => noteCard(n)).join('');
-
-        // Wire delete buttons
-        container.querySelectorAll('.fb-delete-btn').forEach(btn => {
-            btn.addEventListener('click', () => promptDelete(btn, btn.dataset.docId));
-        });
+        if (!list.length) { el.innerHTML = emptyState(filter); return; }
+        el.innerHTML = list.map(noteCardHTML).join('');
+        el.querySelectorAll('.fb-del-btn').forEach(btn =>
+            btn.addEventListener('click', () => promptDelete(btn, btn.dataset.docId)));
     }
 
-    function noteCard(n) {
-        const priorityBorder  = { high: '#FF6B6B', medium: '#F7C948', low: '#4ECDC4' };
-        const priorityChipBg  = { high: 'rgba(255,107,107,0.12)', medium: 'rgba(247,201,72,0.12)', low: 'rgba(78,205,196,0.12)' };
-        const priorityChipBdr = { high: 'rgba(255,107,107,0.3)',  medium: 'rgba(247,201,72,0.3)',  low: 'rgba(78,205,196,0.3)' };
-        const priorityChipClr = { high: '#FF6B6B', medium: '#F7C948', low: '#4ECDC4' };
-
-        const pri = n.priority || 'medium';
-        const ts = n.timestamp?.toDate ? n.timestamp.toDate() : new Date();
-        const dateStr = ts.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
-        const timeStr = ts.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
-
-        const implDetail = n.implemented
-            ? (n.version ? `Fixed in ${n.version}` : (n.implementedAt ? `Fixed on ${new Date(n.implementedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}` : ''))
-            : '';
-
+    function noteCardHTML(n) {
+        const PB = { high:'#FF6B6B', medium:'#F7C948', low:'#4ECDC4' };
+        const CBg= { high:'rgba(255,107,107,0.12)', medium:'rgba(247,201,72,0.12)', low:'rgba(78,205,196,0.12)' };
+        const CBr= { high:'rgba(255,107,107,0.3)',  medium:'rgba(247,201,72,0.3)',  low:'rgba(78,205,196,0.3)' };
+        const p  = n.priority || 'medium';
+        const ts = n.timestamp?.toDate?.() ?? new Date();
+        const ds = ts.toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' });
+        const ti = ts.toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit' });
+        const impl = n.version ? `Fixed in ${n.version}` : (n.implementedAt ? `Fixed on ${new Date(n.implementedAt).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})}` : '');
         return `
-            <div class="fb-note-card" data-doc-id="${n._docId}"
-                style="background:rgba(255,255,255,0.05);border-radius:14px;padding:14px 16px;
-                       margin-bottom:10px;border-left:4px solid ${priorityBorder[pri]};
-                       transition:max-height 300ms ease,opacity 300ms ease,margin 300ms ease,padding 300ms ease;
-                       overflow:hidden;">
-                <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
-                    <span style="font-size:11px;font-weight:600;color:rgba(255,255,255,0.38);
-                                 text-transform:uppercase;letter-spacing:1.5px;flex:1;">${n.zone}</span>
-                    <span style="background:${priorityChipBg[pri]};border:1px solid ${priorityChipBdr[pri]};
-                                 color:${priorityChipClr[pri]};border-radius:20px;padding:2px 8px;
-                                 font-size:10px;font-weight:600;flex-shrink:0;margin-left:8px;">
-                        ${pri.charAt(0).toUpperCase() + pri.slice(1)}
-                    </span>
+        <div class="fb-note-card" data-doc-id="${n._docId}"
+            style="background:rgba(255,255,255,0.05);border-radius:14px;padding:14px 16px;
+                   margin-bottom:10px;border-left:4px solid ${PB[p]};overflow:hidden;
+                   transition:max-height 300ms ease,opacity 300ms ease,margin 300ms ease,padding 300ms ease;">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
+                <span style="font-size:11px;font-weight:600;color:rgba(255,255,255,0.38);text-transform:uppercase;letter-spacing:1.5px;flex:1;">${esc(n.zone)}</span>
+                <span style="background:${CBg[p]};border:1px solid ${CBr[p]};color:${PB[p]};border-radius:20px;padding:2px 8px;font-size:10px;font-weight:600;flex-shrink:0;margin-left:8px;">${p.charAt(0).toUpperCase()+p.slice(1)}</span>
+            </div>
+            <p style="margin:0 0 6px;font-size:14px;color:${n.implemented?'rgba(255,255,255,0.3)':'#fff'};line-height:1.5;${n.implemented?'text-decoration:line-through;':''}">${esc(n.note)}</p>
+            <div style="font-size:11px;color:rgba(255,255,255,0.28);margin-bottom:10px;">Added ${ds} · ${ti}</div>
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+                <div>
+                    ${n.implemented
+                        ? `<span style="background:rgba(78,205,196,0.08);border:1px solid rgba(78,205,196,0.2);color:#4ECDC4;border-radius:20px;padding:3px 10px;font-size:11px;font-weight:500;">✓ Implemented</span>
+                           ${impl ? `<div style="font-size:11px;color:rgba(255,255,255,0.28);margin-top:4px;">${esc(impl)}</div>` : ''}`
+                        : `<span style="background:rgba(247,201,72,0.08);border:1px solid rgba(247,201,72,0.2);color:#F7C948;border-radius:20px;padding:3px 10px;font-size:11px;font-weight:500;">⏳ Pending review</span>`
+                    }
                 </div>
-                <p style="margin:0 0 6px;font-size:14px;color:${n.implemented ? 'rgba(255,255,255,0.32)' : '#fff'};
-                           line-height:1.5;${n.implemented ? 'text-decoration:line-through;' : ''}">${escHtml(n.note)}</p>
-                <div style="font-size:11px;color:rgba(255,255,255,0.28);margin-bottom:10px;">
-                    Added ${dateStr} · ${timeStr}
+                <div class="fb-del-area" data-doc-id="${n._docId}">
+                    <button class="fb-del-btn" data-doc-id="${n._docId}"
+                        style="background:none;border:none;color:rgba(255,107,107,0.55);font:400 12px 'Outfit',sans-serif;cursor:pointer;">Delete</button>
                 </div>
-                <div style="display:flex;justify-content:space-between;align-items:center;">
-                    <div>
-                        ${n.implemented
-                            ? `<span style="background:rgba(78,205,196,0.08);border:1px solid rgba(78,205,196,0.2);
-                                           color:var(--accent-seafoam,#4ECDC4);border-radius:20px;padding:3px 10px;
-                                           font-size:11px;font-weight:500;">✓ Implemented</span>
-                               ${implDetail ? `<div style="font-size:11px;color:rgba(255,255,255,0.28);margin-top:4px;">${escHtml(implDetail)}</div>` : ''}`
-                            : `<span style="background:rgba(247,201,72,0.08);border:1px solid rgba(247,201,72,0.2);
-                                           color:var(--accent-gold,#F7C948);border-radius:20px;padding:3px 10px;
-                                           font-size:11px;font-weight:500;">⏳ Pending review</span>`
-                        }
-                    </div>
-                    <div class="fb-delete-area" data-doc-id="${n._docId}">
-                        <button class="fb-delete-btn" data-doc-id="${n._docId}"
-                            style="background:none;border:none;color:rgba(255,107,107,0.55);
-                                   font-family:'Outfit',sans-serif;font-size:12px;cursor:pointer;">Delete</button>
-                    </div>
-                </div>
-            </div>`;
+            </div>
+        </div>`;
     }
 
     function promptDelete(btn, docId) {
-        const area = document.querySelector(`.fb-delete-area[data-doc-id="${docId}"]`);
+        const area = document.querySelector(`.fb-del-area[data-doc-id="${docId}"]`);
         if (!area) return;
         area.innerHTML = `
-            <span style="font-size:12px;color:rgba(255,255,255,0.5);">Remove? </span>
-            <button class="fb-confirm-yes" data-doc-id="${docId}"
-                style="background:none;border:none;color:#FF6B6B;font-size:12px;cursor:pointer;font-weight:600;">Yes</button>
+            <span style="font-size:12px;color:rgba(255,255,255,0.45);">Remove? </span>
+            <button class="fb-yes" data-doc-id="${docId}" style="background:none;border:none;color:#FF6B6B;font-size:12px;cursor:pointer;font-weight:600;">Yes</button>
             <span style="font-size:12px;color:rgba(255,255,255,0.3);"> | </span>
-            <button class="fb-confirm-no" data-doc-id="${docId}"
-                style="background:none;border:none;color:rgba(255,255,255,0.38);font-size:12px;cursor:pointer;">No</button>
+            <button class="fb-no"  data-doc-id="${docId}" style="background:none;border:none;color:rgba(255,255,255,0.38);font-size:12px;cursor:pointer;">No</button>
         `;
-        area.querySelector('.fb-confirm-yes').addEventListener('click', () => deleteNote(docId));
-        area.querySelector('.fb-confirm-no').addEventListener('click', () => {
-            area.innerHTML = `<button class="fb-delete-btn" data-doc-id="${docId}"
-                style="background:none;border:none;color:rgba(255,107,107,0.55);
-                       font-family:'Outfit',sans-serif;font-size:12px;cursor:pointer;">Delete</button>`;
-            area.querySelector('.fb-delete-btn').addEventListener('click', () => promptDelete(area.querySelector('.fb-delete-btn'), docId));
+        area.querySelector('.fb-yes').addEventListener('click', () => deleteNote(docId));
+        area.querySelector('.fb-no').addEventListener('click',  () => {
+            area.innerHTML = `<button class="fb-del-btn" data-doc-id="${docId}"
+                style="background:none;border:none;color:rgba(255,107,107,0.55);font:400 12px 'Outfit',sans-serif;cursor:pointer;">Delete</button>`;
+            area.querySelector('.fb-del-btn').addEventListener('click', () => promptDelete(area.querySelector('.fb-del-btn'), docId));
         });
     }
 
     async function deleteNote(docId) {
-        const db = getDb();
-        if (!db) return;
-        try {
-            // Animate card out
-            const card = document.querySelector(`.fb-note-card[data-doc-id="${docId}"]`);
-            if (card) {
-                const h = card.offsetHeight;
-                Object.assign(card.style, { maxHeight: h + 'px', overflow: 'hidden' });
-                requestAnimationFrame(() => {
-                    card.style.maxHeight = '0';
-                    card.style.opacity   = '0';
-                    card.style.marginBottom = '0';
-                    card.style.paddingTop   = '0';
-                    card.style.paddingBottom= '0';
-                });
-                setTimeout(() => card.remove(), 320);
-            }
-            await db.collection(COLLECTION).doc(docId).delete();
-        } catch (err) {
-            console.error('[Feedback] Delete error:', err);
-            showToast('Could not delete note', '#FF6B6B');
+        const db = getDb(); if (!db) return;
+        const card = document.querySelector(`.fb-note-card[data-doc-id="${docId}"]`);
+        if (card) {
+            const h = card.offsetHeight;
+            Object.assign(card.style, { maxHeight: h+'px' });
+            requestAnimationFrame(() => {
+                card.style.maxHeight = '0'; card.style.opacity = '0';
+                card.style.marginBottom = '0'; card.style.paddingTop = '0'; card.style.paddingBottom = '0';
+            });
+            setTimeout(() => card.remove(), 320);
         }
+        try { await db.collection(COLLECTION).doc(docId).delete(); }
+        catch (e) { console.error('[Feedback] Delete:', e); showToast('Could not delete', '#FF6B6B'); }
     }
 
     function emptyState(filter) {
         return `
-            <div style="text-align:center;padding:40px 0;">
-                <div style="font-size:28px;">📋</div>
-                <div style="font-size:15px;font-weight:500;color:rgba(255,255,255,0.45);margin-top:10px;">No notes yet</div>
-                <div style="font-size:12px;color:rgba(255,255,255,0.28);max-width:220px;text-align:center;
-                             line-height:1.6;margin:6px auto 0;">
-                    ${filter && filter !== 'all'
-                        ? `No ${filter} notes found`
-                        : 'Enable Feedback Mode and tap ＋ on any section to add a note'}
-                </div>
-            </div>`;
+        <div style="text-align:center;padding:40px 0;">
+            <div style="font-size:28px;">📋</div>
+            <div style="font-size:15px;font-weight:500;color:rgba(255,255,255,0.45);margin-top:10px;">No notes yet</div>
+            <div style="font-size:12px;color:rgba(255,255,255,0.28);max-width:220px;margin:6px auto 0;line-height:1.6;text-align:center;">
+                ${filter && filter !== 'all' ? `No ${filter} notes found`
+                    : 'Enable Feedback Mode and tap ＋ on any section to add a note'}
+            </div>
+        </div>`;
     }
 
     function closePanelIfOpen() {
-        const bd    = document.getElementById('fbPanelBackdrop');
-        const sheet = document.getElementById('fbNotesPanel');
-        if (sheet) {
-            sheet.style.transform = 'translateY(100%)';
-            setTimeout(() => { if (sheet) sheet.remove(); }, 360);
-        }
+        const sh = document.getElementById('fbNotesSheet');
+        const bd = document.getElementById('fbPanelBd');
+        if (sh) { sh.style.transform = 'translateY(100%)'; setTimeout(() => sh.remove(), 360); }
         if (bd) bd.remove();
-        if (unsubscribeSnapshot) { unsubscribeSnapshot(); unsubscribeSnapshot = null; }
+        if (unsubSnapshot) { unsubSnapshot(); unsubSnapshot = null; }
     }
 
-    // ── helpers ─────────────────────────────────────────────────────────
-    function escHtml(str) {
-        return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-    }
+    // ── Tiny HTML-safe escape ──────────────────────────────────────────
+    const esc = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 
-    // ═══════════════════════════════════════════════════════════════════
-    //  ACCOUNT DROPDOWN HOOK
-    // ═══════════════════════════════════════════════════════════════════
+    // ════════════════════════════════════════════════════════════════════
+    //  ACCOUNT DROPDOWN INJECTION  ("My Feedback" menu item)
+    // ════════════════════════════════════════════════════════════════════
     function hookAccountDropdown() {
-        // Patch AccountUI.renderDropdownContent to append "My Feedback" item
-        if (typeof AccountUI === 'undefined') {
-            setTimeout(hookAccountDropdown, 500);
-            return;
-        }
-        const original = AccountUI.renderDropdownContent.bind(AccountUI);
-        AccountUI.renderDropdownContent = function() {
-            original();
-            // Add "My Feedback" button if not already present
+        if (typeof AccountUI === 'undefined') { setTimeout(hookAccountDropdown, 400); return; }
+        const orig = AccountUI.renderDropdownContent.bind(AccountUI);
+        AccountUI.renderDropdownContent = function () {
+            orig();
             const content = document.getElementById('accountDropdownContent');
             if (!content || content.querySelector('#fbMyNotesBtn')) return;
             const btn = document.createElement('button');
@@ -758,51 +549,40 @@ const FeedbackSystem = (() => {
             btn.className = 'btn btn-secondary';
             btn.style.cssText = 'width:100%;margin-top:0.5rem;';
             btn.innerHTML = '📋 My Feedback';
-            btn.onclick = () => { AccountUI.closeDropdown(); openNotesPanel(); };
-            // Append inside the actions section
-            const actionsDiv = content.querySelector('.account-actions');
-            if (actionsDiv) actionsDiv.appendChild(btn);
-            else content.appendChild(btn);
+            btn.onclick = () => { AccountUI.closeDropdown?.(); openNotesPanel(); };
+            const actions = content.querySelector('.account-actions');
+            (actions || content).appendChild(btn);
         };
     }
 
-    // ═══════════════════════════════════════════════════════════════════
-    //  PUBLIC API
-    // ═══════════════════════════════════════════════════════════════════
-    return { init, openNotesPanel, toggleFeedbackMode };
+    // ── Public API ────────────────────────────────────────────────────
+    return { init, openNotesPanel, toggleMode };
 })();
 
-// ── Boot ──────────────────────────────────────────────────────────────
-(function bootFeedback() {
+// ════════════════════════════════════════════════════════════════════════
+//  BOOT — deferred so bundle.js, account-ui.js etc. are all loaded
+// ════════════════════════════════════════════════════════════════════════
+(function boot() {
     function start() {
         FeedbackSystem.init();
-        // Patch account dropdown after AccountUI is ready
-        if (typeof AccountUI !== 'undefined') {
+        // Patch AccountUI for "My Feedback" menu entry
+        function patchAccountUI() {
+            if (typeof AccountUI === 'undefined') { setTimeout(patchAccountUI, 400); return; }
             const orig = AccountUI.renderDropdownContent.bind(AccountUI);
-            AccountUI.renderDropdownContent = function() {
+            AccountUI.renderDropdownContent = function () {
                 orig();
-                const content = document.getElementById('accountDropdownContent');
-                if (!content || content.querySelector('#fbMyNotesBtn')) return;
+                const c = document.getElementById('accountDropdownContent');
+                if (!c || c.querySelector('#fbMyNotesBtn')) return;
                 const btn = document.createElement('button');
-                btn.id = 'fbMyNotesBtn';
-                btn.className = 'btn btn-secondary';
+                btn.id = 'fbMyNotesBtn'; btn.className = 'btn btn-secondary';
                 btn.style.cssText = 'width:100%;margin-top:0.5rem;';
                 btn.innerHTML = '📋 My Feedback';
-                btn.onclick = () => { AccountUI.closeDropdown(); FeedbackSystem.openNotesPanel(); };
-                const actionsDiv = content.querySelector('.account-actions');
-                if (actionsDiv) actionsDiv.appendChild(btn);
-                else content.appendChild(btn);
+                btn.onclick = () => { AccountUI.closeDropdown?.(); FeedbackSystem.openNotesPanel(); };
+                (c.querySelector('.account-actions') || c).appendChild(btn);
             };
-        } else {
-            // Retry until AccountUI is available
-            setTimeout(start, 600);
-            return;
         }
+        patchAccountUI();
     }
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', start);
-    } else {
-        // Defer slightly so all other scripts (bundle.js, account-ui.js) have loaded
-        setTimeout(start, 200);
-    }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => setTimeout(start, 250));
+    else setTimeout(start, 250);
 })();
