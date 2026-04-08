@@ -1,32 +1,4 @@
 /* ========================================
-}
-            <!--  Scan document to pre-fill trip details -->
-            <div style="background:rgba(99,102,241,0.07);border:1.5px dashed rgba(99,102,241,0.35);border-radius:10px;padding:0.85rem 1rem;margin-bottom:1.5rem;text-align:center;">
-                <div id="trip_scan_idle">
-                    <div style="font-size:1.4rem;margin-bottom:0.3rem;"></div>
-                    <p style="margin:0 0 0.6rem;font-size:0.82rem;color:var(--color-text-secondary);">Upload a booking confirmation to pre-fill trip details</p>
-                    <label for="trip_doc_input" class="btn btn-secondary" style="cursor:pointer;font-size:0.8rem;padding:0.4rem 1rem;display:inline-flex;align-items:center;gap:0.4rem;">
-                        📄 Choose PDF / Images
-                    </label>
-                    <input type="file" id="trip_doc_input" accept=".pdf,.jpg,.jpeg,.png,.webp" multiple style="display:none;" onchange="App._handleTripDocumentScan(this)">
-                    <p style="margin:0.5rem 0 0;font-size:0.72rem;color:var(--color-text-secondary);opacity:0.7;">Powered by Gemini Vision AI ✨</p>
-                </div>
-                <div id="trip_scan_loading" style="display:none;">
-                    <div style="font-size:1.4rem;margin-bottom:0.35rem;">🔍</div>
-                    <p id="trip_scan_loading_msg" style="margin:0;font-size:0.85rem;color:var(--color-primary);font-weight:500;">Reading document</p>
-                </div>
-                <div id="trip_scan_result" style="display:none;">
-                    <div style="font-size:1.4rem;margin-bottom:0.25rem;"></div>
-                    <p id="trip_scan_result_msg" style="margin:0;font-size:0.82rem;color:#4caf50;font-weight:500;"></p>
-                    <button onclick="App._resetTripScan()" style="background:none;border:none;color:var(--color-text-secondary);font-size:0.75rem;cursor:pointer;margin-top:0.3rem;text-decoration:underline;">Scan another</button>
-                </div>
-                <div id="trip_scan_error" style="display:none;">
-                    <div style="font-size:1.4rem;margin-bottom:0.25rem;"></div>
-                    <p id="trip_scan_error_msg" style="margin:0;font-size:0.82rem;color:#e53935;"></p>
-                    <button onclick="App._resetTripScan()" style="background:none;border:none;color:var(--color-text-secondary);font-size:0.75rem;cursor:pointer;margin-top:0.3rem;text-decoration:underline;">Try again</button>
-                </div>
-            </div>
-/* ========================================
    MyTrip - Main Application Logic
    ======================================== */
 
@@ -3145,6 +3117,8 @@ const App = {
 
                 ${timelineHTML}
 
+                ${totalItems === 0 && !timelineHTML ? '<div style="text-align:center;padding:1rem 0;color:rgba(255,255,255,0.35);font-size:0.82rem;">No items yet — tap a button below to add your first item 👇</div>' : ''}
+
                 <!-- Untimed Meals -->
                 ${untimedMeals.length > 0 ? `
                     <div style="margin-bottom: 1rem; position:relative;">
@@ -3362,7 +3336,11 @@ const App = {
      * editId / deleteId: DOM id strings of the hidden action buttons.
      * For pre-bookings (no hidden buttons), pass null and use editFn/deleteFn strings (eval'd).
      */
-    showItemMenu(triggerBtn, editId, deleteId) {
+    showItemMenu(triggerBtn, editIdOrFn, deleteIdOrFn) {
+        const editId = typeof editIdOrFn === 'string' ? editIdOrFn : null;
+        const deleteId = typeof deleteIdOrFn === 'string' ? deleteIdOrFn : null;
+        const editFn = typeof editIdOrFn === 'function' ? editIdOrFn : null;
+        const deleteFn = typeof deleteIdOrFn === 'function' ? deleteIdOrFn : null;
         // Remove any existing dropdown
         document.querySelectorAll('.item-overflow-dd').forEach(el => el.remove());
 
@@ -3736,8 +3714,8 @@ const App = {
                 to: document.getElementById('activityTo').value.trim() || null,
                 distanceKm: parseFloat(document.getElementById('activityDistance').value) || null,
                 driveTimeMin: parseInt(document.getElementById('activityDriveTime').value) || null,
-                expectedCost: parseFloat(document.getElementById('activityExpectedCost').value) || 0,
-                actualCost: parseFloat(document.getElementById('activityActualCost').value) || 0,
+                expectedCost: Math.max(0, parseFloat(document.getElementById('activityExpectedCost').value)) || 0,
+                actualCost: Math.max(0, parseFloat(document.getElementById('activityActualCost').value)) || 0,
                 notes: document.getElementById('activityNotes').value.trim()
             };
 
@@ -3910,8 +3888,8 @@ const App = {
                 startTime: document.getElementById('mealStartTime').value || null,
                 endTime:   document.getElementById('mealEndTime').value   || null,
                 splitCount: parseInt(document.getElementById('mealSplitCount').value) || 1,
-                expectedCost: parseFloat(document.getElementById('mealExpectedCost').value) || 0,
-                actualCost: parseFloat(document.getElementById('mealActualCost').value) || 0,
+                expectedCost: Math.max(0, parseFloat(document.getElementById('mealExpectedCost').value)) || 0,
+                actualCost: Math.max(0, parseFloat(document.getElementById('mealActualCost').value)) || 0,
                 notes: document.getElementById('mealNotes').value.trim()
             };
 
@@ -4084,8 +4062,8 @@ const App = {
                 driveTimeMin: parseInt(document.getElementById('travelDriveTime').value) || null,
                 startTime: document.getElementById('travelStartTime').value || null,
                 endTime:   document.getElementById('travelEndTime').value   || null,
-                expectedCost: parseFloat(document.getElementById('travelExpectedCost').value) || 0,
-                actualCost: parseFloat(document.getElementById('travelActualCost').value) || 0,
+                expectedCost: Math.max(0, parseFloat(document.getElementById('travelExpectedCost').value)) || 0,
+                actualCost: Math.max(0, parseFloat(document.getElementById('travelActualCost').value)) || 0,
                 splitBetween: parseInt(document.getElementById('travelSplit').value) || 1,
                 notes: document.getElementById('travelNotes').value.trim()
             };
@@ -4270,8 +4248,8 @@ const App = {
                 preBookedTo: document.getElementById('accPreBookedTo').value || null,
                 startTime: document.getElementById('accCheckIn').value  || null,
                 endTime:   document.getElementById('accCheckOut').value || null,
-                expectedCost: parseFloat(document.getElementById('accExpectedCost').value) || 0,
-                actualCost: parseFloat(document.getElementById('accActualCost').value) || 0,
+                expectedCost: Math.max(0, parseFloat(document.getElementById('accExpectedCost').value)) || 0,
+                actualCost: Math.max(0, parseFloat(document.getElementById('accActualCost').value)) || 0,
                 notes: document.getElementById('accNotes').value.trim()
             };
 
@@ -4619,8 +4597,8 @@ const App = {
             const start = parseFloat(startInput.value) || 0;
             const end = parseFloat(endInput.value) || 0;
             const fuel = parseFloat(fuelInput.value) || 0;
-            const expectedCost = parseFloat(document.getElementById('expectedFuelCost').value) || 0;
-            const actualCost = parseFloat(document.getElementById('fuelCost').value) || 0;
+            const expectedCost = Math.max(0, parseFloat(document.getElementById('expectedFuelCost').value)) || 0;
+            const actualCost = Math.max(0, parseFloat(document.getElementById('fuelCost').value)) || 0;
 
             const distance = end - start;
             const efficiency = fuel > 0 && distance > 0 ? (distance / fuel).toFixed(1) : null;
@@ -4710,8 +4688,8 @@ const App = {
                 day.startOdometer = start;
                 day.endOdometer = end;
                 day.fuelFilled = parseFloat(fuelInput.value) || null;
-                day.expectedFuelCost = parseFloat(document.getElementById('expectedFuelCost').value) || null;
-                day.fuelCost = parseFloat(document.getElementById('fuelCost').value) || null;
+                day.expectedFuelCost = Math.max(0, parseFloat(document.getElementById('expectedFuelCost').value)) || null;
+                day.fuelCost = Math.max(0, parseFloat(document.getElementById('fuelCost').value)) || null;
 
                 // Auto-create or update fuel expense
                 this.reconcileDayExpenses(day);
