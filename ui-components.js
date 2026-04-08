@@ -43,10 +43,14 @@ const UIComponents = {
         const overlay = document.getElementById('modalOverlay');
         const modalContent = document.getElementById('modalContent');
 
-        modalContent.innerHTML = content;
+        // Add × close button + ensure iOS smooth scroll
+        modalContent.style.webkitOverflowScrolling = 'touch';
+        const closeBtn = `<button class="modal-close-btn" aria-label="Close" onclick="UIComponents.closeModal()" title="Close">✕</button>`;
+        modalContent.innerHTML = closeBtn + content;
         overlay.classList.remove('hidden');
+        overlay.style.webkitOverflowScrolling = 'touch';
 
-        // Close on overlay click
+        // Close on overlay backdrop click
         overlay.onclick = (e) => {
             if (e.target === overlay) {
                 this.closeModal();

@@ -4508,3 +4508,163 @@ button[id^="deleteDayBtn_"] {
     border-left: 4px solid var(--accent-gold);
     border-radius: 16px;
 }
+
+/* ================================================================
+   MOBILE UX AUDIT FIX PATCH v2 — 2026-04-08
+   iPhone SE (375x667px) and all mobile viewports
+   ================================================================ */
+
+/* ── CRITICAL: Prevent iOS Safari auto-zoom on input focus ─────── */
+@media (max-width: 768px) {
+    .form-input,
+    .form-select,
+    .form-textarea,
+    input[type='text'],
+    input[type='number'],
+    input[type='date'],
+    input[type='time'],
+    input[type='email'],
+    input[type='tel'],
+    select,
+    textarea {
+        font-size: 16px !important;
+    }
+}
+
+/* ── CRITICAL: Prevent horizontal scrollbar on any screen ─────── */
+html, body {
+    overflow-x: hidden !important;
+    max-width: 100vw !important;
+}
+#app, .app-container {
+    overflow-x: hidden !important;
+    max-width: 100vw !important;
+    position: relative !important;
+}
+
+/* ── CRITICAL: Action button strip — horizontally scrollable ──── */
+.day-card-actions,
+.cat-pills-wrap {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+    gap: 6px !important;
+    padding: 4px 0 8px !important;
+}
+.day-card-actions::-webkit-scrollbar,
+.cat-pills-wrap::-webkit-scrollbar {
+    display: none !important;
+}
+.cat-pill-btn {
+    flex-shrink: 0 !important;
+    white-space: nowrap !important;
+    min-height: 40px !important;
+    padding: 0 14px !important;
+}
+
+/* ── HIGH: Navbar safe-area inset for iPhone notch ────────────── */
+.app-header, header.app-header {
+    padding-top: env(safe-area-inset-top, 0px) !important;
+}
+
+/* ── HIGH: Modal sizing for mobile ─────────────────────────────── */
+@media (max-width: 480px) {
+    .modal-content {
+        width: calc(100% - 24px) !important;
+        margin: 12px auto !important;
+        padding: 20px 16px !important;
+        border-radius: 16px !important;
+        max-height: 88dvh !important;
+        position: relative !important;
+    }
+}
+
+/* ── HIGH: Form 2-column grids → 1 column on mobile ─────────── */
+@media (max-width: 480px) {
+    [style*='grid-template-columns: 1fr 1fr'] {
+        grid-template-columns: 1fr !important;
+    }
+    .form-group-row,
+    .form-date-row,
+    .form-row-2col {
+        grid-template-columns: 1fr !important;
+        display: grid !important;
+    }
+}
+
+/* ── MEDIUM: Day card header — wrap on very narrow screens ─────── */
+@media (max-width: 380px) {
+    .day-card-header {
+        flex-wrap: wrap !important;
+        gap: 2px !important;
+    }
+}
+
+/* ── MEDIUM: Trip list → single column on mobile ──────────────── */
+@media (max-width: 480px) {
+    .trip-list, #tripList {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+/* ── MEDIUM: SELF-DRIVE bar — don't overlay day header ─────────── */
+.self-drive-card {
+    margin-top: 8px !important;
+    position: relative !important;
+    z-index: 0 !important;
+}
+
+/* ── MEDIUM: Modal × close button ───────────────────────────────── */
+.modal-close-btn {
+    position: absolute !important;
+    top: 12px !important;
+    right: 12px !important;
+    width: 32px !important;
+    height: 32px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    background: rgba(255,255,255,0.08) !important;
+    border: none !important;
+    border-radius: 50% !important;
+    color: rgba(255,255,255,0.5) !important;
+    font-size: 18px !important;
+    cursor: pointer !important;
+    z-index: 10 !important;
+    flex-shrink: 0 !important;
+    padding: 0 !important;
+    line-height: 1 !important;
+}
+.modal-close-btn:hover {
+    background: rgba(255,255,255,0.14) !important;
+    color: rgba(255,255,255,0.8) !important;
+}
+
+/* ── MEDIUM: Consistent form input height everywhere ─────────── */
+@media (max-width: 768px) {
+    .form-input,
+    .form-select {
+        min-height: 48px !important;
+        padding: 12px 14px !important;
+    }
+    textarea.form-input,
+    .form-textarea {
+        min-height: auto !important;
+    }
+}
+
+/* ── LOW: Welcome landing bottom padding safe area ─────────────── */
+.landing-btns {
+    padding-bottom: calc(32px + env(safe-area-inset-bottom, 0px)) !important;
+}
+
+/* ── LOW: Typography scale-down on very small screens ─────────── */
+@media (max-width: 380px) {
+    .pf-page-title { font-size: 22px !important; }
+    .lh-line1 { font-size: 26px !important; }
+    .lh-line2 { font-size: 32px !important; }
+}
+
