@@ -3065,11 +3065,11 @@ const App = {
         const renderStay        = day.accommodation && day.accommodation.name && !day.accommodation.startTime;
 
         return `
-            <div class="card" style="margin-bottom: 1rem; cursor: default; border-left: 4px solid ${accentColor}; position:relative; display: flex !important; flex-direction: column !important;">
+            <div class="card" style="margin-bottom: 1rem; cursor: default; border-left: 4px solid ${accentColor}; position:relative; display: flex !important; flex-direction: column !important; padding: 16px;">
                 <button class="fb-trigger-btn" onclick="event.stopPropagation();if(window.fbTrigger)fbTrigger('Day ${day.dayNumber} card')">＋</button>
 
                 <!-- Day header: name/date left, total actual right -->
-                <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 0.5rem; margin-bottom: 0.75rem; padding-right: 1.5rem;">
+                <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 0.5rem; margin-bottom: 0.75rem; padding-right: 1.5rem; position: relative; z-index: 2;">
                     <div style="flex: 1; min-width: 0;">
                         <h4 style="margin: 0; font-size: 1.05rem; color: var(--color-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
                             Day ${day.dayNumber} — ${dayName}
@@ -3332,7 +3332,7 @@ const App = {
                     ` : ''}
 
                 <!-- Add Buttons container -->
-                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr 1fr; gap: 0.5rem; position:relative; margin-top: 0.5rem;">
+                <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; position:relative; margin-top: 0.5rem;">
                     <button class="fb-trigger-btn" onclick="event.stopPropagation();if(window.fbTrigger)fbTrigger('Day ${day.dayNumber} - Add item buttons')">＋</button>
                     <button id="addMeal_${day.id}" class="cat-pill-btn meal">🍽 Meal</button>
                     <button id="addActivity_${day.id}" class="cat-pill-btn activity">⭐ Activity</button>
