@@ -561,12 +561,12 @@ const App = {
                     ${trip.days.map((d, i) => {
                         const autoSum = [...(d.activities || []), ...(d.travel || [])].reduce((s, item) => s + (parseFloat(item.distanceKm) || 0), 0);
                         const savedVal = trip.dailyKm && trip.dailyKm[d.id] !== undefined ? trip.dailyKm[d.id] : '';
-                        return \`
+                        return `
                             <div style="display: flex; flex-direction: column;">
-                                <span style="font-size: 0.75rem; color: rgba(255,255,255,0.7); margin-bottom: 4px;">Day \${i+1} \${autoSum > 0 ? \`(Auto: \${autoSum} km)\` : ''}</span>
-                                <input type="number" id="dailyKm_\${d.id}" data-dayid="\${d.id}" class="form-input daily-km-input" placeholder="\${autoSum || 0}" value="\${savedVal}" min="0" step="0.1">
+                                <span style="font-size: 0.75rem; color: rgba(255,255,255,0.7); margin-bottom: 4px;">Day ${i+1} ${autoSum > 0 ? `(Auto: ${autoSum} km)` : ''}</span>
+                                <input type="number" id="dailyKm_${d.id}" data-dayid="${d.id}" class="form-input daily-km-input" placeholder="${autoSum || 0}" value="${savedVal}" min="0" step="0.1">
                             </div>
-                        \`;
+                        `;
                     }).join('')}
                     </div>
                     ` : ''}
