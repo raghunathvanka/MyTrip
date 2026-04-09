@@ -3037,7 +3037,7 @@ const App = {
         const renderStay        = day.accommodation && day.accommodation.name && !day.accommodation.startTime;
 
         return `
-            <div class="card" style="margin-bottom: 1rem; cursor: default; border-left: 4px solid ${accentColor}; position:relative; display: flex !important; flex-direction: column !important; padding: 16px;">
+            <div class="card" style="margin-bottom: 1rem; cursor: default; border-left: 4px solid ${accentColor}; position:relative; padding: 0;">
                 <button class="fb-trigger-btn" onclick="event.stopPropagation();if(window.fbTrigger)fbTrigger('Day ${day.dayNumber} card')">＋</button>
 
                 <!-- Day header: name/date left, total actual right -->
