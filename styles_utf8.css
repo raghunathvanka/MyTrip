@@ -2738,9 +2738,11 @@ button[id="saveBasicBtn"] {
 
 /* Override the #daysList > .card — only target day cards, not budget card */
 #daysList .card {
+    display: flex !important;
+    flex-direction: column !important;
     padding: 0 !important;
     border-radius: 20px !important;
-    overflow: hidden !important;
+    overflow: visible !important;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4) !important;
     cursor: default !important;
     position: relative !important;
