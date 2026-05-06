@@ -1,148 +1,179 @@
-/* ========================================
-   MyTrip - Soft Neumorphism UI
-   Modern Premium iOS-Style Design
-   ======================================== */
+/* ══════════════════════════════════════════════════════
+   MYTRIP DESIGN SYSTEM v3 — TradeVibes-inspired
+   Professional Travel Intelligence Dashboard
+   Dark theme · Monospace numbers · Clear hierarchy
+   ══════════════════════════════════════════════════════ */
 
 /* ========== CSS Variables ========== */
 :root {
-    /* ── Design System 2.0 Tokens ── */
-    --bg-primary: #0A1628;
-    --bg-secondary: #0D2137;
-    --bg-gradient: linear-gradient(145deg, #0A1628 0%, #0D2137 50%, #0A1F35 100%);
-    --glass-bg: rgba(255, 255, 255, 0.07);
-    --glass-border: rgba(255, 255, 255, 0.12);
-    --glass-blur: blur(20px);
-    --glass-hover: rgba(255, 255, 255, 0.11);
-    --text-primary: #FFFFFF;
-    --text-secondary: rgba(255, 255, 255, 0.55);
-    --text-muted: rgba(255, 255, 255, 0.3);
-    --accent-coral: #FF6B6B;
-    --accent-seafoam: #4ECDC4;
-    --accent-gold: #F7C948;
-    --color-travel: #4FC3F7;
-    --color-stay: #FFB74D;
-    --color-meal: #81C784;
+    /* ── Backgrounds (layered dark system) ── */
+    --bg-deep:        #0E1012;   /* deepest — modal overlays */
+    --bg-primary:     #1A1C1F;   /* page background */
+    --bg-secondary:   #22252A;   /* panels, sidebars */
+    --bg-elevated:    #2A2E34;   /* cards, dropdowns */
+    --bg-raised:      #3A3E45;   /* tooltips, popovers */
+    --bg-hover:       #404550;   /* interactive hover */
+    --bg-gradient:    linear-gradient(160deg, #0E1012 0%, #1A1C1F 55%, #22252A 100%);
+
+    /* ── Brand Green (success · under-budget · confirmed) ── */
+    --accent-green:       #38B54A;
+    --accent-green-light: #5CD972;
+    --accent-green-dark:  #2E9E40;
+    --accent-green-alpha: rgba(56, 181, 74, 0.12);
+    --accent-green-glow:  0 0 24px rgba(56,181,74,0.28), 0 0 48px rgba(56,181,74,0.12);
+
+    /* ── Brand Red (danger · over-budget · alerts) ── */
+    --accent-red:         #CC1100;
+    --accent-red-light:   #FF4422;
+    --accent-red-alpha:   rgba(204, 17, 0, 0.12);
+
+    /* ── Semantic Accents ── */
+    --accent-gold:        #F5A623;
+    --accent-gold-alpha:  rgba(245, 166, 35, 0.12);
+    --accent-info:        #378ADD;
+    --accent-info-alpha:  rgba(55, 138, 221, 0.12);
+
+    /* ── Legacy aliases (backward compatibility) ── */
+    --accent-seafoam:     #38B54A;
+    --accent-coral:       #FF4422;
+    --color-success:      #38B54A;
+    --color-error:        #CC1100;
+    --color-warning:      #F5A623;
+    --color-primary:      #378ADD;
+    --color-secondary:    #5CD972;
+    --color-accent:       #38B54A;
+    --color-accent-hover: #5CD972;
+    --gradient-primary:       linear-gradient(135deg, #38B54A 0%, #2E9E40 100%);
+    --gradient-primary-hover: linear-gradient(135deg, #5CD972 0%, #38B54A 100%);
+    --gradient-secondary:     linear-gradient(135deg, #378ADD 0%, #2A6DB5 100%);
+    --gradient-danger:        linear-gradient(135deg, #CC1100 0%, #990E00 100%);
+    --gradient-success:       linear-gradient(135deg, #38B54A 0%, #2E9E40 100%);
+    --color-bg:            #1A1C1F;
+    --color-bg-card:       #2A2E34;
+    --color-bg-secondary:  #22252A;
+
+    /* ── Text Colors (WCAG 2.1 AA compliant on dark bg) ── */
+    --text-primary:    #E8ECF0;
+    --text-secondary:  #C8CDD4;
+    --text-muted:      #8B95A0;
+    --text-dim:        #8A9099;
+    --text-bullish:    #5CD972;
+    --text-bearish:    #FF4422;
+    --text-warning:    #F5A623;
+    --text-info:       #5DA8E8;
+
+    /* ── Legacy text aliases ── */
+    --color-text:           #E8ECF0;
+    --color-text-secondary: #8B95A0;
+    --color-text-tertiary:  #8A9099;
+    --color-text-light:     #545A62;
+    --color-text-label:     #8B95A0;
+    --color-text-value:     #E8ECF0;
+
+    /* ── Day Plan Category Colors ── */
+    --color-travel:   #5DA8E8;
+    --color-stay:     #F5A623;
+    --color-meal:     #5CD972;
     --color-activity: #CE93D8;
-    --radius-card: 20px;
-    --radius-pill: 50px;
-    --shadow-glass: 0 8px 32px rgba(0, 0, 0, 0.4);
-    --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.3);
 
-    /* ── Legacy tokens kept for compatibility ── */
-    --color-bg: #0A1628;
-    --color-bg-card: #0D2137;
-    --color-bg-secondary: #0A1F35;
+    /* ── Borders ── */
+    --glass-border:    rgba(255,255,255,0.08);
+    --border-faint:    rgba(255,255,255,0.05);
+    --border-dim:      rgba(255,255,255,0.08);
+    --border-base:     #3A3E45;
+    --border-emphasis: #545A62;
+    --border-accent:   rgba(56, 181, 74, 0.30);
+    --border-danger:   rgba(204, 17, 0, 0.30);
 
-    /* Text Colors - High Contrast */
-    --color-text: #ffffff;
-    --color-text-secondary: #a1a1aa;
-    --color-text-tertiary: #71717a;
-    --color-text-light: #52525b;
-    --color-text-label: #71717a;
-    --color-text-value: #ffffff;
+    /* ── Glass (kept for backward compat) ── */
+    --glass-bg:    rgba(42, 46, 52, 0.92);
+    --glass-blur:  blur(12px);
+    --glass-hover: rgba(58, 62, 69, 0.95);
 
-    /* Luxury Gold Accent - Refined */
-    --color-accent: #c6a84a;
-    --color-accent-hover: #d4b55e;
-
-    /* Primary Gradient - Refined Gold */
-    --gradient-primary: linear-gradient(135deg, #c6a84a 0%, #b89840 100%);
-    --gradient-primary-hover: linear-gradient(135deg, #d4b55e 0%, #c6a84a 100%);
-
-    /* Secondary Gradient - Deep Teal */
-    --gradient-secondary: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
-
-    /* Danger Gradient - Deep Red */
-    --gradient-danger: linear-gradient(135deg, #991b1b 0%, #7f1d1d 100%);
-
-    /* Success Gradient - Deep Green */
-    --gradient-success: linear-gradient(135deg, #15803d 0%, #166534 100%);
-
-    /* Luxury Elevation Shadows */
-    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.4);
-    --shadow-md: 0 6px 16px rgba(0, 0, 0, 0.5);
-    --shadow-lg: 0 12px 30px rgba(0, 0, 0, 0.6);
-    --shadow-xl: 0 20px 50px rgba(0, 0, 0, 0.7);
-    --shadow-card: 0 12px 30px rgba(0, 0, 0, 0.6);
-
-    /* Inset Shadow for Inputs */
-    --shadow-inset: inset 0 2px 4px rgba(0, 0, 0, 0.3);
-
-    /* Border Radius */
-    --radius-sm: 8px;
-    --radius-md: 12px;
-    --radius-lg: 16px;
-    --radius-xl: 20px;
-    --radius-2xl: 24px;
+    /* ── Border Radius ── */
+    --radius-card: 10px;
+    --radius-pill: 9999px;
+    --radius-sm:   4px;
+    --radius-md:   8px;
+    --radius-lg:   10px;
+    --radius-xl:   14px;
+    --radius-2xl:  18px;
     --radius-full: 9999px;
 
-    /* Spacing */
-    --spacing-xs: 0.25rem;
-    --spacing-sm: 0.5rem;
-    --spacing-md: 1rem;
-    --spacing-lg: 1.5rem;
-    --spacing-xl: 2rem;
-    --spacing-2xl: 3rem;
+    /* ── Shadows ── */
+    --shadow-card:       0 2px 12px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.04);
+    --shadow-card-hover: 0 6px 24px rgba(0,0,0,0.65), inset 0 1px 0 rgba(255,255,255,0.06);
+    --shadow-glass:      0 2px 12px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.04);
+    --shadow-sm:    0 1px 4px  rgba(0,0,0,0.40);
+    --shadow-md:    0 4px 12px rgba(0,0,0,0.50);
+    --shadow-lg:    0 8px 24px rgba(0,0,0,0.60);
+    --shadow-xl:    0 16px 40px rgba(0,0,0,0.70);
+    --shadow-inset: inset 0 2px 4px rgba(0,0,0,0.30);
+    --shadow-focus: 0 0 0 3px rgba(56,181,74,0.35);
 
-    /* Typography - Outfit (body) + Playfair Display (headings) */
-    --font-body: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
-    --font-primary: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
-    /* alias */
+    /* ── Typography ── */
+    --font-body:    'Source Sans 3', 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-primary: 'Source Sans 3', 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
     --font-heading: 'Playfair Display', Georgia, serif;
-    --font-serif: 'Playfair Display', Georgia, serif;
-    /* alias */
+    --font-serif:   'Playfair Display', Georgia, serif;
+    --font-mono:    'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
 
-    /* Font Sizes — user-specified hierarchy */
-    --font-size-brand: 1.625rem;
-    /* 26px — logo/brand */
-    --font-size-page-title: 1.5rem;
-    /* 24px — page titles */
-    --font-size-day-title: 1.25rem;
-    /* 20px — day card titles */
-    --font-size-value: 1.125rem;
-    /* 18px — amount values */
-    --font-size-item: 1rem;
-    /* 16px — item names */
-    --font-size-base: 1rem;
-    /* 16px — body text */
-    --font-size-button: 0.9375rem;
-    /* 15px — button text */
-    --font-size-label-lg: 0.875rem;
-    /* 14px — larger labels */
-    --font-size-card-title: 1.125rem;
-    /* 18px — card titles */
-    --font-size-section: 1.25rem;
-    /* 20px — section titles */
-    --font-size-body: 0.8125rem;
-    /* 13px — body/helper */
-    --font-size-label: 0.6875rem;
-    /* 11px — small labels/tags */
-    --font-size-value-lg: 1.5rem;
-    /* 24px — large values */
+    /* Font Sizes */
+    --font-size-brand:      1.5rem;
+    --font-size-page-title: 1.25rem;
+    --font-size-day-title:  1.0625rem;
+    --font-size-value:      1rem;
+    --font-size-item:       0.9375rem;
+    --font-size-base:       0.9375rem;
+    --font-size-button:     0.875rem;
+    --font-size-label-lg:   0.8125rem;
+    --font-size-card-title: 1rem;
+    --font-size-section:    1.0625rem;
+    --font-size-body:       0.8125rem;
+    --font-size-label:      0.6875rem;
+    --font-size-value-lg:   1.375rem;
+
+    /* Letter Spacing */
+    --ls-label: 0.12em;
+    --ls-wide:  0.05em;
+    --ls-mono:  0;
 
     /* Font Weights */
-    --font-weight-normal: 400;
-    --font-weight-medium: 500;
+    --font-weight-normal:   400;
+    --font-weight-medium:   500;
     --font-weight-semibold: 600;
-    --font-weight-bold: 700;
+    --font-weight-bold:     700;
 
-    /* Transitions */
-    --transition-fast: 200ms cubic-bezier(0.4, 0, 0.2, 1);
-    --transition-base: 250ms cubic-bezier(0.4, 0, 0.2, 1);
-    --transition-slow: 350ms cubic-bezier(0.4, 0, 0.2, 1);
+    /* ── Spacing ── */
+    --spacing-xs:  0.25rem;
+    --spacing-sm:  0.5rem;
+    --spacing-md:  1rem;
+    --spacing-lg:  1.5rem;
+    --spacing-xl:  2rem;
+    --spacing-2xl: 3rem;
 
-    /* Z-index */
-    --z-dropdown: 1000;
-    --z-sticky: 1020;
-    --z-fixed: 1030;
+    /* ── Transitions ── */
+    --transition-fast: 150ms ease;
+    --transition-base: 250ms ease;
+    --transition-slow: 400ms ease;
+
+    /* ── Z-index ── */
+    --z-dropdown:       1000;
+    --z-sticky:         1020;
+    --z-fixed:          1030;
     --z-modal-backdrop: 1040;
-    --z-modal: 1050;
-    --z-toast: 1060;
+    --z-modal:          1050;
+    --z-toast:          1060;
 }
 
-/* ========== Global Smooth Transitions ========== */
-* {
-    transition: all 0.25s ease;
+/* ── Selective transitions — not "all" which causes layout thrash ── */
+*, *::before, *::after {
+    transition: background-color var(--transition-base),
+                border-color var(--transition-base),
+                color var(--transition-base),
+                box-shadow var(--transition-base),
+                opacity var(--transition-fast),
+                transform var(--transition-base);
 }
 
 *,
@@ -193,7 +224,7 @@ body {
 .blob-1 {
     width: 400px;
     height: 400px;
-    background: rgba(78, 205, 196, 0.06);
+    background: rgba(56, 181, 74, 0.04);
     top: -100px;
     right: -100px;
 }
@@ -201,7 +232,7 @@ body {
 .blob-2 {
     width: 500px;
     height: 500px;
-    background: rgba(255, 107, 107, 0.04);
+    background: rgba(204, 17, 0, 0.03);
     bottom: 10%;
     left: -150px;
 }
@@ -209,7 +240,7 @@ body {
 .blob-3 {
     width: 300px;
     height: 300px;
-    background: rgba(247, 201, 72, 0.05);
+    background: rgba(245, 166, 35, 0.03);
     top: 40%;
     right: 20%;
 }
@@ -269,7 +300,7 @@ p {
     min-height: 100dvh;
     display: flex;
     flex-direction: column;
-    background: var(--color-bg);
+    background: var(--bg-primary);
     height: 100dvh;
     overflow-y: auto;
     overflow-x: hidden;
@@ -634,17 +665,14 @@ p {
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
 }
 
-/* ========== Cards — Glassmorphism ========== */
+/* ========== Cards — TradeVibes Dark Elevated ========== */
 .card,
 .glass-card {
-    background: var(--glass-bg);
-    backdrop-filter: var(--glass-blur);
-    -webkit-backdrop-filter: var(--glass-blur);
-    border: 1px solid var(--glass-border);
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-base);
     border-radius: var(--radius-card);
-    box-shadow: var(--shadow-glass);
-    padding: 28px;
-    transition: background 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
+    box-shadow: var(--shadow-card);
+    padding: 20px;
     cursor: pointer;
     position: relative;
     overflow: hidden;
@@ -652,10 +680,10 @@ p {
 
 .card:hover,
 .glass-card:hover {
-    background: var(--glass-hover);
-    border-color: rgba(255, 255, 255, 0.2);
-    transform: translateY(-3px);
-    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+    background: var(--bg-raised);
+    border-color: var(--border-emphasis);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-card-hover);
 }
 
 .card:active,
@@ -4673,5 +4701,228 @@ html, body {
     .pf-page-title { font-size: 22px !important; }
     .lh-line1 { font-size: 26px !important; }
     .lh-line2 { font-size: 32px !important; }
+}
+
+
+/* ══════════════════════════════════════════════════════════
+   TRADEVIBES UTILITY CLASSES — MyTrip Design System v3
+   ══════════════════════════════════════════════════════════ */
+
+/* ── Monospace: ALL currency, numbers, amounts ── */
+.tv-mono,
+[class*="currency"], [class*="amount"], [class*="budget"],
+[id*="totalBudget"], [id*="actualTotal"], [id*="expectedTotal"],
+[id*="variance"],
+.budget-value, .budget-amount, .cost-value,
+.stat-value, .metric-value,
+/* Day card amounts */
+#daysList .card span[style*="font-weight: 700"],
+#daysList .card span[style*="font-weight:700"],
+/* Budget summary numbers */
+#tripDetailContent strong,
+#tripDetailContent .budget-number,
+/* Inline currency spans in bundle.js */
+.total-actual-amount, .total-expected-amount {
+    font-family: var(--font-mono) !important;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: var(--ls-mono);
+}
+
+/* ── Monospace for all amount spans inside day cards & trip cards ── */
+#daysList .card span:not([class]),
+#tripList .card span:not([class]) {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+}
+
+/* ── Section / category labels — UPPERCASE with tracking ── */
+.tv-label,
+.cat-chip,
+.section-label,
+.stat-label,
+.tl-badge,
+.tl-header-label {
+    font-family: var(--font-primary) !important;
+    font-size: var(--font-size-label) !important;
+    font-weight: 600 !important;
+    letter-spacing: var(--ls-label) !important;
+    text-transform: uppercase !important;
+}
+
+/* ── Semantic color utilities ── */
+.tv-bullish,  .text-bullish  { color: var(--text-bullish) !important; }
+.tv-bearish,  .text-bearish  { color: var(--text-bearish) !important; }
+.tv-warning,  .text-warning  { color: var(--text-warning) !important; }
+.tv-info,     .text-info     { color: var(--text-info)    !important; }
+.tv-muted,    .text-muted    { color: var(--text-muted)   !important; }
+
+/* ── Stat Card — Travel Intelligence Dashboard style ── */
+.tv-stat-card {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-base);
+    border-radius: var(--radius-lg);
+    padding: 16px 20px;
+    box-shadow: var(--shadow-card);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+.tv-stat-card .tv-stat-label {
+    font-family: var(--font-primary);
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--text-muted);
+}
+.tv-stat-card .tv-stat-value {
+    font-family: var(--font-mono);
+    font-size: 1.375rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    font-variant-numeric: tabular-nums;
+    line-height: 1.1;
+}
+.tv-stat-card .tv-stat-delta {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+.tv-stat-card.tv-positive { border-left: 3px solid var(--accent-green); }
+.tv-stat-card.tv-negative { border-left: 3px solid var(--accent-red-light); }
+.tv-stat-card.tv-warning  { border-left: 3px solid var(--accent-gold); }
+
+/* ── App header — tighten up, Bloomberg-like ── */
+.app-header {
+    background: var(--bg-secondary) !important;
+    border-bottom: 1px solid var(--border-base) !important;
+    box-shadow: none !important;
+}
+
+/* ── Budget / finance numbers — always monospace ── */
+.budget-section span,
+.budget-section strong,
+.budget-section div[style*="font-weight"],
+#tripDetailContent [style*="font-size: 1.5rem"],
+#tripDetailContent [style*="font-size: 1.2rem"],
+#tripDetailContent [style*="font-size: 1.1rem"],
+#tripDetailContent [style*="font-size: 1rem"][style*="font-weight"],
+#tripDetailContent [style*="font-weight: 700"],
+#tripDetailContent [style*="font-weight:700"] {
+    font-family: var(--font-mono) !important;
+    font-variant-numeric: tabular-nums;
+}
+
+/* ── Day card total — monospace ── */
+#daysList .card [style*="font-weight: 700"],
+#daysList .card [style*="font-weight:700"] {
+    font-family: var(--font-mono) !important;
+    font-variant-numeric: tabular-nums;
+}
+
+/* ── Item cards (meal, activity, travel, stay) ── */
+.item-card {
+    background: var(--bg-secondary) !important;
+    border: 1px solid var(--border-dim) !important;
+    border-radius: 8px !important;
+}
+.item-card::before {
+    border-radius: 2px 0 0 2px !important;   /* tighter left stripe */
+    width: 3px !important;
+}
+
+/* ── Progress bars — thinner, sharper ── */
+.progress-bar, [class*="progress"] {
+    border-radius: 2px !important;
+}
+
+/* ── Timeline rows ── */
+.tl-container {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-faint);
+    border-radius: var(--radius-lg);
+}
+
+/* ── Badges / chips — letter-spaced uppercase ── */
+.cat-chip,
+.tl-badge {
+    letter-spacing: 0.12em;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    border-radius: var(--radius-sm);
+}
+
+/* ── Buttons — consistent styling ── */
+.btn,
+.cat-pill-btn {
+    font-family: var(--font-primary);
+    font-weight: 500;
+    letter-spacing: 0.02em;
+}
+
+.btn-primary {
+    background: var(--accent-green) !important;
+    border-color: var(--accent-green-dark) !important;
+    color: #fff !important;
+}
+.btn-primary:hover {
+    background: var(--accent-green-light) !important;
+}
+
+/* ── Focus ring — green ── */
+:focus-visible {
+    outline: none;
+    box-shadow: var(--shadow-focus) !important;
+}
+
+/* ── Form inputs — dark elevated ── */
+.form-input,
+.form-select,
+.form-textarea,
+input[type="text"],
+input[type="number"],
+input[type="date"],
+input[type="email"],
+textarea,
+select {
+    background: var(--bg-secondary) !important;
+    border-color: var(--border-base) !important;
+    color: var(--text-primary) !important;
+}
+.form-input:focus,
+.form-select:focus,
+.form-textarea:focus {
+    border-color: var(--accent-green) !important;
+    box-shadow: var(--shadow-focus) !important;
+}
+
+/* ── Hero budget doughnut / summary cards ── */
+.budget-hero,
+[id*="budgetSection"] .card,
+[id*="budget-card"] {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-base);
+    border-radius: var(--radius-lg);
+}
+
+/* ── Self-drive card ── */
+.sd-route-card {
+    border-radius: var(--radius-lg) !important;
+    border: 1px solid var(--border-dim) !important;
+}
+
+/* ── Trip list card hover — green accent ── */
+#tripList .card:hover {
+    border-color: var(--border-accent) !important;
+}
+
+/* ── Modal ── */
+.modal-content,
+.modal-container {
+    background: var(--bg-elevated) !important;
+    border: 1px solid var(--border-emphasis) !important;
+    border-radius: var(--radius-xl) !important;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.75) !important;
 }
 
